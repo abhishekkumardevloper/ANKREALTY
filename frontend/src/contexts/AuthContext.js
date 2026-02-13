@@ -16,9 +16,17 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   /**
-   * ✅ FIX:
-   * Wrap fetchUser inside useCallback
-   * so React Hook dependency rule is satisfied
+   * ✅ DEFINE logout FIRST
+   */
+  const logout = useCallback(() => {
+    localStorage.removeItem('token');
+    setToken(null);
+    setUser(null);
+    delete axios.defaults.headers.common['Authorization'];
+  }, []);
+
+  /**
+   * ✅ fetchUser now safely depends on logout
    */
   const fetchUser = useCallback(async () => {
     try {
@@ -30,12 +38,8 @@ export function AuthProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }, []); // no changing dependencies here
+  }, [logout]);
 
-  /**
-   * ✅ FIX:
-   * Add fetchUser inside dependency array
-   */
   useEffect(() => {
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -52,8 +56,8 @@ export function AuthProvider({ children }) {
     localStorage.setItem('token', newToken);
     setToken(newToken);
     setUser(userData);
-
     axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+
     return userData;
   };
 
@@ -71,17 +75,10 @@ export function AuthProvider({ children }) {
     localStorage.setItem('token', newToken);
     setToken(newToken);
     setUser(userData);
-
     axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+
     return userData;
   };
-
-  const logout = useCallback(() => {
-    localStorage.removeItem('token');
-    setToken(null);
-    setUser(null);
-    delete axios.defaults.headers.common['Authorization'];
-  }, []);
 
   const value = {
     user,
