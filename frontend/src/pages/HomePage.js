@@ -138,81 +138,80 @@ export default function HomePage() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/80 z-10" />
 
-        <div className="relative z-20 w-full max-w-5xl px-4 md:px-6 text-center mt-10">
+        <div className="relative z-20 w-full max-w-5xl px-6 text-center mt-10">
           <span className="inline-block py-1 px-3 rounded-full bg-red-600/90 text-white text-xs font-bold tracking-wider mb-6 animate-fade-in-up">
             #1 REAL ESTATE PLATFORM
           </span>
-          <h1 className="text-4xl md:text-7xl font-black text-white mb-6 leading-tight tracking-tight drop-shadow-lg" data-testid="hero-title">
+          <h1 className="text-5xl md:text-7xl font-black text-white mb-6 leading-tight tracking-tight drop-shadow-lg" data-testid="hero-title">
             Find a Place <br/> You'll Love to Live
           </h1>
-          <p className="text-lg md:text-2xl text-gray-200 mb-12 max-w-2xl mx-auto font-light" data-testid="hero-subtitle">
+          <p className="text-xl md:text-2xl text-gray-200 mb-12 max-w-2xl mx-auto font-light" data-testid="hero-subtitle">
             From luxury penthouses to cozy family homes, we bring the red carpet experience to your property search.
           </p>
 
-          {/* Search Widget - FIXED CSS OVERFLOW */}
+          {/* Search Widget */}
           <div className="bg-white/95 backdrop-blur-md rounded-xl shadow-2xl p-4 md:p-6 max-w-4xl mx-auto w-full transform hover:-translate-y-1 transition-all duration-300" data-testid="search-widget">
-            {/* Tabs - Fixed wrapping */}
-            <div className="flex flex-wrap justify-center gap-2 mb-6 border-b border-gray-200 pb-2">
-              {['buy', 'rent', 'sell'].map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setCategory(cat)}
-                  className={`px-4 md:px-6 py-2 text-sm font-bold uppercase tracking-wide transition-all border-b-2 whitespace-nowrap ${
-                    category === cat 
-                      ? 'border-red-600 text-red-600' 
-                      : 'border-transparent text-gray-500 hover:text-gray-800'
-                  }`}
-                  data-testid={`category-${cat}-button`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
+  {/* Tabs - Fixed Overflow with flex-wrap */}
+  <div className="flex flex-wrap justify-center gap-2 mb-6 border-b border-gray-200 pb-2">
+    {['buy', 'rent', 'sell'].map((cat) => (
+      <button
+        key={cat}
+        onClick={() => setCategory(cat)}
+        className={`px-4 md:px-6 py-2 text-sm font-bold uppercase tracking-wide transition-all border-b-2 ${
+          category === cat 
+            ? 'border-red-600 text-red-600' 
+            : 'border-transparent text-gray-500 hover:text-gray-800'
+        }`}
+        data-testid={`category-${cat}-button`}
+      >
+        {cat}
+      </button>
+    ))}
+  </div>
 
-            {/* Inputs Grid - Added w-full to prevent overflow */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-              <div className="md:col-span-4 relative w-full">
-                 <MapPin className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
-                 <Input
-                  placeholder="City or Locality..."
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="h-12 pl-10 border-gray-200 bg-gray-50 focus:bg-white w-full"
-                  data-testid="search-location-input"
-                />
-              </div>
-              <div className="md:col-span-4 relative w-full">
-                <Home className="absolute left-3 top-3.5 h-5 w-5 text-gray-400 z-10" />
-                <Select value={propertyType} onValueChange={setPropertyType}>
-                  <SelectTrigger className="h-12 pl-10 border-gray-200 bg-gray-50 focus:bg-white w-full" data-testid="search-property-type-select">
-                    <SelectValue placeholder="Property Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="apartment">Apartment</SelectItem>
-                    <SelectItem value="villa">Villa</SelectItem>
-                    <SelectItem value="house">Independent House</SelectItem>
-                    <SelectItem value="commercial">Commercial Space</SelectItem>
-                    <SelectItem value="plot">Land / Plot</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="md:col-span-4 w-full">
-                <Button
-                  onClick={handleSearch}
-                  className="w-full h-12 bg-red-600 hover:bg-red-700 text-white font-bold text-lg shadow-lg hover:shadow-red-600/30 transition-all"
-                  data-testid="search-submit-button"
-                >
-                  <Search className="mr-2 h-5 w-5" />
-                  Search
-                </Button>
-              </div>
-            </div>
+  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+    <div className="md:col-span-4 relative w-full">
+        <MapPin className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+        <Input
+        placeholder="Enter City, Locality..."
+        value={location}
+        onChange={(e) => setLocation(e.target.value)}
+        className="h-12 pl-10 border-gray-200 bg-gray-50 focus:bg-white w-full"
+        data-testid="search-location-input"
+      />
+    </div>
+    <div className="md:col-span-4 relative w-full">
+      <Home className="absolute left-3 top-3.5 h-5 w-5 text-gray-400 z-10" />
+      <Select value={propertyType} onValueChange={setPropertyType}>
+        <SelectTrigger className="h-12 pl-10 border-gray-200 bg-gray-50 focus:bg-white w-full" data-testid="search-property-type-select">
+          <SelectValue placeholder="Property Type" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="apartment">Apartment</SelectItem>
+          <SelectItem value="villa">Villa</SelectItem>
+          <SelectItem value="house">Independent House</SelectItem>
+          <SelectItem value="commercial">Commercial Space</SelectItem>
+          <SelectItem value="plot">Land / Plot</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+    <div className="md:col-span-4 w-full">
+      <Button
+        onClick={handleSearch}
+        className="w-full h-12 bg-red-600 hover:bg-red-700 text-white font-bold text-lg shadow-lg hover:shadow-red-600/30 transition-all"
+        data-testid="search-submit-button"
+      >
+        <Search className="mr-2 h-5 w-5" />
+        Search
+      </Button>
+    </div>
+  </div>
           </div>
         </div>
       </section>
 
       {/* STATS SECTION */}
-      <section className="bg-white py-10 border-b border-gray-100 hidden md:block">
+      <section className="bg-white py-10 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-6">
            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-gray-100">
               <div>
@@ -306,46 +305,32 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* EXPLORE CITIES SECTION (Updated Images) */}
+      {/* EXPLORE CITIES SECTION (New Content) */}
       <section className="py-20 px-6 bg-white">
         <div className="max-w-7xl mx-auto">
             <h2 className="text-4xl font-black text-gray-900 mb-12 text-center">Explore Top Cities</h2>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 h-auto md:h-[400px]">
-                {/* Mumbai - Updated Image (Skyline/Plots feel) */}
-                <div className="md:col-span-2 relative rounded-2xl overflow-hidden group cursor-pointer h-64 md:h-full">
-                    <img 
-                      src="https://images.unsplash.com/photo-1570129477492-45f003f2dffa?auto=format&fit=crop&w=800&q=80" 
-                      alt="Mumbai" 
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
-                    />
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 h-[500px] md:h-[400px]">
+                {/* Mumbai */}
+                <div className="md:col-span-2 relative rounded-2xl overflow-hidden group cursor-pointer">
+                    <img src="https://images.unsplash.com/photo-1566552881560-0be862a7c445?auto=format&fit=crop&w=800&q=80" alt="Mumbai" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                     <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-all" />
                     <div className="absolute bottom-6 left-6 text-white">
                         <h3 className="text-2xl font-bold">Mumbai</h3>
                         <p className="text-sm opacity-90">2,400+ Properties</p>
                     </div>
                 </div>
-
                 {/* Bangalore */}
-                <div className="relative rounded-2xl overflow-hidden group cursor-pointer h-64 md:h-full">
-                    <img 
-                      src="https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&w=800&q=80" 
-                      alt="Bangalore" 
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
-                    />
+                <div className="relative rounded-2xl overflow-hidden group cursor-pointer">
+                    <img src="https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&w=800&q=80" alt="Bangalore" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                     <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-all" />
                     <div className="absolute bottom-6 left-6 text-white">
                         <h3 className="text-2xl font-bold">Bangalore</h3>
                         <p className="text-sm opacity-90">1,800+ Properties</p>
                     </div>
                 </div>
-
-                {/* Delhi - Added Image */}
-                <div className="relative rounded-2xl overflow-hidden group cursor-pointer h-64 md:h-full">
-                    <img 
-                      src="https://images.unsplash.com/photo-1587474265402-2e63a4e96843?auto=format&fit=crop&w=800&q=80" 
-                      alt="Delhi" 
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
-                    />
+                {/* Delhi */}
+                <div className="relative rounded-2xl overflow-hidden group cursor-pointer">
+                    <img src="https://images.unsplash.com/photo-1587474265402-2e63a4e96843?auto=format&fit=crop&w=800&q=80" alt="Delhi" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                     <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-all" />
                     <div className="absolute bottom-6 left-6 text-white">
                         <h3 className="text-2xl font-bold">Delhi NCR</h3>
@@ -398,7 +383,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
+      {/* TESTIMONIALS (New Content) */}
       <section className="py-20 px-6 bg-gray-50">
         <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
@@ -426,7 +411,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* NEWSLETTER CTA */}
+      {/* NEWSLETTER CTA (New Content) */}
       <section className="py-20 px-6">
         <div className="max-w-5xl mx-auto bg-red-600 rounded-3xl overflow-hidden shadow-2xl relative">
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
@@ -453,6 +438,7 @@ export default function HomePage() {
                 The Red Carpet of Real Estate. We are committed to providing the highest level of service and expertise in the real estate market.
               </p>
               <div className="flex space-x-4">
+                  {/* Social Icons Placeholder */}
                   <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer"><Mail className="w-4 h-4"/></div>
                   <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer"><MapPin className="w-4 h-4"/></div>
               </div>
