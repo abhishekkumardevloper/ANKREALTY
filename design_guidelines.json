@@ -1,0 +1,157 @@
+{
+  "project_name": "ANK Realty",
+  "design_philosophy": {
+    "identity": "The Red Carpet of Real Estate",
+    "core_values": ["Luxury", "Trust", "Clarity", "Exclusivity"],
+    "anti_patterns": [
+      "Generic 'SaaS Blue' templates",
+      "Cluttered listing grids",
+      "Low-contrast gray text",
+      "Overused gradients"
+    ]
+  },
+  "typography": {
+    "font_family": {
+      "headings": "Montserrat, sans-serif",
+      "body": "Inter, sans-serif"
+    },
+    "weights": {
+      "headings": ["600", "700", "900"],
+      "body": ["400", "500"]
+    },
+    "usage_rules": [
+      "Headings (H1, H2): Use Montserrat Bold/Black. Tight tracking (-0.02em).",
+      "Subheadings (H3, H4): Use Montserrat SemiBold. Normal tracking.",
+      "Body Text: Use Inter. Relaxed line-height (1.6).",
+      "Labels/Overlines: Uppercase, wide tracking (0.1em), small size (12px)."
+    ]
+  },
+  "colors": {
+    "palette": {
+      "primary": "#C8102E",
+      "primary_foreground": "#FFFFFF",
+      "secondary": "#0D0D0D",
+      "secondary_foreground": "#FFFFFF",
+      "accent": "#F4F4F4",
+      "accent_foreground": "#0D0D0D",
+      "background": "#FFFFFF",
+      "foreground": "#0D0D0D",
+      "muted": "#F4F4F4",
+      "muted_foreground": "#64748B",
+      "border": "#E2E8F0",
+      "input": "#E2E8F0",
+      "ring": "#C8102E"
+    },
+    "usage": {
+      "primary": "Main CTAs, Active States, Brand Highlights (Use sparingly for impact)",
+      "secondary": "Footer, Dark Sections, Secondary Buttons",
+      "background": "Main page background (White)",
+      "surface": "Cards, Modals (White or very light gray)",
+      "text_headings": "Black (#0D0D0D)",
+      "text_body": "Dark Gray (#404040)"
+    }
+  },
+  "layout": {
+    "grid_system": {
+      "type": "Bento Grid",
+      "columns": "12",
+      "gap": "gap-6 md:gap-8",
+      "rules": [
+        "Avoid uniform rows of equal-sized cards.",
+        "Use col-span-8 for hero listings, col-span-4 for secondary.",
+        "Mix vertical and horizontal cards."
+      ]
+    },
+    "spacing": {
+      "section_padding": "py-20 md:py-32",
+      "container_padding": "px-6 md:px-12",
+      "element_spacing": "space-y-6"
+    },
+    "container": {
+      "max_width": "max-w-7xl",
+      "alignment": "mx-auto"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-[#C8102E] text-white hover:bg-[#A00C24] rounded-sm px-8 py-3 font-semibold transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5",
+      "secondary": "border-2 border-[#0D0D0D] text-[#0D0D0D] hover:bg-[#0D0D0D] hover:text-white rounded-sm px-8 py-3 font-semibold transition-all",
+      "ghost": "text-[#0D0D0D] hover:bg-gray-100 rounded-sm px-4 py-2"
+    },
+    "cards": {
+      "property_card": "bg-white rounded-lg overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 group",
+      "feature_card": "p-8 bg-gray-50 hover:bg-white border border-transparent hover:border-gray-200 transition-all"
+    },
+    "inputs": {
+      "style": "h-12 rounded-sm border-gray-300 focus:border-[#C8102E] focus:ring-[#C8102E]",
+      "labels": "text-sm font-medium text-gray-700 mb-2 block"
+    },
+    "navigation": {
+      "style": "fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-gray-100",
+      "links": "text-sm font-medium text-gray-600 hover:text-[#C8102E] transition-colors"
+    }
+  },
+  "visual_enhancers": {
+    "shadows": {
+      "soft": "0 4px 20px -2px rgba(0, 0, 0, 0.05)",
+      "hover": "0 10px 40px -10px rgba(0, 0, 0, 0.1)"
+    },
+    "borders": {
+      "subtle": "1px solid #E2E8F0",
+      "active": "1px solid #C8102E"
+    },
+    "radius": {
+      "default": "rounded-lg",
+      "sharp": "rounded-sm"
+    }
+  },
+  "motion": {
+    "transitions": "transition-all duration-300 ease-out",
+    "hover_effects": "hover:-translate-y-1 hover:shadow-lg",
+    "micro_interactions": "Active states should have immediate feedback (scale 0.98 on click)"
+  },
+  "images": {
+    "hero_section": {
+      "url": "https://images.unsplash.com/photo-1766603636562-531bb3e1dda8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2Mzl8MHwxfHNlYXJjaHwyfHxsdXh1cnklMjBtb2Rlcm4lMjBob3VzZSUyMGV4dGVyaW9yJTIwYXJjaGl0ZWN0dXJlfGVufDB8fHx8MTc3MDk4ODk0NHww&ixlib=rb-4.1.0&q=85",
+      "alt": "Luxury Modern House Exterior",
+      "description": "Primary Hero Image. Full width, immersive."
+    },
+    "featured_properties": [
+      {
+        "url": "https://images.unsplash.com/photo-1642976975710-1d8890dbf5ab?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTJ8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBwZW50aG91c2UlMjBpbnRlcmlvciUyMGxpdmluZyUyMHJvb218ZW58MHx8fHwxNzcwOTg4OTQ5fDA&ixlib=rb-4.1.0&q=85",
+        "alt": "Modern Penthouse Interior",
+        "category": "Luxury Apartment"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1746458258536-b9ee5db20a73?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2Mzl8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBtb2Rlcm4lMjBob3VzZSUyMGV4dGVyaW9yJTIwYXJjaGl0ZWN0dXJlfGVufDB8fHx8MTc3MDk4ODk0NHww&ixlib=rb-4.1.0&q=85",
+        "alt": "Hillside Villa",
+        "category": "Villa"
+      }
+    ],
+    "agents": [
+      {
+        "url": "https://images.unsplash.com/photo-1738750908048-14200459c3c9?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzh8MHwxfHNlYXJjaHwzfHxwcm9mZXNzaW9uYWwlMjByZWFsJTIwZXN0YXRlJTIwYWdlbnQlMjBwb3J0cmFpdHxlbnwwfHx8fDE3NzA5ODg5NTN8MA&ixlib=rb-4.1.0&q=85",
+        "alt": "Professional Agent",
+        "role": "Senior Broker"
+      }
+    ],
+    "testimonials": [
+      {
+        "url": "https://images.unsplash.com/photo-1758523671285-9ff3f4e0ff38?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzV8MHwxfHNlYXJjaHwxfHxoYXBweSUyMGNvdXBsZSUyMGtleXMlMjBuZXclMjBob21lfGVufDB8fHx8MTc3MDk4ODk1N3ww&ixlib=rb-4.1.0&q=85",
+        "alt": "Happy Couple",
+        "role": "Homeowners"
+      }
+    ]
+  },
+  "universal_guidelines": [
+    "Do not use generic 'SaaS Blue'. Stick to the Red/Black/White theme.",
+    "Avoid gradients on text. Keep it legible and high-contrast.",
+    "Use 'sonner' for toasts.",
+    "Use 'lucide-react' for icons.",
+    "Ensure all interactive elements have 'data-testid'.",
+    "Mobile-first responsive design is mandatory.",
+    "Images must be optimized and lazy-loaded.",
+    "Do not center-align long text blocks. Left-align for readability."
+  ],
+  "instructions_to_main_agent": "You are building the frontend for ANK Realty. Use the provided colors and typography strictly. Implement the 'Bento Grid' layout for property listings. Use the provided image URLs for the respective sections. Ensure the 'Post Property' form is a multi-step wizard using Shadcn Form components. The dashboard should be clean and data-focused."
+}
