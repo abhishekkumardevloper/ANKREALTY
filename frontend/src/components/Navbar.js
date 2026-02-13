@@ -32,8 +32,8 @@ export default function Navbar() {
     { name: 'Buy', path: '/properties?category=buy' },
     { name: 'Sell', path: '/properties?category=sell' },
     { name: 'Rent', path: '/properties?category=rent' },
-    { name: 'About', path: '/about' },
-    { name: 'Contact', path: '/contact' },
+    { name: 'About', path: '/Aboutpage' },
+    { name: 'Contact', path: '/Contactpage' },
   ];
 
   return (
