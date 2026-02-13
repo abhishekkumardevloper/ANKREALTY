@@ -314,7 +314,7 @@ export default function HomePage() {
                 {/* Mumbai - Updated Image (Skyline/Plots feel) */}
                 <div className="md:col-span-2 relative rounded-2xl overflow-hidden group cursor-pointer h-64 md:h-full">
                     <img 
-                      src="https://unsplash.com/photos/brown-bridge-during-golden-hour-tsXADt9ldio" 
+                      src="https://ibb.co/MkGFnDML" 
                       alt="Mumbai" 
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
                     />
@@ -342,7 +342,7 @@ export default function HomePage() {
                 {/* Delhi - Added Image */}
                 <div className="relative rounded-2xl overflow-hidden group cursor-pointer h-64 md:h-full">
                     <img 
-                      src="https://unsplash.com/photos/white-dome-building-near-palm-trees-during-daytime-9WP-NVh2d6U" 
+                      src="https://ibb.co/DDnMSM83" 
                       alt="Delhi" 
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
                     />
