@@ -150,14 +150,14 @@ export default function HomePage() {
           </p>
 
           {/* Search Widget */}
-          <div className="bg-white/95 backdrop-blur-md rounded-xl shadow-2xl p-4 md:p-6 max-w-4xl mx-auto w-full transform hover:-translate-y-1 transition-all duration-300" data-testid="search-widget">
+         <div className="bg-white/95 backdrop-blur-md rounded-xl shadow-2xl p-4 md:p-6 max-w-4xl mx-auto w-full transform hover:-translate-y-1 transition-all duration-300" data-testid="search-widget">
   {/* Tabs - Fixed Overflow with flex-wrap */}
   <div className="flex flex-wrap justify-center gap-2 mb-6 border-b border-gray-200 pb-2">
     {['buy', 'rent', 'sell'].map((cat) => (
       <button
         key={cat}
         onClick={() => setCategory(cat)}
-        className={`px-4 md:px-6 py-2 text-sm font-bold uppercase tracking-wide transition-all border-b-2 ${
+        className={`px-4 md:px-6 py-2 text-sm font-bold uppercase tracking-wide transition-all border-b-2 whitespace-nowrap ${
           category === cat 
             ? 'border-red-600 text-red-600' 
             : 'border-transparent text-gray-500 hover:text-gray-800'
@@ -206,33 +206,9 @@ export default function HomePage() {
       </Button>
     </div>
   </div>
-          </div>
-        </div>
-      </section>
-
-      {/* STATS SECTION */}
-      <section className="bg-white py-10 border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-6">
-           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-gray-100">
-              <div>
-                 <p className="text-4xl font-black text-gray-900">12k+</p>
-                 <p className="text-gray-500 text-sm uppercase tracking-wider mt-1">Properties Listed</p>
-              </div>
-              <div>
-                 <p className="text-4xl font-black text-gray-900">8.5k+</p>
-                 <p className="text-gray-500 text-sm uppercase tracking-wider mt-1">Happy Customers</p>
-              </div>
-              <div>
-                 <p className="text-4xl font-black text-gray-900">150+</p>
-                 <p className="text-gray-500 text-sm uppercase tracking-wider mt-1">Awards Won</p>
-              </div>
-              <div>
-                 <p className="text-4xl font-black text-gray-900">24/7</p>
-                 <p className="text-gray-500 text-sm uppercase tracking-wider mt-1">Expert Support</p>
-              </div>
-           </div>
-        </div>
-      </section>
+</div>
+</div>
+</section>
 
       {/* FEATURED PROPERTIES */}
       <section className="py-20 px-6 bg-gray-50" data-testid="featured-properties-section">
