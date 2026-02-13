@@ -31,7 +31,7 @@ const MOCK_PROPERTIES = [
     area: 3200,
     category: "buy",
     type: "apartment",
-    images: ["https://images.unsplash.com/photo-1600596542815-e32c215dd86b?auto=format&fit=crop&w=800&q=80"]
+    images: ["https://unsplash.com/photos/city-skyline-with-residential-buildings-under-a-clear-sky-E6GRuKLCB3c"]
   },
   {
     id: 2,
@@ -139,9 +139,7 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/80 z-10" />
 
         <div className="relative z-20 w-full max-w-5xl px-4 md:px-6 text-center mt-10">
-          <span className="inline-block py-1 px-3 rounded-full bg-red-600/90 text-white text-xs font-bold tracking-wider mb-6 animate-fade-in-up">
-            #1 REAL ESTATE PLATFORM
-          </span>
+          
           <h1 className="text-4xl md:text-7xl font-black text-white mb-6 leading-tight tracking-tight drop-shadow-lg" data-testid="hero-title">
             Find a Place <br/> You'll Love to Live
           </h1>
@@ -342,7 +340,7 @@ export default function HomePage() {
                 {/* Delhi - Added Image */}
                 <div className="relative rounded-2xl overflow-hidden group cursor-pointer h-64 md:h-full">
                     <img 
-                      src="https://images.unsplash.com/photo-1587474265402-2e63a4e96843?auto=format&fit=crop&w=800&q=80" 
+                      src="https://unsplash.com/photos/MWcjOi9FLBA" 
                       alt="Delhi" 
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
                     />
