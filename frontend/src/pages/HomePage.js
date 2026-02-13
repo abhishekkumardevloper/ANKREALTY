@@ -25,12 +25,23 @@ export default function HomePage() {
   const [featuredProperties, setFeaturedProperties] = useState([]);
 
   /**
-   * ✅ SAFE FETCH FUNCTION
+   * ✅ SAFE FETCH (MAIN FIX)
    */
   const fetchFeaturedProperties = useCallback(async () => {
     try {
       const response = await axios.get(`${API}/properties/featured`);
-      setFeaturedProperties(response.data || []);
+
+      // 👇 VERY IMPORTANT FIX
+      const data = response.data;
+
+      if (Array.isArray(data)) {
+        setFeaturedProperties(data);
+      } else if (Array.isArray(data?.data)) {
+        setFeaturedProperties(data.data);
+      } else {
+        setFeaturedProperties([]);
+      }
+
     } catch (error) {
       console.error('Error fetching properties:', error);
       setFeaturedProperties([]);
@@ -41,9 +52,6 @@ export default function HomePage() {
     fetchFeaturedProperties();
   }, [fetchFeaturedProperties]);
 
-  /**
-   * ✅ SAFE NAVIGATION (NO FULL PAGE RELOAD)
-   */
   const handleSearch = () => {
     const params = new URLSearchParams();
 
@@ -59,35 +67,16 @@ export default function HomePage() {
       <Navbar />
 
       {/* HERO */}
-      <section
-        className="hero-section"
-        style={{
-          backgroundImage: `url('https://images.unsplash.com/photo-1766603636562-531bb3e1dda8?crop=entropy&cs=srgb&fm=jpg&q=85')`
-        }}
-      >
+      <section className="hero-section">
         <div className="hero-overlay" />
         <div className="relative z-10 h-full flex items-center justify-center">
           <div className="max-w-4xl mx-auto px-6 text-center">
+
             <h1 className="text-5xl md:text-7xl font-black text-white mb-6">
               Find Your Dream Home
             </h1>
 
             <div className="bg-white rounded-sm shadow-2xl p-6 space-y-4">
-
-              {/* CATEGORY */}
-              <div className="flex justify-center mb-4">
-                <div className="search-toggle">
-                  {['buy','sell','rent'].map(type=>(
-                    <button
-                      key={type}
-                      className={category===type?'active':''}
-                      onClick={()=>setCategory(type)}
-                    >
-                      {type.charAt(0).toUpperCase()+type.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Input
@@ -117,12 +106,13 @@ export default function HomePage() {
                   Search Properties
                 </Button>
               </div>
+
             </div>
           </div>
         </div>
       </section>
 
-      {/* FEATURED */}
+      {/* FEATURED PROPERTIES */}
       <section className="py-20 px-6 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl md:text-5xl font-black mb-12 text-center">
@@ -130,7 +120,11 @@ export default function HomePage() {
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredProperties.slice(0,6).map((property)=>(
+
+            {(Array.isArray(featuredProperties)
+              ? featuredProperties
+              : []
+            ).slice(0,6).map((property)=>(
               <Link
                 key={property.id}
                 to={`/properties/${property.id}`}
@@ -154,40 +148,13 @@ export default function HomePage() {
                     {property.location}, {property.city}
                   </p>
 
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-black text-[#C8102E]">
-                      ₹{((property.price||0)/100000).toFixed(1)}L
-                    </span>
-                    <span className="text-sm text-gray-600">
-                      {property.area} sqft
-                    </span>
-                  </div>
+                  <span className="text-2xl font-black text-[#C8102E]">
+                    ₹{((property.price || 0)/100000).toFixed(1)}L
+                  </span>
                 </div>
               </Link>
             ))}
-          </div>
-        </div>
-      </section>
 
-      {/* WHY US */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-8">
-          <div className="p-8 bg-gray-50 rounded-lg">
-            <Home className="h-12 w-12 text-[#C8102E] mb-4" />
-            <h3 className="text-xl font-bold mb-3">Wide Selection</h3>
-            <p className="text-gray-600">Thousands of verified properties.</p>
-          </div>
-
-          <div className="p-8 bg-gray-50 rounded-lg">
-            <CheckCircle className="h-12 w-12 text-[#C8102E] mb-4" />
-            <h3 className="text-xl font-bold mb-3">Verified Listings</h3>
-            <p className="text-gray-600">Transparent and trusted deals.</p>
-          </div>
-
-          <div className="p-8 bg-gray-50 rounded-lg">
-            <TrendingUp className="h-12 w-12 text-[#C8102E] mb-4" />
-            <h3 className="text-xl font-bold mb-3">Expert Support</h3>
-            <p className="text-gray-600">Guidance from start to finish.</p>
           </div>
         </div>
       </section>
