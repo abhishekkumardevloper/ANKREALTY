@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext();
@@ -15,16 +15,12 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      fetchUser();
-    } else {
-      setLoading(false);
-    }
-  }, [token]);
-
-  const fetchUser = async () => {
+  /**
+   * ✅ FIX:
+   * Wrap fetchUser inside useCallback
+   * so React Hook dependency rule is satisfied
+   */
+  const fetchUser = useCallback(async () => {
     try {
       const response = await axios.get(`${API}/auth/me`);
       setUser(response.data);
@@ -34,14 +30,29 @@ export function AuthProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // no changing dependencies here
+
+  /**
+   * ✅ FIX:
+   * Add fetchUser inside dependency array
+   */
+  useEffect(() => {
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      fetchUser();
+    } else {
+      setLoading(false);
+    }
+  }, [token, fetchUser]);
 
   const login = async (email, password) => {
     const response = await axios.post(`${API}/auth/login`, { email, password });
     const { token: newToken, user: userData } = response.data;
+
     localStorage.setItem('token', newToken);
     setToken(newToken);
     setUser(userData);
+
     axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
     return userData;
   };
@@ -54,20 +65,23 @@ export function AuthProvider({ children }) {
       phone,
       role
     });
+
     const { token: newToken, user: userData } = response.data;
+
     localStorage.setItem('token', newToken);
     setToken(newToken);
     setUser(userData);
+
     axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
     return userData;
   };
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('token');
     setToken(null);
     setUser(null);
     delete axios.defaults.headers.common['Authorization'];
-  };
+  }, []);
 
   const value = {
     user,
