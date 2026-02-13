@@ -10,8 +10,8 @@ import PostPropertyPage from './pages/PostPropertyPage';
 import UserDashboard from './pages/UserDashboard';
 import AgentDashboard from './pages/AgentDashboard';
 import AuthPage from './pages/AuthPage';
-import AboutPage from './pages/AboutPage';     // <-- Added
-import ContactPage from './pages/ContactPage'; // <-- Added
+import AboutPage from './pages/Aboutpage';     // <-- Added
+import ContactPage from './pages/Contactpage'; // <-- Added
 
 // Context Imports
 import { AuthProvider, useAuth } from './contexts/AuthContext';
