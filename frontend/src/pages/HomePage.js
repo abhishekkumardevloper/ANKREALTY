@@ -31,7 +31,7 @@ const MOCK_PROPERTIES = [
     area: 3200,
     category: "buy",
     type: "apartment",
-    images: ["https://images.unsplash.com/photo-1600596542815-e32c215dd86b?auto=format&fit=crop&w=800&q=80"]
+    images: ["https://unsplash.com/photos/white-and-blue-glass-walled-high-rise-building-w3eFhqXjkZE"]
   },
   {
     id: 2,
@@ -314,7 +314,7 @@ export default function HomePage() {
                 {/* Mumbai - Updated Image (Skyline/Plots feel) */}
                 <div className="md:col-span-2 relative rounded-2xl overflow-hidden group cursor-pointer h-64 md:h-full">
                     <img 
-                      src="https://images.unsplash.com/photo-1570129477492-45f003f2dffa?auto=format&fit=crop&w=800&q=80" 
+                      src="https://unsplash.com/photos/brown-bridge-during-golden-hour-tsXADt9ldio" 
                       alt="Mumbai" 
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
                     />
@@ -342,7 +342,7 @@ export default function HomePage() {
                 {/* Delhi - Added Image */}
                 <div className="relative rounded-2xl overflow-hidden group cursor-pointer h-64 md:h-full">
                     <img 
-                      src="https://images.unsplash.com/photo-1587474265402-2e63a4e96843?auto=format&fit=crop&w=800&q=80" 
+                      src="https://unsplash.com/photos/white-dome-building-near-palm-trees-during-daytime-9WP-NVh2d6U" 
                       alt="Delhi" 
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
                     />
