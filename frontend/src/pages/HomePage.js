@@ -150,65 +150,89 @@ export default function HomePage() {
           </p>
 
           {/* Search Widget */}
-         <div className="bg-white/95 backdrop-blur-md rounded-xl shadow-2xl p-4 md:p-6 max-w-4xl mx-auto w-full transform hover:-translate-y-1 transition-all duration-300" data-testid="search-widget">
-  {/* Tabs - Fixed Overflow with flex-wrap */}
-  <div className="flex flex-wrap justify-center gap-2 mb-6 border-b border-gray-200 pb-2">
-    {['buy', 'rent', 'sell'].map((cat) => (
-      <button
-        key={cat}
-        onClick={() => setCategory(cat)}
-        className={`px-4 md:px-6 py-2 text-sm font-bold uppercase tracking-wide transition-all border-b-2 whitespace-nowrap ${
-          category === cat 
-            ? 'border-red-600 text-red-600' 
-            : 'border-transparent text-gray-500 hover:text-gray-800'
-        }`}
-        data-testid={`category-${cat}-button`}
-      >
-        {cat}
-      </button>
-    ))}
-  </div>
+          <div className="bg-white/95 backdrop-blur-md rounded-xl shadow-2xl p-4 md:p-6 max-w-full mx-auto transform hover:-translate-y-1 transition-all duration-300" data-testid="search-widget">
+            {/* Tabs */}
+            <div className="flex flex-wrap justify-center gap-2 mb-6 border-b border-gray-200 pb-2">
+              {['buy', 'rent', 'sell'].map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setCategory(cat)}
+                  className={`px-6 py-2 text-sm font-bold uppercase tracking-wide transition-all border-b-2 ${
+                    category === cat 
+                      ? 'border-red-600 text-red-600' 
+                      : 'border-transparent text-gray-500 hover:text-gray-800'
+                  }`}
+                  data-testid={`category-${cat}-button`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
 
-  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-    <div className="md:col-span-4 relative w-full">
-        <MapPin className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
-        <Input
-        placeholder="Enter City, Locality..."
-        value={location}
-        onChange={(e) => setLocation(e.target.value)}
-        className="h-12 pl-10 border-gray-200 bg-gray-50 focus:bg-white w-full"
-        data-testid="search-location-input"
-      />
-    </div>
-    <div className="md:col-span-4 relative w-full">
-      <Home className="absolute left-3 top-3.5 h-5 w-5 text-gray-400 z-10" />
-      <Select value={propertyType} onValueChange={setPropertyType}>
-        <SelectTrigger className="h-12 pl-10 border-gray-200 bg-gray-50 focus:bg-white w-full" data-testid="search-property-type-select">
-          <SelectValue placeholder="Property Type" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="apartment">Apartment</SelectItem>
-          <SelectItem value="villa">Villa</SelectItem>
-          <SelectItem value="house">Independent House</SelectItem>
-          <SelectItem value="commercial">Commercial Space</SelectItem>
-          <SelectItem value="plot">Land / Plot</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
-    <div className="md:col-span-4 w-full">
-      <Button
-        onClick={handleSearch}
-        className="w-full h-12 bg-red-600 hover:bg-red-700 text-white font-bold text-lg shadow-lg hover:shadow-red-600/30 transition-all"
-        data-testid="search-submit-button"
-      >
-        <Search className="mr-2 h-5 w-5" />
-        Search
-      </Button>
-    </div>
-  </div>
-</div>
-</div>
-</section>
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center w-full">
+              <div className="md:col-span-4 relative w-full">
+                 <MapPin className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+                 <Input
+                  placeholder="Enter City, Locality..."
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="h-12 pl-10 border-gray-200 bg-gray-50 focus:bg-white"
+                  data-testid="search-location-input"
+                />
+              </div>
+              <div className="md:col-span-4 relative w-full">
+                <Home className="absolute left-3 top-3.5 h-5 w-5 text-gray-400 z-10" />
+                <Select value={propertyType} onValueChange={setPropertyType}>
+                  <SelectTrigger className="h-12 pl-10 border-gray-200 bg-gray-50 focus:bg-white" data-testid="search-property-type-select">
+                    <SelectValue placeholder="Property Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="apartment">Apartment</SelectItem>
+                    <SelectItem value="villa">Villa</SelectItem>
+                    <SelectItem value="house">Independent House</SelectItem>
+                    <SelectItem value="commercial">Commercial Space</SelectItem>
+                    <SelectItem value="plot">Land / Plot</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="md:col-span-4 w-full">
+                <Button
+                  onClick={handleSearch}
+                  className="w-full h-12 bg-red-600 hover:bg-red-700 text-white font-bold text-lg shadow-lg hover:shadow-red-600/30 transition-all"
+                  data-testid="search-submit-button"
+                >
+                  <Search className="mr-2 h-5 w-5" />
+                  Search
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* STATS SECTION */}
+      <section className="bg-white py-10 border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-6">
+           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-gray-100">
+              <div>
+                 <p className="text-4xl font-black text-gray-900">12k+</p>
+                 <p className="text-gray-500 text-sm uppercase tracking-wider mt-1">Properties Listed</p>
+              </div>
+              <div>
+                 <p className="text-4xl font-black text-gray-900">8.5k+</p>
+                 <p className="text-gray-500 text-sm uppercase tracking-wider mt-1">Happy Customers</p>
+              </div>
+              <div>
+                 <p className="text-4xl font-black text-gray-900">150+</p>
+                 <p className="text-gray-500 text-sm uppercase tracking-wider mt-1">Awards Won</p>
+              </div>
+              <div>
+                 <p className="text-4xl font-black text-gray-900">24/7</p>
+                 <p className="text-gray-500 text-sm uppercase tracking-wider mt-1">Expert Support</p>
+              </div>
+           </div>
+        </div>
+      </section>
 
       {/* FEATURED PROPERTIES */}
       <section className="py-20 px-6 bg-gray-50" data-testid="featured-properties-section">
