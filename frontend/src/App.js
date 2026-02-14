@@ -10,20 +10,26 @@ import PostPropertyPage from './pages/PostPropertyPage';
 import UserDashboard from './pages/UserDashboard';
 import AgentDashboard from './pages/AgentDashboard';
 import AuthPage from './pages/AuthPage';
-import AboutPage from './pages/Aboutpage';     // <-- Added
-import ContactPage from './pages/Contactpage'; // <-- Added
+import AboutPage from './pages/Aboutpage';
+import ContactPage from './pages/Contactpage';
+
+// 🔥 NEW PAGES (Create these files)
+import BuyPage from './pages/BuyPage';
+import SellPage from './pages/SellPage';
+import RentPage from './pages/RentPage';
 
 // Context Imports
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './App.css';
 
+
 // Protected Route Component
-// This ensures only logged-in users can access specific pages
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
-  
-  // Optional: Add a loading state check if your AuthContext has one
-  if (loading) return <div className="p-10 text-center">Loading...</div>;
+
+  if (loading) {
+    return <div className="p-10 text-center">Loading...</div>;
+  }
 
   return user ? children : <Navigate to="/auth" />;
 }
@@ -34,15 +40,26 @@ function App() {
       <BrowserRouter>
         <div className="App">
           <Routes>
-            {/* --- Public Routes --- */}
+
+            {/* ---------- Public Routes ---------- */}
             <Route path="/" element={<HomePage />} />
-            <Route path="/about" element={<AboutPage />} />       {/* <-- New Route */}
-            <Route path="/contact" element={<ContactPage />} />   {/* <-- New Route */}
+
+            {/* 🔥 NEW NAVBAR LINK ROUTES */}
+            <Route path="/buy" element={<BuyPage />} />
+            <Route path="/sell" element={<SellPage />} />
+            <Route path="/rent" element={<RentPage />} />
+
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+
+            {/* Existing Property Routes */}
             <Route path="/properties" element={<PropertyListingPage />} />
             <Route path="/properties/:id" element={<PropertyDetailPage />} />
+
             <Route path="/auth" element={<AuthPage />} />
 
-            {/* --- Protected Routes (Require Login) --- */}
+
+            {/* ---------- Protected Routes ---------- */}
             <Route
               path="/post-property"
               element={
@@ -51,6 +68,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
             <Route
               path="/dashboard"
               element={
@@ -59,6 +77,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
             <Route
               path="/agent-dashboard"
               element={
@@ -67,8 +86,9 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
           </Routes>
-          
+
           {/* Toast Notifications */}
           <Toaster position="top-right" />
         </div>
