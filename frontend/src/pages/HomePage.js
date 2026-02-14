@@ -31,7 +31,7 @@ const MOCK_PROPERTIES = [
     area: 3200,
     category: "buy",
     type: "apartment",
-    images: "/M3.jpg.jpeg"
+    images: ["/M3.jpeg"]
   },
   {
     id: 2,
