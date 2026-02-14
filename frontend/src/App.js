@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
 
-// Page Imports
+// ---------- Page Imports ----------
 import HomePage from './pages/HomePage';
 import PropertyListingPage from './pages/PropertyListingPage';
 import PropertyDetailPage from './pages/PropertyDetailPage';
@@ -10,20 +10,21 @@ import PostPropertyPage from './pages/PostPropertyPage';
 import UserDashboard from './pages/UserDashboard';
 import AgentDashboard from './pages/AgentDashboard';
 import AuthPage from './pages/AuthPage';
-import AboutPage from './pages/Aboutpage';
-import ContactPage from './pages/Contactpage';
 
-// 🔥 NEW PAGES (Create these files)
-import BuyPage from './pages/BuyPage';
-import SellPage from './pages/SellPage';
-import RentPage from './pages/RentPage';
+// ⚠️ IMPORTANT — Same names as your files
+import AboutPage from './pages/about';
+import ContactPage from './pages/contact';   // ← your file is contact.js
 
-// Context Imports
+import BuyPage from './pages/buy';           // ← buy.js
+import SellPage from './pages/sell';         // ← sell.js
+import RentPage from './pages/rent';         // ← rent.js
+
+// ---------- Context ----------
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './App.css';
 
 
-// Protected Route Component
+// ---------- Protected Route ----------
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
 
@@ -34,6 +35,8 @@ function ProtectedRoute({ children }) {
   return user ? children : <Navigate to="/auth" />;
 }
 
+
+// ---------- Main App ----------
 function App() {
   return (
     <AuthProvider>
@@ -41,25 +44,24 @@ function App() {
         <div className="App">
           <Routes>
 
-            {/* ---------- Public Routes ---------- */}
+            {/* -------- PUBLIC ROUTES -------- */}
             <Route path="/" element={<HomePage />} />
 
-            {/* 🔥 NEW NAVBAR LINK ROUTES */}
+            {/* Navbar Pages */}
             <Route path="/buy" element={<BuyPage />} />
             <Route path="/sell" element={<SellPage />} />
             <Route path="/rent" element={<RentPage />} />
-
             <Route path="/about" element={<AboutPage />} />
             <Route path="/contact" element={<ContactPage />} />
 
-            {/* Existing Property Routes */}
+            {/* Property Pages */}
             <Route path="/properties" element={<PropertyListingPage />} />
             <Route path="/properties/:id" element={<PropertyDetailPage />} />
 
             <Route path="/auth" element={<AuthPage />} />
 
 
-            {/* ---------- Protected Routes ---------- */}
+            {/* -------- PROTECTED ROUTES -------- */}
             <Route
               path="/post-property"
               element={
