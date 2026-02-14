@@ -31,7 +31,7 @@ const MOCK_PROPERTIES = [
     area: 3200,
     category: "buy",
     type: "apartment",
-    images: ["https://unsplash.com/photos/city-skyline-with-residential-buildings-under-a-clear-sky-E6GRuKLCB3c"]
+    images: "M3.jpg.jpeg"
   },
   {
     id: 2,
@@ -340,7 +340,7 @@ export default function HomePage() {
                 {/* Delhi - Added Image */}
                 <div className="relative rounded-2xl overflow-hidden group cursor-pointer h-64 md:h-full">
                     <img 
-                      src="https://unsplash.com/photos/MWcjOi9FLBA" 
+                      src="photo-1597040663342-45b6af3d91a5.avif" 
                       alt="Delhi" 
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
                     />
