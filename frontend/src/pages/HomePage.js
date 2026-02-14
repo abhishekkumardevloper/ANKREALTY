@@ -31,7 +31,7 @@ const MOCK_PROPERTIES = [
     area: 3200,
     category: "buy",
     type: "apartment",
-    images: "M3.jpg.jpeg"
+    images: "/M3.jpg.jpeg"
   },
   {
     id: 2,
@@ -340,7 +340,7 @@ export default function HomePage() {
                 {/* Delhi - Added Image */}
                 <div className="relative rounded-2xl overflow-hidden group cursor-pointer h-64 md:h-full">
                     <img 
-                      src="photo-1597040663342-45b6af3d91a5.avif" 
+                      src="/photo-1597040663342-45b6af3d91a5.avif" 
                       alt="Delhi" 
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
                     />
