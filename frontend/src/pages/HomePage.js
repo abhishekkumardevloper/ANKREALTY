@@ -31,7 +31,7 @@ const MOCK_PROPERTIES = [
     area: 3200,
     category: "buy",
     type: "apartment",
-    images: ["/M3.jpeg"]
+    images: ["https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"]
   },
   {
     id: 2,
