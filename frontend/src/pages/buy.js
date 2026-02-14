@@ -45,7 +45,7 @@ const properties = [
     beds: 4,
     baths: 3,
     sqft: 2800,
-    image: "https://images.unsplash.com/photo-1600596542815-6ad4c12756ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+    image: ["/M3.jpeg"],
     tag: "Featured"
   },
   {
