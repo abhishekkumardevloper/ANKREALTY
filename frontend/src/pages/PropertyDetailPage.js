@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { 
-  MapPin, Bed, Bath, Maximize, Phone, Mail, Calendar, 
-  Heart, IndianRupee, ShieldCheck, Share2, CheckCircle, Clock, Info
+  MapPin, Bed, Bath, Maximize, Phone, Mail, Calendar, Home,
+  Heart, ShieldCheck, Share2, CheckCircle, Info
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { Button } from '@/components/ui/button';
@@ -21,11 +21,12 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000/api";
+const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000/api";
 
 export default function PropertyDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
 
   const [property, setProperty] = useState(null);
@@ -45,13 +46,18 @@ export default function PropertyDetailPage() {
       const response = await axios.get(`${API_BASE}/properties/${id}`);
       setProperty(response.data);
     } catch (error) {
-      console.error('Error fetching property:', error);
-      toast.error('Property not found');
-      navigate('/properties');
+      const fallbackProperty = location.state?.property;
+      if (fallbackProperty) {
+        setProperty(fallbackProperty);
+      } else {
+        console.error('Error fetching property:', error);
+        toast.error('Property not found');
+        navigate('/properties');
+      }
     } finally {
       setLoading(false);
     }
-  }, [id, navigate]);
+  }, [id, location.state, navigate]);
 
   useEffect(() => {
     fetchProperty();
