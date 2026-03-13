@@ -11,34 +11,121 @@ import {
   MessageSquare, Send
 } from "lucide-react";
 
-// --- HARDCODED PROPERTY DATA WITH UNIQUE IMAGES ---
-const generateImage = (name) => `https://picsum.photos/seed/${encodeURIComponent(name)}/800/600`;
+// --- PREMIUM IMAGE GENERATOR ---
+const generateImage = (category, index) => {
+  const residentialImages = [
+    'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80', 
+    'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80', 
+    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80', 
+    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80', 
+    'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80', 
+    'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1200&q=80', 
+    'https://images.unsplash.com/photo-1502672260266-1c1de2d96674?auto=format&fit=crop&w=1200&q=80', 
+    'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=80'  
+  ];
 
+  const commercialImages = [
+    'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80', 
+    'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80', 
+    'https://images.unsplash.com/photo-1416331108676-a22ccb276e35?auto=format&fit=crop&w=1200&q=80'  
+  ];
+
+  if (category === 'Commercial') {
+    return commercialImages[index % commercialImages.length];
+  }
+  
+  const safeIndex = (typeof index === 'number' ? index : index?.length || 0) % residentialImages.length;
+  return residentialImages[safeIndex];
+};
+
+// --- RICH HARDCODED PROPERTY DATA ---
 const propertyListings = [
   // FRESH PROPERTIES - NOIDA RESIDENTIAL
-  { id: 'f1', title: 'Experion Saatori', city: 'Noida', location: 'Sec 151', category: 'buy', type: 'apartment', bedrooms: 4, bathrooms: 4, price: 18500000, area: 2400, description: 'Premium fresh residential living spaces in Sector 151 with world-class amenities.', imageUrl: generateImage('Experion Saatori') },
-  { id: 'f2', title: 'Smart World Elie Saab', city: 'Noida', location: 'Sec 98', category: 'buy', type: 'villa', bedrooms: 5, bathrooms: 5, price: 22000000, area: 3100, description: 'Exclusive designer residences in Sector 98.', imageUrl: generateImage('Smart World Elie Saab') },
-  { id: 'f3', title: 'M3M Jacob & Co', city: 'Noida', location: 'Sec 97', category: 'buy', type: 'apartment', bedrooms: 4, bathrooms: 5, price: 35000000, area: 4500, description: 'Ultra-luxury living conceptualized by Jacob & Co.', imageUrl: generateImage('M3M Jacob & Co') },
-  { id: 'f4', title: 'Max Estate', city: 'Noida', location: 'Sec 105', category: 'buy', type: 'apartment', bedrooms: 3, bathrooms: 3, price: 17500000, area: 2200, description: 'Tranquil and sustainable residential spaces.', imageUrl: generateImage('Max Estate Res') },
-  { id: 'f5', title: 'RG Mirage', city: 'Noida', location: 'Sec 120', category: 'buy', type: 'apartment', bedrooms: 3, bathrooms: 2, price: 11000000, area: 1600, description: 'Modern apartments with seamless connectivity.', imageUrl: generateImage('RG Mirage') },
-  { id: 'f6', title: 'Godrej Riverine', city: 'Noida', location: 'Sec 44', category: 'buy', type: 'apartment', bedrooms: 4, bathrooms: 4, price: 21000000, area: 2800, description: 'Riverside luxury living by Godrej Properties.', imageUrl: generateImage('Godrej Riverine') },
-  { id: 'f7', title: 'M3M Cullinan', city: 'Noida', location: 'Sec 94', category: 'buy', type: 'apartment', bedrooms: 5, bathrooms: 6, price: 40000000, area: 5500, description: 'Bespoke mega-luxury apartments in Sector 94.', imageUrl: generateImage('M3M Cullinan') },
-  { id: 'f8', title: 'Great Value Ekanam', city: 'Noida', location: 'Sec 107', category: 'buy', type: 'apartment', bedrooms: 3, bathrooms: 3, price: 14000000, area: 1950, description: 'Spacious and well-ventilated premium homes.', imageUrl: generateImage('Great Value Ekanam') },
+  { 
+    id: 'f1', title: 'Experion Saatori', city: 'Noida', location: 'Sec 151', category: 'buy', type: 'apartment', bedrooms: 4, bathrooms: 4, price: 18500000, area: 2400, 
+    description: 'Discover the epitome of luxury living at Experion Saatori, strategically located in the highly sought-after Sector 151, Noida. This premium residential development offers a harmonious blend of contemporary architecture and lush green landscapes, providing residents with a serene retreat from the bustling city. The meticulously designed apartments feature expansive layouts, floor-to-ceiling windows, and top-tier finishes that redefine modern elegance. Residents can indulge in a plethora of world-class amenities, including a state-of-the-art clubhouse, infinity swimming pool, fully equipped gymnasium, and dedicated sports facilities. With seamless connectivity to major expressways, corporate hubs, and premier educational institutions, Experion Saatori is not just a home, but a lifestyle statement for those who seek the very best in urban living and unparalleled comfort.', 
+    imageUrl: generateImage('Residential', 0) 
+  },
+  { 
+    id: 'f2', title: 'Smart World Elie Saab', city: 'Noida', location: 'Sec 98', category: 'buy', type: 'villa', bedrooms: 5, bathrooms: 5, price: 22000000, area: 3100, 
+    description: 'Step into a realm of unmatched elegance at Smart World Elie Saab, an exclusive designer residential enclave situated in the heart of Sector 98. Conceptualized by globally renowned designers, this iconic property brings haute couture to real estate. Every inch of these majestic residences exudes sophistication, featuring bespoke interiors, imported marble flooring, and panoramic views of the city skyline. The development boasts an exclusive residents-only lounge, a temperature-controlled indoor pool, private cabanas, and a wellness spa that rivals five-star resorts. Designed for the elite few, the property ensures absolute privacy with dedicated elevators and multi-tier security. Its prime location guarantees that high-end shopping avenues, fine dining restaurants, and top corporate centers are merely a stone’s throw away.', 
+    imageUrl: generateImage('Residential', 1) 
+  },
+  { 
+    id: 'f3', title: 'M3M Jacob & Co', city: 'Noida', location: 'Sec 97', category: 'buy', type: 'apartment', bedrooms: 4, bathrooms: 5, price: 35000000, area: 4500, 
+    description: 'Experience the pinnacle of ultra-luxury real estate at M3M Jacob & Co in Sector 97. This architectural masterpiece is inspired by the meticulous craftsmanship of luxury horology and fine jewelry. The magnificent towers pierce the skyline, offering opulent, sweeping residences that redefine grand living. Each apartment is a sprawling canvas of luxury, featuring double-height ceilings, private plunge pools, and expansive terraces that invite natural light and fresh air. The extravagant clubhouse is an architectural marvel in itself, offering a private cinema, a cigar lounge, a gourmet restaurant, and a cascading infinity pool. Living here means embracing a lifestyle reserved for global citizens, surrounded by impeccable aesthetics and the very highest standards of personalized concierge services.', 
+    imageUrl: generateImage('Residential', 2) 
+  },
+  { 
+    id: 'f4', title: 'Max Estate', city: 'Noida', location: 'Sec 105', category: 'buy', type: 'apartment', bedrooms: 3, bathrooms: 3, price: 17500000, area: 2200, 
+    description: 'Max Estate in Sector 105 represents the future of sustainable and tranquil residential living. Built on the philosophy of holistic well-being, this property seamlessly integrates nature with modern urban conveniences. The meticulously planned apartments are designed to maximize cross-ventilation and natural sunlight, significantly reducing the carbon footprint. Surrounded by acres of beautifully curated botanical gardens, therapeutic walkways, and pristine water bodies, it offers a peaceful sanctuary for families. The property includes a specialized wellness center, organic cafes, co-working spaces, and dedicated zones for yoga and meditation. With a strong focus on community living and eco-friendly infrastructure, Max Estate provides a unique opportunity to live a balanced, healthy, and elevated lifestyle right in the center of Noida.', 
+    imageUrl: generateImage('Residential', 3) 
+  },
+  { 
+    id: 'f5', title: 'RG Mirage', city: 'Noida', location: 'Sec 120', category: 'buy', type: 'apartment', bedrooms: 3, bathrooms: 2, price: 11000000, area: 1600, 
+    description: 'Welcome to RG Mirage, a premier residential destination in Sector 120 that promises a perfect blend of comfort, style, and exceptional value. These thoughtfully designed modern apartments cater specifically to the dynamic needs of contemporary urban families. Featuring smart space utilization, modular kitchens, and premium bath fittings, the interiors are both highly functional and aesthetically pleasing. The vibrant community features a sprawling central courtyard, safe kids’ play zones, a multi-purpose banquet hall, and a well-maintained swimming pool. Its strategic location provides residents with immediate access to reputed schools, mega commercial markets, and advanced healthcare facilities. RG Mirage is designed to foster a warm community atmosphere while offering the privacy and luxury you deserve.', 
+    imageUrl: generateImage('Residential', 4) 
+  },
+  { 
+    id: 'f6', title: 'Godrej Riverine', city: 'Noida', location: 'Sec 44', category: 'buy', type: 'apartment', bedrooms: 4, bathrooms: 4, price: 21000000, area: 2800, 
+    description: 'Godrej Riverine in Sector 44 offers an extraordinary riverside luxury living experience crafted by one of India’s most trusted developers. Wake up to the soothing sights of gentle waters and lush green belts that surround this magnificent property. The residences are a masterclass in elegant design, offering expansive living areas, wrap-around balconies, and smart-home automation features. The project is heavily focused on creating an active and healthy lifestyle, featuring miles of jogging and cycling tracks, outdoor sports courts, a grand clubhouse, and dedicated pet parks. Situated in a highly developed and pristine neighborhood, it provides a quiet, pollution-free environment while keeping you seamlessly connected to South Delhi and major business hubs across the NCR.', 
+    imageUrl: generateImage('Residential', 5) 
+  },
+  { 
+    id: 'f7', title: 'M3M Cullinan', city: 'Noida', location: 'Sec 94', category: 'buy', type: 'apartment', bedrooms: 5, bathrooms: 6, price: 40000000, area: 5500, 
+    description: 'M3M Cullinan stands as a monumental landmark of bespoke mega-luxury in Sector 94. Named after the world’s largest diamond, this property is the crown jewel of Noida’s real estate. It features palatial apartments that offer a sweeping, uninterrupted 360-degree view of the city and the river. Every residence is meticulously crafted with the finest global materials, offering features like private elevators, massive walk-in closets, and personal bar areas. The ultra-exclusive community amenities include a rooftop helipad, a high-end luxury retail boulevard at the podium level, a world-class spa, and fine dining establishments. This is an address of absolute prestige and power, designed for industry leaders and those who compromise on nothing.', 
+    imageUrl: generateImage('Residential', 6) 
+  },
+  { 
+    id: 'f8', title: 'Great Value Ekanam', city: 'Noida', location: 'Sec 107', category: 'buy', type: 'apartment', bedrooms: 3, bathrooms: 3, price: 14000000, area: 1950, 
+    description: 'Great Value Ekanam in Sector 107 is synonymous with spacious, well-ventilated, and premium family homes. The architectural design places a heavy emphasis on Vastu compliance, ensuring positive energy and harmony within every apartment. The residences feature large bay windows, imported wooden flooring in master bedrooms, and highly efficient floor plans that eliminate dead spaces. The community is enveloped in lush greenery, featuring thematic gardens, a state-of-the-art fitness center, a sparkling swimming pool, and an exclusive residents’ club. Sector 107 is renowned for its tranquil environment and rapid infrastructural growth, making Great Value Ekanam an incredibly smart investment for those seeking a peaceful yet highly connected urban lifestyle.', 
+    imageUrl: generateImage('Residential', 7) 
+  },
 
   // FRESH PROPERTIES - NOIDA COMMERCIAL (Treated as plots/commercial)
-  { id: 'c1', title: 'M3M Line', city: 'Noida', location: 'Sec 72', category: 'buy', type: 'plot', bedrooms: 0, bathrooms: 1, price: 8000000, area: 500, description: 'High-footfall retail and office spaces.', imageUrl: generateImage('M3M Line') },
-  { id: 'c2', title: 'Max Estate', city: 'Noida', location: 'Sec 105', category: 'buy', type: 'plot', bedrooms: 0, bathrooms: 2, price: 12000000, area: 1200, description: 'Grade A corporate office spaces.', imageUrl: generateImage('Max Estate Com') },
-  { id: 'c3', title: 'Paras Avenue', city: 'Noida', location: 'Sec 129', category: 'buy', type: 'plot', bedrooms: 0, bathrooms: 1, price: 6500000, area: 450, description: 'Premium high-street retail destination.', imageUrl: generateImage('Paras Avenue') },
+  { 
+    id: 'c1', title: 'M3M Line', city: 'Noida', location: 'Sec 72', category: 'buy', type: 'plot', bedrooms: 0, bathrooms: 1, price: 8000000, area: 500, 
+    description: 'M3M Line is poised to become the ultimate high-street commercial destination in Sector 72. Designed to attract massive daily footfall, this state-of-the-art commercial hub offers a brilliant mix of premium retail spaces, gourmet food courts, and modern office suites. The architecture features an open-to-sky courtyard, striking glass facades, and high-speed escalators, ensuring maximum visibility for every brand. With multi-level basement parking and round-the-clock security, it provides a seamless experience for both business owners and consumers. Its location in a densely populated upscale residential catchment area guarantees high returns on investment and unmatched business growth opportunities for retail brands, cafes, and boutique businesses.', 
+    imageUrl: generateImage('Commercial', 0) 
+  },
+  { 
+    id: 'c2', title: 'Max Estate', city: 'Noida', location: 'Sec 105', category: 'buy', type: 'plot', bedrooms: 0, bathrooms: 2, price: 12000000, area: 1200, 
+    description: 'Redefine your corporate identity at Max Estate, Sector 105, offering elite Grade A office spaces. This architectural marvel is designed to foster productivity, innovation, and employee well-being. The building is LEED-certified, featuring smart climate control, energy-efficient lighting, and advanced air filtration systems. Tenants will enjoy grand double-height lobbies, high-speed destination-controlled elevators, and beautifully landscaped breakout zones. The property also houses premium cafeterias, conference facilities, and an executive lounge. Perfect for multinational corporations and fast-growing startups, Max Estate provides an unparalleled professional environment that leaves a lasting impression on clients and ensures a thriving workplace culture.', 
+    imageUrl: generateImage('Commercial', 1) 
+  },
+  { 
+    id: 'c3', title: 'Paras Avenue', city: 'Noida', location: 'Sec 129', category: 'buy', type: 'plot', bedrooms: 0, bathrooms: 1, price: 6500000, area: 450, 
+    description: 'Paras Avenue in Sector 129 is a revolutionary premium high-street retail and lifestyle destination. This brilliantly conceptualized commercial project combines the luxury of a mall with the vibrancy of an open-air market. The development features double-height retail shops, creating grand storefronts that demand attention. Alongside premium retail, it offers dedicated floors for entertainment, wellness centers, and fine dining restaurants with open-air terrace seating. Situated right on the Noida-Greater Noida Expressway, Paras Avenue boasts unparalleled visibility and accessibility. It is surrounded by affluent residential sectors and massive IT parks, ensuring a continuous stream of premium customers and guaranteeing highly lucrative rental yields for investors.', 
+    imageUrl: generateImage('Commercial', 2) 
+  },
 
   // FRESH PROPERTIES - GREATER NOIDA WEST
-  { id: 'gw1', title: 'Fusion – The Brook', city: 'Greater Noida West', location: 'Sec 12', category: 'buy', type: 'apartment', bedrooms: 2, bathrooms: 2, price: 8500000, area: 1300, description: 'Nature-inspired living in Greater Noida West.', imageUrl: generateImage('Fusion The Brook') },
-  { id: 'gw2', title: 'Yatharth Eternia', city: 'Greater Noida West', location: 'Tech Zone 4', category: 'buy', type: 'apartment', bedrooms: 3, bathrooms: 2, price: 9200000, area: 1450, description: 'Modern amenities right in Tech Zone 4.', imageUrl: generateImage('Yatharth Eternia') },
-  { id: 'gw3', title: 'VVIP Addresses', city: 'Greater Noida West', location: 'Sec 12', category: 'buy', type: 'apartment', bedrooms: 3, bathrooms: 3, price: 10500000, area: 1650, description: 'Prestigious residential address for modern families.', imageUrl: generateImage('VVIP Addresses') },
+  { 
+    id: 'gw1', title: 'Fusion – The Brook', city: 'Greater Noida West', location: 'Sec 12', category: 'buy', type: 'apartment', bedrooms: 2, bathrooms: 2, price: 8500000, area: 1300, 
+    description: 'Embrace a serene, nature-inspired lifestyle at Fusion – The Brook, located in the rapidly developing Sector 12 of Greater Noida West. This property is designed around central water features and lush landscaping, offering a tranquil escape from city noise. The apartments are meticulously crafted to provide maximum natural light, featuring spacious balconies that overlook the beautiful central courtyard. Residents can enjoy an array of premium amenities, including a lavish clubhouse, a modern gymnasium, a swimming pool, and dedicated jogging tracks. With close proximity to upcoming metro stations, reputed schools, and shopping arcades, it offers an ideal environment for families looking for a balanced and vibrant lifestyle.', 
+    imageUrl: generateImage('Residential', 0) 
+  },
+  { 
+    id: 'gw2', title: 'Yatharth Eternia', city: 'Greater Noida West', location: 'Tech Zone 4', category: 'buy', type: 'apartment', bedrooms: 3, bathrooms: 2, price: 9200000, area: 1450, 
+    description: 'Yatharth Eternia brings modern, upscale living right to the heart of Tech Zone 4 in Greater Noida West. This highly sought-after residential project is defined by its robust construction quality and elegant architectural design. The spacious apartments are tailored for modern families, featuring open-plan living areas, designer fittings, and smart security systems. The project is packed with world-class facilities, including an Olympic-sized swimming pool, indoor sports arenas, a massive community hall, and beautifully manicured gardens. Its strategic location right next to major IT hubs and commercial parks makes it incredibly convenient for working professionals, offering a minimal commute and maximum time for family and recreation.', 
+    imageUrl: generateImage('Residential', 1) 
+  },
+  { 
+    id: 'gw3', title: 'VVIP Addresses', city: 'Greater Noida West', location: 'Sec 12', category: 'buy', type: 'apartment', bedrooms: 3, bathrooms: 3, price: 10500000, area: 1650, 
+    description: 'Live like royalty at VVIP Addresses, a highly prestigious residential enclave in Sector 12, Greater Noida West. This development sets a new benchmark for luxury in the region, offering grand, well-appointed homes with sophisticated interiors. The property features a majestic entrance gate, sweeping driveways, and magnificent towers that offer panoramic views of the city. The clubhouse is a masterpiece of leisure, offering everything from a lavish spa and salon to a private bowling alley and an elegant restaurant. Designed for modern families who desire a status-driven lifestyle, the project ensures top-tier security, immaculate maintenance, and a vibrant community atmosphere of like-minded individuals.', 
+    imageUrl: generateImage('Residential', 2) 
+  },
 
   // RESALE PROPERTIES - NOIDA
-  ...['Lotus Panache – Sec 110', 'Lotus Boulevard – Sec 100', 'Great Value Sharnam – Sec 107', 'Prateek Stylome – Sec 45', 'Mahagun Moderne – Sec 78'].map((name, i) => ({
-    id: `rs${i}`, title: name.split(' – ')[0], city: 'Noida', location: name.split(' – ')[1], category: 'buy', type: 'apartment', bedrooms: 3, bathrooms: 3, price: 12000000 + (i * 1000000), area: 1500 + (i * 100), description: `Excellent resale opportunity in ${name.split(' – ')[0]}. Ready to move in immediately.`, imageUrl: generateImage(name + ' Resale')
-  }))
+  ...['Lotus Panache – Sec 110', 'Lotus Boulevard – Sec 100', 'Great Value Sharnam – Sec 107', 'Prateek Stylome – Sec 45', 'Mahagun Moderne – Sec 78'].map((name, i) => {
+    const title = name.split(' – ')[0];
+    const location = name.split(' – ')[1];
+    return {
+      id: `rs${i}`, title: title, city: 'Noida', location: location, category: 'buy', type: 'apartment', bedrooms: 3, bathrooms: 3, price: 12000000 + (i * 1000000), area: 1500 + (i * 100), 
+      description: `Presenting an exceptional resale opportunity at ${title}, prominently located in the highly desirable ${location} of Noida. This magnificent ready-to-move-in residential property offers an unparalleled lifestyle, seamlessly combining modern architectural brilliance with everyday functional comfort. Spanning a generous ${1500 + (i * 100)} square feet, the apartment features meticulously crafted interiors, premium imported flooring, modular wardrobes, and expansive balconies that offer breathtaking, unobstructed views of the surrounding skyline. The living spaces are bathed in natural light and highly ventilated, ensuring a warm, inviting, and healthy atmosphere for your family. Residents will have exclusive, immediate access to a wide array of premium, fully operational amenities, including a resort-style swimming pool, a state-of-the-art fitness center, landscaped podium gardens, indoor sports courts, and 24/7 multi-tier security. Its strategic location ensures effortless connectivity to key commercial IT hubs, top-tier international schools, and world-class healthcare facilities, making it a spectacular choice for discerning homebuyers seeking immediate possession of luxury and convenience.`, 
+      imageUrl: generateImage('Residential', i + 3)
+    };
+  })
 ];
 
 export default function BuyPage() {
@@ -46,7 +133,6 @@ export default function BuyPage() {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   
-
   // CHATBOT STATE
   const [isChatOpen, setIsChatOpen] = useState(false);
   const chatSubjects = [
@@ -73,7 +159,6 @@ export default function BuyPage() {
 
   // FETCH DATA
   useEffect(() => {
-    // Simulating API fetch but prioritizing our extensive hardcoded listings
     setTimeout(() => {
       setProperties(propertyListings);
       setLoading(false);
@@ -332,58 +417,56 @@ export default function BuyPage() {
          </div>
       </section>
       
-      {/* FOOTER */}
+      {/* FOOTER - Matched to HomePage & DetailPage layout */}
       <footer className="bg-[#0A0A0A] text-white pt-20 pb-10 px-6 border-t border-slate-800">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-10 mb-16">
-            <div className="md:col-span-2 space-y-6 pr-4">
-              <h3 className="text-3xl font-black tracking-tight">ANK Realty<span className="text-red-600">.</span></h3>
-              <p className="text-slate-400 text-sm leading-relaxed">
-                The Red Carpet of Real Estate. We are India's most trusted property portal, committed to providing transparency, verified listings, and end-to-end property solutions.
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+            <div className="space-y-6">
+              <h3 className="text-3xl font-extrabold tracking-tight">ANK Realty<span className="text-red-600">.</span></h3>
+              <p className="text-slate-400 text-sm leading-relaxed pr-4 font-medium">
+                The Red Carpet of Real Estate. We are committed to providing the highest level of service, transparency, and expertise in the Indian real estate market.
               </p>
-              <div className="space-y-3 pt-2">
-                <p className="flex items-center text-slate-300"><Phone className="w-5 h-5 mr-3 text-red-500"/> Toll Free: 1800-123-4567</p>
-                <p className="flex items-center text-slate-300"><Mail className="w-5 h-5 mr-3 text-red-500"/> support@ankrealty.com</p>
+              <div className="flex space-x-3">
+                  <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer"><Mail className="w-4 h-4"/></div>
+                  <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer"><Phone className="w-4 h-4"/></div>
               </div>
             </div>
             
             <div>
-              <h4 className="font-bold text-lg mb-6 text-slate-100">Properties</h4>
-              <ul className="space-y-4 text-slate-400 text-sm">
-                <li><Link to="/buy" className="hover:text-white transition-colors">Property for Sale</Link></li>
-                <li><Link to="/rent" className="hover:text-white transition-colors">Property for Rent</Link></li>
-                <li><Link to="/buy" className="hover:text-white transition-colors">Commercial Projects</Link></li>
-                <li><Link to="/buy" className="hover:text-white transition-colors">New Projects</Link></li>
+              <h4 className="font-bold text-lg mb-6 text-slate-100">Quick Links</h4>
+              <ul className="space-y-4 text-slate-400 font-medium text-sm">
+                <li><Link to="/buy" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Buy Property</Link></li>
+                <li><Link to="/sell" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Sell Property</Link></li>
+                <li><Link to="/rent" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Rent Property</Link></li>
+                <li><Link to="/contact" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Contact Us</Link></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-bold text-lg mb-6 text-slate-100">Company</h4>
-              <ul className="space-y-4 text-slate-400 text-sm">
-                <li><Link to="/about" className="hover:text-white transition-colors">About Us</Link></li>
-                <li><Link to="/careers" className="hover:text-white transition-colors">Careers</Link></li>
-                <li><Link to="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
-                <li><Link to="/terms" className="hover:text-white transition-colors">Terms & Conditions</Link></li>
+              <h4 className="font-bold text-lg mb-6 text-slate-100">Categories</h4>
+              <ul className="space-y-4 text-slate-400 font-medium text-sm">
+                <li><Link to="/buy" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Apartments</Link></li>
+                <li><Link to="/buy" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Villas</Link></li>
+                <li><Link to="/buy" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Plots / Land</Link></li>
+                <li><Link to="/buy" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Commercial Space</Link></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-bold text-lg mb-6 text-slate-100">For Builders & Agents</h4>
-              <ul className="space-y-4 text-slate-400 text-sm">
-                <li><Link to="/sell" className="hover:text-white transition-colors">List your Property</Link></li>
-                <li><Link to="/advertise" className="hover:text-white transition-colors">Advertise with Us</Link></li>
-                <li><Link to="/agent-login" className="hover:text-white transition-colors">Agent Portal</Link></li>
-              </ul>
+              <h4 className="font-bold text-lg mb-6 text-slate-100">Contact Us</h4>
+              <div className="space-y-4 text-slate-400 font-medium text-sm">
+                <p className="flex items-start"><MapPin className="w-5 h-5 mr-3 text-red-600 shrink-0"/> 123 Business Avenue, Tech Park, Mumbai, 400001</p>
+                <p className="flex items-center"><Mail className="w-5 h-5 mr-3 text-red-600 shrink-0"/> info@ankrealty.com</p>
+                <p className="flex items-center"><Phone className="w-5 h-5 mr-3 text-red-600 shrink-0"/> +91 98765 43210</p>
+              </div>
             </div>
           </div>
           
-          <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-slate-500">
+          <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-slate-500 font-medium">
             <p>&copy; {new Date().getFullYear()} ANK Realty. All rights reserved.</p>
-            <div className="flex space-x-4 mt-4 md:mt-0">
-               <span className="hover:text-white cursor-pointer">Facebook</span>
-               <span className="hover:text-white cursor-pointer">Twitter</span>
-               <span className="hover:text-white cursor-pointer">Instagram</span>
-               <span className="hover:text-white cursor-pointer">LinkedIn</span>
+            <div className="flex space-x-6 mt-4 md:mt-0">
+                <Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+                <Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
             </div>
           </div>
         </div>
