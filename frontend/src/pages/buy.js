@@ -7,30 +7,60 @@ import {
   Search, MapPin, Filter, X, Bed, Bath, 
   Maximize, CheckCircle, ArrowRight, Calculator,
   Home, DollarSign, Calendar, Mail, Loader2,
-  SlidersHorizontal, ChevronDown, Phone, ShieldCheck
+  SlidersHorizontal, ChevronDown, Phone, ShieldCheck,
+  MessageSquare, Send
 } from "lucide-react";
 
-// API Configuration
-const API_URL = 'http://127.0.0.1:8000/api/properties';
+// --- HARDCODED PROPERTY DATA WITH UNIQUE IMAGES ---
+const generateImage = (name) => `https://picsum.photos/seed/${encodeURIComponent(name)}/800/600`;
 
-// Helper for consistent high-quality placeholder images
-const getPlaceholderImage = (id, type) => {
-  const images = {
-    apartment: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80", "https://images.unsplash.com/photo-1502672260266-1c1e5240980c?w=800&q=80"],
-    villa: ["https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80", "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80"],
-    plot: ["https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&q=80"],
-    default: ["https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80"]
-  };
-  const safeType = type ? type.toLowerCase() : 'default';
-  const list = images[safeType] || images.default;
-  return list[id % list.length];
-};
+const propertyListings = [
+  // FRESH PROPERTIES - NOIDA RESIDENTIAL
+  { id: 'f1', title: 'Experion Saatori', city: 'Noida', location: 'Sec 151', category: 'buy', type: 'apartment', bedrooms: 4, bathrooms: 4, price: 18500000, area: 2400, description: 'Premium fresh residential living spaces in Sector 151 with world-class amenities.', imageUrl: generateImage('Experion Saatori') },
+  { id: 'f2', title: 'Smart World Elie Saab', city: 'Noida', location: 'Sec 98', category: 'buy', type: 'villa', bedrooms: 5, bathrooms: 5, price: 22000000, area: 3100, description: 'Exclusive designer residences in Sector 98.', imageUrl: generateImage('Smart World Elie Saab') },
+  { id: 'f3', title: 'M3M Jacob & Co', city: 'Noida', location: 'Sec 97', category: 'buy', type: 'apartment', bedrooms: 4, bathrooms: 5, price: 35000000, area: 4500, description: 'Ultra-luxury living conceptualized by Jacob & Co.', imageUrl: generateImage('M3M Jacob & Co') },
+  { id: 'f4', title: 'Max Estate', city: 'Noida', location: 'Sec 105', category: 'buy', type: 'apartment', bedrooms: 3, bathrooms: 3, price: 17500000, area: 2200, description: 'Tranquil and sustainable residential spaces.', imageUrl: generateImage('Max Estate Res') },
+  { id: 'f5', title: 'RG Mirage', city: 'Noida', location: 'Sec 120', category: 'buy', type: 'apartment', bedrooms: 3, bathrooms: 2, price: 11000000, area: 1600, description: 'Modern apartments with seamless connectivity.', imageUrl: generateImage('RG Mirage') },
+  { id: 'f6', title: 'Godrej Riverine', city: 'Noida', location: 'Sec 44', category: 'buy', type: 'apartment', bedrooms: 4, bathrooms: 4, price: 21000000, area: 2800, description: 'Riverside luxury living by Godrej Properties.', imageUrl: generateImage('Godrej Riverine') },
+  { id: 'f7', title: 'M3M Cullinan', city: 'Noida', location: 'Sec 94', category: 'buy', type: 'apartment', bedrooms: 5, bathrooms: 6, price: 40000000, area: 5500, description: 'Bespoke mega-luxury apartments in Sector 94.', imageUrl: generateImage('M3M Cullinan') },
+  { id: 'f8', title: 'Great Value Ekanam', city: 'Noida', location: 'Sec 107', category: 'buy', type: 'apartment', bedrooms: 3, bathrooms: 3, price: 14000000, area: 1950, description: 'Spacious and well-ventilated premium homes.', imageUrl: generateImage('Great Value Ekanam') },
+
+  // FRESH PROPERTIES - NOIDA COMMERCIAL (Treated as plots/commercial)
+  { id: 'c1', title: 'M3M Line', city: 'Noida', location: 'Sec 72', category: 'buy', type: 'plot', bedrooms: 0, bathrooms: 1, price: 8000000, area: 500, description: 'High-footfall retail and office spaces.', imageUrl: generateImage('M3M Line') },
+  { id: 'c2', title: 'Max Estate', city: 'Noida', location: 'Sec 105', category: 'buy', type: 'plot', bedrooms: 0, bathrooms: 2, price: 12000000, area: 1200, description: 'Grade A corporate office spaces.', imageUrl: generateImage('Max Estate Com') },
+  { id: 'c3', title: 'Paras Avenue', city: 'Noida', location: 'Sec 129', category: 'buy', type: 'plot', bedrooms: 0, bathrooms: 1, price: 6500000, area: 450, description: 'Premium high-street retail destination.', imageUrl: generateImage('Paras Avenue') },
+
+  // FRESH PROPERTIES - GREATER NOIDA WEST
+  { id: 'gw1', title: 'Fusion – The Brook', city: 'Greater Noida West', location: 'Sec 12', category: 'buy', type: 'apartment', bedrooms: 2, bathrooms: 2, price: 8500000, area: 1300, description: 'Nature-inspired living in Greater Noida West.', imageUrl: generateImage('Fusion The Brook') },
+  { id: 'gw2', title: 'Yatharth Eternia', city: 'Greater Noida West', location: 'Tech Zone 4', category: 'buy', type: 'apartment', bedrooms: 3, bathrooms: 2, price: 9200000, area: 1450, description: 'Modern amenities right in Tech Zone 4.', imageUrl: generateImage('Yatharth Eternia') },
+  { id: 'gw3', title: 'VVIP Addresses', city: 'Greater Noida West', location: 'Sec 12', category: 'buy', type: 'apartment', bedrooms: 3, bathrooms: 3, price: 10500000, area: 1650, description: 'Prestigious residential address for modern families.', imageUrl: generateImage('VVIP Addresses') },
+
+  // RESALE PROPERTIES - NOIDA
+  ...['Lotus Panache – Sec 110', 'Lotus Boulevard – Sec 100', 'Great Value Sharnam – Sec 107', 'Prateek Stylome – Sec 45', 'Mahagun Moderne – Sec 78'].map((name, i) => ({
+    id: `rs${i}`, title: name.split(' – ')[0], city: 'Noida', location: name.split(' – ')[1], category: 'buy', type: 'apartment', bedrooms: 3, bathrooms: 3, price: 12000000 + (i * 1000000), area: 1500 + (i * 100), description: `Excellent resale opportunity in ${name.split(' – ')[0]}. Ready to move in immediately.`, imageUrl: generateImage(name + ' Resale')
+  }))
+];
 
 export default function BuyPage() {
-  const navigate = useNavigate(); // Hook for routing
+  const navigate = useNavigate();
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   
+  // MODAL STATE FOR SAME-PAGE DETAILS
+  const [selectedProperty, setSelectedProperty] = useState(null);
+
+  // CHATBOT STATE
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const chatSubjects = [
+    "Schedule a Visit",
+    "Price Details & Negotiation",
+    "Legal Verification Check",
+    "Home Loan Options",
+    "Property Locations & Tours",
+    "Resale Values & ROI",
+    "Connect with an Agent"
+  ];
+
   // Advanced Filter States
   const [searchCity, setSearchCity] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
@@ -43,22 +73,19 @@ export default function BuyPage() {
   const [intRate, setIntRate] = useState(8.5);
   const [tenure, setTenure] = useState(20);
 
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (selectedProperty) document.body.style.overflow = 'hidden';
+    else document.body.style.overflow = 'unset';
+  }, [selectedProperty]);
+
   // FETCH DATA
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(API_URL);
-        const buyListings = Array.isArray(response.data) 
-          ? response.data.filter(p => p.status?.toLowerCase() === 'active' || p.status?.toLowerCase() === 'approved') 
-          : [];
-        setProperties(buyListings);
-      } catch (error) {
-        console.error("Error fetching buy properties:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+    // Simulating API fetch but prioritizing our extensive hardcoded listings
+    setTimeout(() => {
+      setProperties(propertyListings);
+      setLoading(false);
+    }, 800);
   }, []);
 
   // Filter & Sort Logic
@@ -198,23 +225,17 @@ export default function BuyPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredAndSortedProperties.map((property) => {
-              // Extract real cover image from backend if it exists, otherwise use placeholder
-              const coverImage = property.images && property.images.length > 0 
-                ? property.images[0] 
-                : property.imageUrl || getPlaceholderImage(property.id, property.category || property.type);
-
-              return (
+            {filteredAndSortedProperties.map((property) => (
                 <div 
                   key={property.id} 
                   className="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-2xl hover:border-red-100 transition-all duration-300 group cursor-pointer flex flex-col"
-                  onClick={() => navigate(`/property/${property.id}`)} // 🔥 NAVIGATES TO DETAILS PAGE
+                  onClick={() => setSelectedProperty(property)} // OPENS MODAL
                 >
                   {/* Image Area */}
                   <div className="h-60 relative overflow-hidden p-2">
                      <div className="w-full h-full rounded-3xl overflow-hidden relative">
                        <img 
-                         src={coverImage} 
+                         src={property.imageUrl} 
                          alt={property.title}
                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                        />
@@ -237,7 +258,7 @@ export default function BuyPage() {
                        {property.title}
                      </h3>
                      <p className="text-slate-500 text-sm flex items-center mb-4">
-                       <MapPin className="w-4 h-4 mr-1 text-slate-400"/> {property.city}
+                       <MapPin className="w-4 h-4 mr-1 text-slate-400"/> {property.location}, {property.city}
                      </p>
 
                      {/* Features */}
@@ -256,7 +277,9 @@ export default function BuyPage() {
                      <div className="pt-4 border-t border-slate-100 flex items-center justify-between mt-auto">
                         <div>
                           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Price</p>
-                          <span className="text-2xl font-black text-slate-900">₹{Number(property.price).toLocaleString('en-IN')}</span>
+                          <span className="text-2xl font-black text-slate-900">
+                             ₹{property.price >= 10000000 ? (property.price / 10000000).toFixed(2) + ' Cr' : (property.price / 100000).toFixed(2) + ' Lac'}
+                          </span>
                         </div>
                         <div className="w-10 h-10 rounded-full bg-red-50 text-red-600 flex items-center justify-center group-hover:bg-red-600 group-hover:text-white transition-colors">
                           <ArrowRight className="w-5 h-5"/>
@@ -264,8 +287,7 @@ export default function BuyPage() {
                      </div>
                   </div>
                 </div>
-              );
-            })}
+            ))}
           </div>
         )}
       </section>
@@ -318,7 +340,7 @@ export default function BuyPage() {
          </div>
       </section>
       
-      {/* FOOTER (Expanded) */}
+      {/* FOOTER */}
       <footer className="bg-[#0A0A0A] text-white pt-20 pb-10 px-6 border-t border-slate-800">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-10 mb-16">
@@ -374,6 +396,127 @@ export default function BuyPage() {
           </div>
         </div>
       </footer>
+
+      {/* --- PROPERTY DETAILS MODAL (SAME PAGE) --- */}
+      {selectedProperty && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col relative animate-in slide-in-from-bottom-10">
+            {/* Close Button */}
+            <button 
+              onClick={() => setSelectedProperty(null)}
+              className="absolute top-4 right-4 z-10 p-2 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-md transition-all"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            
+            {/* Modal Scrollable Content */}
+            <div className="overflow-y-auto flex-1">
+              <div className="h-64 sm:h-80 w-full relative">
+                <img src={selectedProperty.imageUrl} alt={selectedProperty.title} className="w-full h-full object-cover" />
+                <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black/80 to-transparent" />
+                <div className="absolute bottom-6 left-6 text-white">
+                   <div className="flex gap-2 mb-2">
+                     <span className="bg-red-600 px-3 py-1 rounded-md text-xs font-black uppercase tracking-wider">{selectedProperty.category}</span>
+                     <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-md text-xs font-bold capitalize">{selectedProperty.type}</span>
+                   </div>
+                   <h2 className="text-3xl sm:text-4xl font-black mb-1">{selectedProperty.title}</h2>
+                   <p className="flex items-center text-slate-200"><MapPin className="w-4 h-4 mr-1"/> {selectedProperty.location}, {selectedProperty.city}</p>
+                </div>
+              </div>
+              
+              <div className="p-6 sm:p-10 flex flex-col md:flex-row gap-10">
+                <div className="md:w-2/3">
+                  <h3 className="text-2xl font-bold text-slate-900 mb-4">Description</h3>
+                  <p className="text-slate-600 leading-relaxed text-lg mb-8">{selectedProperty.description}</p>
+                  
+                  <h3 className="text-2xl font-bold text-slate-900 mb-4">Property Features</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                      <p className="text-sm text-slate-500 font-medium">Built-up Area</p>
+                      <p className="text-lg font-bold text-slate-900">{selectedProperty.area} sq.ft.</p>
+                    </div>
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                      <p className="text-sm text-slate-500 font-medium">Bedrooms / Bathrooms</p>
+                      <p className="text-lg font-bold text-slate-900">{selectedProperty.bedrooms} Bed, {selectedProperty.bathrooms} Bath</p>
+                    </div>
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                      <p className="text-sm text-slate-500 font-medium">Furnishing</p>
+                      <p className="text-lg font-bold text-slate-900">Semi-Furnished</p>
+                    </div>
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                      <p className="text-sm text-slate-500 font-medium">Possession</p>
+                      <p className="text-lg font-bold text-slate-900">Immediate</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="md:w-1/3 space-y-4">
+                  <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 text-center">
+                    <p className="text-slate-500 font-medium mb-1">Total Price</p>
+                    <p className="text-4xl font-black text-red-600 mb-6">
+                      ₹{selectedProperty.price >= 10000000 ? (selectedProperty.price / 10000000).toFixed(2) + ' Cr' : (selectedProperty.price / 100000).toFixed(2) + ' Lac'}
+                    </p>
+                    <Button className="w-full h-12 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl mb-3">Contact Builder/Agent</Button>
+                    <Button variant="outline" className="w-full h-12 border-slate-300 text-slate-700 font-bold rounded-xl">Download Brochure</Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- FLOATING CHATBOT --- */}
+      <div className="fixed bottom-6 right-6 z-50">
+        {isChatOpen ? (
+          <div className="bg-white rounded-2xl shadow-2xl w-80 sm:w-96 border border-slate-200 overflow-hidden flex flex-col animate-in slide-in-from-bottom-5">
+            <div className="bg-slate-900 text-white p-4 font-bold flex justify-between items-center shadow-md relative z-10">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                ANK AI Assistant
+              </div>
+              <button onClick={() => setIsChatOpen(false)} className="hover:bg-slate-700 p-1 rounded-md transition-colors"><X className="w-4 h-4"/></button>
+            </div>
+            
+            <div className="p-4 flex-1 bg-slate-50 flex flex-col gap-3 h-[380px] overflow-y-auto">
+              <div className="flex gap-2">
+                <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                   <Home className="w-4 h-4 text-red-600"/>
+                </div>
+                <div className="bg-white p-3 rounded-2xl rounded-tl-sm shadow-sm text-sm border border-slate-100 text-slate-700">
+                  Welcome to ANK Realty! I am your virtual assistant. Please choose a subject below so I can assist you better:
+                </div>
+              </div>
+              
+              <div className="flex flex-col gap-2 mt-2 pl-10">
+                {chatSubjects.map((subject, i) => (
+                  <button key={i} className="text-left bg-white hover:bg-red-50 text-slate-700 hover:text-red-700 p-2.5 rounded-xl text-sm font-medium transition-all border border-slate-200 hover:border-red-200 shadow-sm">
+                    {subject}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="p-3 bg-white border-t border-slate-100 flex items-center gap-2">
+              <input type="text" placeholder="Type your message..." className="flex-1 bg-slate-50 border border-slate-200 rounded-full px-4 py-2 text-sm outline-none focus:border-red-400" />
+              <button className="bg-red-600 text-white p-2 rounded-full hover:bg-red-700 transition-colors">
+                <Send className="w-4 h-4 ml-0.5" />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button 
+            onClick={() => setIsChatOpen(true)} 
+            className="bg-red-600 hover:bg-red-700 text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-transform flex items-center justify-center group"
+          >
+            <MessageSquare className="w-7 h-7" />
+            <span className="absolute right-full mr-4 bg-slate-900 text-white text-xs font-bold py-1.5 px-3 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+              Chat with us!
+            </span>
+          </button>
+        )}
+      </div>
+
     </div>
   );
 }
