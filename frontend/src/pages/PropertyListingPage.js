@@ -19,7 +19,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000/api";
+const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000/api";
 
 // Helper for consistent premium images
 const getPlaceholderImage = (id, type) => {
@@ -325,7 +325,14 @@ export default function PropertyListingPage() {
                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Price</p>
                             <span className="text-xl font-black text-slate-900">₹{Number(property.price).toLocaleString('en-IN')}</span>
                           </div>
-                          <Button variant="outline" className="h-9 px-4 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-600 text-xs font-bold rounded-lg pointer-events-none">
+                          <Button
+                            variant="outline"
+                            className="h-9 px-4 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-600 text-xs font-bold rounded-lg"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              navigate(`/property/${property.id}`);
+                            }}
+                          >
                             View Details
                           </Button>
                        </div>

@@ -46,8 +46,6 @@ export default function BuyPage() {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // MODAL STATE FOR SAME-PAGE DETAILS
-  const [selectedProperty, setSelectedProperty] = useState(null);
 
   // CHATBOT STATE
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -72,12 +70,6 @@ export default function BuyPage() {
   const [loanAmt, setLoanAmt] = useState(5000000);
   const [intRate, setIntRate] = useState(8.5);
   const [tenure, setTenure] = useState(20);
-
-  // Prevent background scrolling when modal is open
-  useEffect(() => {
-    if (selectedProperty) document.body.style.overflow = 'hidden';
-    else document.body.style.overflow = 'unset';
-  }, [selectedProperty]);
 
   // FETCH DATA
   useEffect(() => {
@@ -229,7 +221,7 @@ export default function BuyPage() {
                 <div 
                   key={property.id} 
                   className="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-2xl hover:border-red-100 transition-all duration-300 group cursor-pointer flex flex-col"
-                  onClick={() => setSelectedProperty(property)} // OPENS MODAL
+                  onClick={() => navigate(`/property/${property.id}`, { state: { property } })}
                 >
                   {/* Image Area */}
                   <div className="h-60 relative overflow-hidden p-2">
@@ -396,75 +388,6 @@ export default function BuyPage() {
           </div>
         </div>
       </footer>
-
-      {/* --- PROPERTY DETAILS MODAL (SAME PAGE) --- */}
-      {selectedProperty && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col relative animate-in slide-in-from-bottom-10">
-            {/* Close Button */}
-            <button 
-              onClick={() => setSelectedProperty(null)}
-              className="absolute top-4 right-4 z-10 p-2 bg-black/40 hover:bg-black/70 text-white rounded-full backdrop-blur-md transition-all"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            
-            {/* Modal Scrollable Content */}
-            <div className="overflow-y-auto flex-1">
-              <div className="h-64 sm:h-80 w-full relative">
-                <img src={selectedProperty.imageUrl} alt={selectedProperty.title} className="w-full h-full object-cover" />
-                <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black/80 to-transparent" />
-                <div className="absolute bottom-6 left-6 text-white">
-                   <div className="flex gap-2 mb-2">
-                     <span className="bg-red-600 px-3 py-1 rounded-md text-xs font-black uppercase tracking-wider">{selectedProperty.category}</span>
-                     <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-md text-xs font-bold capitalize">{selectedProperty.type}</span>
-                   </div>
-                   <h2 className="text-3xl sm:text-4xl font-black mb-1">{selectedProperty.title}</h2>
-                   <p className="flex items-center text-slate-200"><MapPin className="w-4 h-4 mr-1"/> {selectedProperty.location}, {selectedProperty.city}</p>
-                </div>
-              </div>
-              
-              <div className="p-6 sm:p-10 flex flex-col md:flex-row gap-10">
-                <div className="md:w-2/3">
-                  <h3 className="text-2xl font-bold text-slate-900 mb-4">Description</h3>
-                  <p className="text-slate-600 leading-relaxed text-lg mb-8">{selectedProperty.description}</p>
-                  
-                  <h3 className="text-2xl font-bold text-slate-900 mb-4">Property Features</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                      <p className="text-sm text-slate-500 font-medium">Built-up Area</p>
-                      <p className="text-lg font-bold text-slate-900">{selectedProperty.area} sq.ft.</p>
-                    </div>
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                      <p className="text-sm text-slate-500 font-medium">Bedrooms / Bathrooms</p>
-                      <p className="text-lg font-bold text-slate-900">{selectedProperty.bedrooms} Bed, {selectedProperty.bathrooms} Bath</p>
-                    </div>
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                      <p className="text-sm text-slate-500 font-medium">Furnishing</p>
-                      <p className="text-lg font-bold text-slate-900">Semi-Furnished</p>
-                    </div>
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                      <p className="text-sm text-slate-500 font-medium">Possession</p>
-                      <p className="text-lg font-bold text-slate-900">Immediate</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="md:w-1/3 space-y-4">
-                  <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 text-center">
-                    <p className="text-slate-500 font-medium mb-1">Total Price</p>
-                    <p className="text-4xl font-black text-red-600 mb-6">
-                      ₹{selectedProperty.price >= 10000000 ? (selectedProperty.price / 10000000).toFixed(2) + ' Cr' : (selectedProperty.price / 100000).toFixed(2) + ' Lac'}
-                    </p>
-                    <Button className="w-full h-12 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl mb-3">Contact Builder/Agent</Button>
-                    <Button variant="outline" className="w-full h-12 border-slate-300 text-slate-700 font-bold rounded-xl">Download Brochure</Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* --- FLOATING CHATBOT --- */}
       <div className="fixed bottom-6 right-6 z-50">
