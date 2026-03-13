@@ -1,0 +1,30 @@
+[
+  {
+    "id": "plot-1002",
+    "title": "Park Facing Corner Plot",
+    "description": "Premium corner plot in gated township with wide 18m roads and immediate registry option.",
+    "location": "Sector 79",
+    "city": "Gurgaon",
+    "price": 18900000,
+    "image": "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?q=80&w=1200&auto=format&fit=crop",
+    "size": "250 sq. yd.",
+    "status": "approved",
+    "contactName": "ANK Realty",
+    "contactPhone": "+91-9876543210",
+    "createdBy": "admin"
+  },
+  {
+    "id": "plot-1001",
+    "title": "Metro Linked Investment Plot",
+    "description": "Well-connected investment plot close to upcoming metro station and expressway corridor.",
+    "location": "Yamuna Expressway",
+    "city": "Noida",
+    "price": 7200000,
+    "image": "https://images.unsplash.com/photo-1480074568708-e7b720bb3f09?q=80&w=1200&auto=format&fit=crop",
+    "size": "160 sq. yd.",
+    "status": "approved",
+    "contactName": "ANK Realty",
+    "contactPhone": "+91-9876543210",
+    "createdBy": "admin"
+  }
+]
