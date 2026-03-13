@@ -1,6 +1,6 @@
 // src/admin/AdminPanel.jsx
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner"; 
 import AdminLayout from "./AdminLayout";
 import Dashboard from "./Dashboard";
@@ -67,8 +67,10 @@ const AddReport = ({ onCancel }) => (
 );
 // =====================================================================
 
+// Moved outside the component to prevent recreation on every render
+const API_BASE = "http://127.0.0.1:8000/api";
+
 export default function AdminPanel() {
-  const API_BASE = "http://127.0.0.1:8000/api";
   const token = localStorage.getItem("token");
   const userRole = localStorage.getItem("role") || "admin"; // "admin" or "broker"
 
@@ -83,7 +85,8 @@ export default function AdminPanel() {
   const [videos, setVideos] = useState([]);
   const [reports, setReports] = useState([]);
 
-  async function fetchAllData() {
+  // Wrapped in useCallback to prevent ESLint warnings in useEffect
+  const fetchAllData = useCallback(async () => {
     setLoading(true);
     try {
       const headers = { Authorization: `Bearer ${token}` };
@@ -124,11 +127,11 @@ export default function AdminPanel() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [token, userRole]); // Added dependencies
 
   useEffect(() => {
     fetchAllData();
-  }, []);
+  }, [fetchAllData]); // Added fetchAllData to dependencies array
 
   async function saveEntity(endpoint, formData) {
     try {
