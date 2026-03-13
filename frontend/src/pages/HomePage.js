@@ -13,48 +13,191 @@ import { Input } from '@/components/ui/input';
 
 // --- HARDCODED PROPERTY DATA WITH UNIQUE IMAGES ---
 // Using picsum seeds with the property name guarantees a distinct, high-quality placeholder for every plot
-const generateImage = (name) => `https://picsum.photos/seed/${encodeURIComponent(name)}/800/600`;
+// Helper function to provide professional real estate images (Flats, Houses, Commercial)
+const generateImage = (category, index) => {
+  const residentialImages = [
+    'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80', // Modern House Exterior
+    'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80', // Luxury Flat Interior
+    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80', // Apartment Living Room
+    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80', // Villa Exterior
+    'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80', // Modern Apartment Setup
+    'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1200&q=80', // House with Pool
+    'https://images.unsplash.com/photo-1502672260266-1c1de2d96674?auto=format&fit=crop&w=1200&q=80', // High-rise Balcony View
+    'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=80'  // Luxury Condo
+  ];
 
-const propertyListings = [
+  const commercialImages = [
+    'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80', // Glass Office Building
+    'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80', // Modern Office Interior
+    'https://images.unsplash.com/photo-1416331108676-a22ccb276e35?auto=format&fit=crop&w=1200&q=80'  // Corporate Exterior
+  ];
+
+  if (category === 'Commercial') {
+    return commercialImages[index % commercialImages.length];
+  }
+  
+  // Calculate a pseudo-random index based on string length so it stays consistent
+  const safeIndex = (typeof index === 'number' ? index : index?.length || 0) % residentialImages.length;
+  return residentialImages[safeIndex];
+};
+
+export const propertiesData = [
   // FRESH PROPERTIES - NOIDA RESIDENTIAL
-  { id: 'f1', title: 'Experion Saatori', city: 'Noida', location: 'Sec 151', category: 'buy', tag: 'Fresh', type: 'Residential', price: 18500000, area: 2400, description: 'Premium fresh residential living spaces in Sector 151 with world-class amenities.', imageUrl: generateImage('Experion Saatori') },
-  { id: 'f2', title: 'Smart World Elie Saab', city: 'Noida', location: 'Sec 98', category: 'buy', tag: 'Fresh', type: 'Residential', price: 22000000, area: 3100, description: 'Exclusive designer residences in Sector 98.', imageUrl: generateImage('Smart World Elie Saab') },
-  { id: 'f3', title: 'M3M Jacob & Co', city: 'Noida', location: 'Sec 97', category: 'buy', tag: 'Fresh', type: 'Residential', price: 35000000, area: 4500, description: 'Ultra-luxury living conceptualized by Jacob & Co.', imageUrl: generateImage('M3M Jacob & Co') },
-  { id: 'f4', title: 'Max Estate', city: 'Noida', location: 'Sec 105', category: 'buy', tag: 'Fresh', type: 'Residential', price: 17500000, area: 2200, description: 'Tranquil and sustainable residential spaces.', imageUrl: generateImage('Max Estate Res') },
-  { id: 'f5', title: 'RG Mirage', city: 'Noida', location: 'Sec 120', category: 'buy', tag: 'Fresh', type: 'Residential', price: 11000000, area: 1600, description: 'Modern apartments with seamless connectivity.', imageUrl: generateImage('RG Mirage') },
-  { id: 'f6', title: 'Godrej Riverine', city: 'Noida', location: 'Sec 44', category: 'buy', tag: 'Fresh', type: 'Residential', price: 21000000, area: 2800, description: 'Riverside luxury living by Godrej Properties.', imageUrl: generateImage('Godrej Riverine') },
-  { id: 'f7', title: 'M3M Cullinan', city: 'Noida', location: 'Sec 94', category: 'buy', tag: 'Fresh', type: 'Residential', price: 40000000, area: 5500, description: 'Bespoke mega-luxury apartments in Sector 94.', imageUrl: generateImage('M3M Cullinan') },
-  { id: 'f8', title: 'Great Value Ekanam', city: 'Noida', location: 'Sec 107', category: 'buy', tag: 'Fresh', type: 'Residential', price: 14000000, area: 1950, description: 'Spacious and well-ventilated premium homes.', imageUrl: generateImage('Great Value Ekanam') },
+  { 
+    id: 'f1', title: 'Experion Saatori', city: 'Noida', location: 'Sec 151', category: 'buy', tag: 'Fresh', type: 'Residential', price: 18500000, area: 2400, 
+    description: 'Discover the epitome of luxury living at Experion Saatori, strategically located in the highly sought-after Sector 151, Noida. This premium residential development offers a harmonious blend of contemporary architecture and lush green landscapes, providing residents with a serene retreat from the bustling city. The meticulously designed apartments feature expansive layouts, floor-to-ceiling windows, and top-tier finishes that redefine modern elegance. Residents can indulge in a plethora of world-class amenities, including a state-of-the-art clubhouse, infinity swimming pool, fully equipped gymnasium, and dedicated sports facilities. With seamless connectivity to major expressways, corporate hubs, and premier educational institutions, Experion Saatori is not just a home, but a lifestyle statement for those who seek the very best in urban living and unparalleled comfort.', 
+    imageUrl: generateImage('Residential', 0) 
+  },
+  { 
+    id: 'f2', title: 'Smart World Elie Saab', city: 'Noida', location: 'Sec 98', category: 'buy', tag: 'Fresh', type: 'Residential', price: 22000000, area: 3100, 
+    description: 'Step into a realm of unmatched elegance at Smart World Elie Saab, an exclusive designer residential enclave situated in the heart of Sector 98. Conceptualized by globally renowned designers, this iconic property brings haute couture to real estate. Every inch of these majestic residences exudes sophistication, featuring bespoke interiors, imported marble flooring, and panoramic views of the city skyline. The development boasts an exclusive residents-only lounge, a temperature-controlled indoor pool, private cabanas, and a wellness spa that rivals five-star resorts. Designed for the elite few, the property ensures absolute privacy with dedicated elevators and multi-tier security. Its prime location guarantees that high-end shopping avenues, fine dining restaurants, and top corporate centers are merely a stone’s throw away.', 
+    imageUrl: generateImage('Residential', 1) 
+  },
+  { 
+    id: 'f3', title: 'M3M Jacob & Co', city: 'Noida', location: 'Sec 97', category: 'buy', tag: 'Fresh', type: 'Residential', price: 35000000, area: 4500, 
+    description: 'Experience the pinnacle of ultra-luxury real estate at M3M Jacob & Co in Sector 97. This architectural masterpiece is inspired by the meticulous craftsmanship of luxury horology and fine jewelry. The magnificent towers pierce the skyline, offering opulent, sweeping residences that redefine grand living. Each apartment is a sprawling canvas of luxury, featuring double-height ceilings, private plunge pools, and expansive terraces that invite natural light and fresh air. The extravagant clubhouse is an architectural marvel in itself, offering a private cinema, a cigar lounge, a gourmet restaurant, and a cascading infinity pool. Living here means embracing a lifestyle reserved for global citizens, surrounded by impeccable aesthetics and the very highest standards of personalized concierge services.', 
+    imageUrl: generateImage('Residential', 2) 
+  },
+  { 
+    id: 'f4', title: 'Max Estate', city: 'Noida', location: 'Sec 105', category: 'buy', tag: 'Fresh', type: 'Residential', price: 17500000, area: 2200, 
+    description: 'Max Estate in Sector 105 represents the future of sustainable and tranquil residential living. Built on the philosophy of holistic well-being, this property seamlessly integrates nature with modern urban conveniences. The meticulously planned apartments are designed to maximize cross-ventilation and natural sunlight, significantly reducing the carbon footprint. Surrounded by acres of beautifully curated botanical gardens, therapeutic walkways, and pristine water bodies, it offers a peaceful sanctuary for families. The property includes a specialized wellness center, organic cafes, co-working spaces, and dedicated zones for yoga and meditation. With a strong focus on community living and eco-friendly infrastructure, Max Estate provides a unique opportunity to live a balanced, healthy, and elevated lifestyle right in the center of Noida.', 
+    imageUrl: generateImage('Residential', 3) 
+  },
+  { 
+    id: 'f5', title: 'RG Mirage', city: 'Noida', location: 'Sec 120', category: 'buy', tag: 'Fresh', type: 'Residential', price: 11000000, area: 1600, 
+    description: 'Welcome to RG Mirage, a premier residential destination in Sector 120 that promises a perfect blend of comfort, style, and exceptional value. These thoughtfully designed modern apartments cater specifically to the dynamic needs of contemporary urban families. Featuring smart space utilization, modular kitchens, and premium bath fittings, the interiors are both highly functional and aesthetically pleasing. The vibrant community features a sprawling central courtyard, safe kids’ play zones, a multi-purpose banquet hall, and a well-maintained swimming pool. Its strategic location provides residents with immediate access to reputed schools, mega commercial markets, and advanced healthcare facilities. RG Mirage is designed to foster a warm community atmosphere while offering the privacy and luxury you deserve.', 
+    imageUrl: generateImage('Residential', 4) 
+  },
+  { 
+    id: 'f6', title: 'Godrej Riverine', city: 'Noida', location: 'Sec 44', category: 'buy', tag: 'Fresh', type: 'Residential', price: 21000000, area: 2800, 
+    description: 'Godrej Riverine in Sector 44 offers an extraordinary riverside luxury living experience crafted by one of India’s most trusted developers. Wake up to the soothing sights of gentle waters and lush green belts that surround this magnificent property. The residences are a masterclass in elegant design, offering expansive living areas, wrap-around balconies, and smart-home automation features. The project is heavily focused on creating an active and healthy lifestyle, featuring miles of jogging and cycling tracks, outdoor sports courts, a grand clubhouse, and dedicated pet parks. Situated in a highly developed and pristine neighborhood, it provides a quiet, pollution-free environment while keeping you seamlessly connected to South Delhi and major business hubs across the NCR.', 
+    imageUrl: generateImage('Residential', 5) 
+  },
+  { 
+    id: 'f7', title: 'M3M Cullinan', city: 'Noida', location: 'Sec 94', category: 'buy', tag: 'Fresh', type: 'Residential', price: 40000000, area: 5500, 
+    description: 'M3M Cullinan stands as a monumental landmark of bespoke mega-luxury in Sector 94. Named after the world’s largest diamond, this property is the crown jewel of Noida’s real estate. It features palatial apartments that offer a sweeping, uninterrupted 360-degree view of the city and the river. Every residence is meticulously crafted with the finest global materials, offering features like private elevators, massive walk-in closets, and personal bar areas. The ultra-exclusive community amenities include a rooftop helipad, a high-end luxury retail boulevard at the podium level, a world-class spa, and fine dining establishments. This is an address of absolute prestige and power, designed for industry leaders and those who compromise on nothing.', 
+    imageUrl: generateImage('Residential', 6) 
+  },
+  { 
+    id: 'f8', title: 'Great Value Ekanam', city: 'Noida', location: 'Sec 107', category: 'buy', tag: 'Fresh', type: 'Residential', price: 14000000, area: 1950, 
+    description: 'Great Value Ekanam in Sector 107 is synonymous with spacious, well-ventilated, and premium family homes. The architectural design places a heavy emphasis on Vastu compliance, ensuring positive energy and harmony within every apartment. The residences feature large bay windows, imported wooden flooring in master bedrooms, and highly efficient floor plans that eliminate dead spaces. The community is enveloped in lush greenery, featuring thematic gardens, a state-of-the-art fitness center, a sparkling swimming pool, and an exclusive residents’ club. Sector 107 is renowned for its tranquil environment and rapid infrastructural growth, making Great Value Ekanam an incredibly smart investment for those seeking a peaceful yet highly connected urban lifestyle.', 
+    imageUrl: generateImage('Residential', 7) 
+  },
 
   // FRESH PROPERTIES - NOIDA COMMERCIAL
-  { id: 'c1', title: 'M3M Line', city: 'Noida', location: 'Sec 72', category: 'buy', tag: 'Commercial', type: 'Commercial', price: 8000000, area: 500, description: 'High-footfall retail and office spaces.', imageUrl: generateImage('M3M Line') },
-  { id: 'c2', title: 'Max Estate', city: 'Noida', location: 'Sec 105', category: 'buy', tag: 'Commercial', type: 'Commercial', price: 12000000, area: 1200, description: 'Grade A corporate office spaces.', imageUrl: generateImage('Max Estate Com') },
-  { id: 'c3', title: 'Paras Avenue', city: 'Noida', location: 'Sec 129', category: 'buy', tag: 'Commercial', type: 'Commercial', price: 6500000, area: 450, description: 'Premium high-street retail destination.', imageUrl: generateImage('Paras Avenue') },
+  { 
+    id: 'c1', title: 'M3M Line', city: 'Noida', location: 'Sec 72', category: 'buy', tag: 'Commercial', type: 'Commercial', price: 8000000, area: 500, 
+    description: 'M3M Line is poised to become the ultimate high-street commercial destination in Sector 72. Designed to attract massive daily footfall, this state-of-the-art commercial hub offers a brilliant mix of premium retail spaces, gourmet food courts, and modern office suites. The architecture features an open-to-sky courtyard, striking glass facades, and high-speed escalators, ensuring maximum visibility for every brand. With multi-level basement parking and round-the-clock security, it provides a seamless experience for both business owners and consumers. Its location in a densely populated upscale residential catchment area guarantees high returns on investment and unmatched business growth opportunities for retail brands, cafes, and boutique businesses.', 
+    imageUrl: generateImage('Commercial', 0) 
+  },
+  { 
+    id: 'c2', title: 'Max Estate', city: 'Noida', location: 'Sec 105', category: 'buy', tag: 'Commercial', type: 'Commercial', price: 12000000, area: 1200, 
+    description: 'Redefine your corporate identity at Max Estate, Sector 105, offering elite Grade A office spaces. This architectural marvel is designed to foster productivity, innovation, and employee well-being. The building is LEED-certified, featuring smart climate control, energy-efficient lighting, and advanced air filtration systems. Tenants will enjoy grand double-height lobbies, high-speed destination-controlled elevators, and beautifully landscaped breakout zones. The property also houses premium cafeterias, conference facilities, and an executive lounge. Perfect for multinational corporations and fast-growing startups, Max Estate provides an unparalleled professional environment that leaves a lasting impression on clients and ensures a thriving workplace culture.', 
+    imageUrl: generateImage('Commercial', 1) 
+  },
+  { 
+    id: 'c3', title: 'Paras Avenue', city: 'Noida', location: 'Sec 129', category: 'buy', tag: 'Commercial', type: 'Commercial', price: 6500000, area: 450, 
+    description: 'Paras Avenue in Sector 129 is a revolutionary premium high-street retail and lifestyle destination. This brilliantly conceptualized commercial project combines the luxury of a mall with the vibrancy of an open-air market. The development features double-height retail shops, creating grand storefronts that demand attention. Alongside premium retail, it offers dedicated floors for entertainment, wellness centers, and fine dining restaurants with open-air terrace seating. Situated right on the Noida-Greater Noida Expressway, Paras Avenue boasts unparalleled visibility and accessibility. It is surrounded by affluent residential sectors and massive IT parks, ensuring a continuous stream of premium customers and guaranteeing highly lucrative rental yields for investors.', 
+    imageUrl: generateImage('Commercial', 2) 
+  },
 
   // FRESH PROPERTIES - GREATER NOIDA WEST
-  { id: 'gw1', title: 'Fusion – The Brook', city: 'Greater Noida West', location: 'Sec 12', category: 'buy', tag: 'Fresh', type: 'Residential', price: 8500000, area: 1300, description: 'Nature-inspired living in Greater Noida West.', imageUrl: generateImage('Fusion The Brook') },
-  { id: 'gw2', title: 'Yatharth Eternia', city: 'Greater Noida West', location: 'Tech Zone 4', category: 'buy', tag: 'Fresh', type: 'Residential', price: 9200000, area: 1450, description: 'Modern amenities right in Tech Zone 4.', imageUrl: generateImage('Yatharth Eternia') },
-  { id: 'gw3', title: 'VVIP Addresses', city: 'Greater Noida West', location: 'Sec 12', category: 'buy', tag: 'Fresh', type: 'Residential', price: 10500000, area: 1650, description: 'Prestigious residential address for modern families.', imageUrl: generateImage('VVIP Addresses') },
-  { id: 'gw4', title: 'Eldeco La Vida Bella', city: 'Greater Noida West', location: 'Sec 12', category: 'buy', tag: 'Fresh', type: 'Residential', price: 11500000, area: 1800, description: 'Beautifully crafted Spanish-themed homes.', imageUrl: generateImage('Eldeco La Vida') },
-  { id: 'gw5', title: 'Elite X', city: 'Greater Noida West', location: 'Sec 10', category: 'buy', tag: 'Fresh', type: 'Residential', price: 7800000, area: 1250, description: 'Smart homes for the smart generation.', imageUrl: generateImage('Elite X') },
+  { 
+    id: 'gw1', title: 'Fusion – The Brook', city: 'Greater Noida West', location: 'Sec 12', category: 'buy', tag: 'Fresh', type: 'Residential', price: 8500000, area: 1300, 
+    description: 'Embrace a serene, nature-inspired lifestyle at Fusion – The Brook, located in the rapidly developing Sector 12 of Greater Noida West. This property is designed around central water features and lush landscaping, offering a tranquil escape from city noise. The apartments are meticulously crafted to provide maximum natural light, featuring spacious balconies that overlook the beautiful central courtyard. Residents can enjoy an array of premium amenities, including a lavish clubhouse, a modern gymnasium, a swimming pool, and dedicated jogging tracks. With close proximity to upcoming metro stations, reputed schools, and shopping arcades, it offers an ideal environment for families looking for a balanced and vibrant lifestyle.', 
+    imageUrl: generateImage('Residential', 0) 
+  },
+  { 
+    id: 'gw2', title: 'Yatharth Eternia', city: 'Greater Noida West', location: 'Tech Zone 4', category: 'buy', tag: 'Fresh', type: 'Residential', price: 9200000, area: 1450, 
+    description: 'Yatharth Eternia brings modern, upscale living right to the heart of Tech Zone 4 in Greater Noida West. This highly sought-after residential project is defined by its robust construction quality and elegant architectural design. The spacious apartments are tailored for modern families, featuring open-plan living areas, designer fittings, and smart security systems. The project is packed with world-class facilities, including an Olympic-sized swimming pool, indoor sports arenas, a massive community hall, and beautifully manicured gardens. Its strategic location right next to major IT hubs and commercial parks makes it incredibly convenient for working professionals, offering a minimal commute and maximum time for family and recreation.', 
+    imageUrl: generateImage('Residential', 1) 
+  },
+  { 
+    id: 'gw3', title: 'VVIP Addresses', city: 'Greater Noida West', location: 'Sec 12', category: 'buy', tag: 'Fresh', type: 'Residential', price: 10500000, area: 1650, 
+    description: 'Live like royalty at VVIP Addresses, a highly prestigious residential enclave in Sector 12, Greater Noida West. This development sets a new benchmark for luxury in the region, offering grand, well-appointed homes with sophisticated interiors. The property features a majestic entrance gate, sweeping driveways, and magnificent towers that offer panoramic views of the city. The clubhouse is a masterpiece of leisure, offering everything from a lavish spa and salon to a private bowling alley and an elegant restaurant. Designed for modern families who desire a status-driven lifestyle, the project ensures top-tier security, immaculate maintenance, and a vibrant community atmosphere of like-minded individuals.', 
+    imageUrl: generateImage('Residential', 2) 
+  },
+  { 
+    id: 'gw4', title: 'Eldeco La Vida Bella', city: 'Greater Noida West', location: 'Sec 12', category: 'buy', tag: 'Fresh', type: 'Residential', price: 11500000, area: 1800, 
+    description: 'Transport yourself to the charm of Europe with Eldeco La Vida Bella, a beautifully crafted Spanish-themed residential development in Sector 12. From the stunning terracotta-tiled roofs to the ornate ironwork balconies and vibrant central plazas, every detail of this property exudes Mediterranean elegance. The spacious homes are bathed in natural light and feature premium, classic finishes. The community is built around social interaction, featuring beautiful courtyards, cobblestone pathways, al-fresco cafes, and a stunning resort-style pool. It offers a unique, holiday-like lifestyle every single day, while still providing rapid connectivity to the core commercial sectors of Noida and Greater Noida.', 
+    imageUrl: generateImage('Residential', 3) 
+  },
+  { 
+    id: 'gw5', title: 'Elite X', city: 'Greater Noida West', location: 'Sec 10', category: 'buy', tag: 'Fresh', type: 'Residential', price: 7800000, area: 1250, 
+    description: 'Welcome to Elite X in Sector 10, a futuristic residential project designed specifically for the smart, tech-savvy generation. These homes seamlessly integrate advanced home automation, allowing residents to control lighting, climate, and security with a touch of a button. The architecture is ultra-modern, featuring sleek lines and large glass facades. The development focuses heavily on co-living and networking, offering high-speed Wi-Fi zones, modern co-working spaces, a fully equipped fitness center, and a vibrant rooftop lounge. Perfect for young professionals and small families, Elite X offers an energetic, modern lifestyle at a highly competitive price point, right in the heart of Greater Noida West’s growth corridor.', 
+    imageUrl: generateImage('Residential', 4) 
+  },
 
   // FRESH PROPERTIES - YAMUNA
-  { id: 'y1', title: 'Ace Hive', city: 'Yamuna', location: 'Sec 22A', category: 'buy', tag: 'Fresh', type: 'Residential', price: 6000000, area: 1100, description: 'Emerging luxury destination near Yamuna Expressway.', imageUrl: generateImage('Ace Hive') },
-  { id: 'y2', title: 'Eldeco Whispers of Wow', city: 'Yamuna', location: 'Sec 22D', category: 'buy', tag: 'Fresh', type: 'Residential', price: 7200000, area: 1350, description: 'Serene living spaces close to upcoming infra.', imageUrl: generateImage('Eldeco Whispers') },
-  { id: 'y3', title: 'Gaur Chrysalis', city: 'Yamuna', location: 'Sec 22D', category: 'buy', tag: 'Fresh', type: 'Residential', price: 6500000, area: 1200, description: 'Premium plotted and high-rise developments.', imageUrl: generateImage('Gaur Chrysalis') },
-  { id: 'y4', title: 'Ace Verde', city: 'Yamuna', location: 'Sec 22', category: 'buy', tag: 'Fresh', type: 'Residential', price: 8000000, area: 1500, description: 'Lush green surroundings with modern comforts.', imageUrl: generateImage('Ace Verde') },
+  { 
+    id: 'y1', title: 'Ace Hive', city: 'Yamuna', location: 'Sec 22A', category: 'buy', tag: 'Fresh', type: 'Residential', price: 6000000, area: 1100, 
+    description: 'Ace Hive is a rapidly emerging luxury destination strategically located in Sector 22A, near the Yamuna Expressway. This vibrant residential complex is designed to offer a premium lifestyle at an excellent value. The masterfully planned apartments offer highly efficient layouts, elegant flooring, and scenic views of the vast, open surroundings. Residents have access to a massive central park, an interactive children’s play area, a modern gym, and a multi-cuisine cafeteria. With the upcoming Noida International Airport and Film City just a short drive away, Ace Hive represents not just a beautiful home, but a golden investment opportunity in one of India’s fastest-growing real estate corridors.', 
+    imageUrl: generateImage('Residential', 5) 
+  },
+  { 
+    id: 'y2', title: 'Eldeco Whispers of Wow', city: 'Yamuna', location: 'Sec 22D', category: 'buy', tag: 'Fresh', type: 'Residential', price: 7200000, area: 1350, 
+    description: 'Discover serene and majestic living at Eldeco Whispers of Wow in Sector 22D, Yamuna Expressway. This property is a sanctuary of peace, offering low-density living spaces surrounded by vast, pristine green landscapes. The residences are exceptionally spacious, featuring large windows that invite the outdoors in. The property is equipped with top-class amenities, including a luxury club, a grand swimming pool, extensive sporting facilities, and dedicated yoga pavilions. Situated right next to the upcoming mega infrastructural developments, it offers the perfect balance of living in a quiet, pollution-free oasis while being poised to benefit from massive future capital appreciation.', 
+    imageUrl: generateImage('Residential', 6) 
+  },
+  { 
+    id: 'y3', title: 'Gaur Chrysalis', city: 'Yamuna', location: 'Sec 22D', category: 'buy', tag: 'Fresh', type: 'Residential', price: 6500000, area: 1200, 
+    description: 'Gaur Chrysalis in Sector 22D is a magnificent mixed-use development offering a blend of premium high-rise apartments and plotted developments. Crafted by the renowned Gaur Group, this township is a city within a city. The apartments are built to rigorous standards, offering plush interiors and modern conveniences. The sprawling township features its own commercial complex, an international standard school, a hospital, and acres of beautifully landscaped parks. Whether you are taking an evening stroll by the water bodies or enjoying a game at the sports complex, Gaur Chrysalis provides a comprehensive, self-sustained luxury lifestyle just minutes away from the upcoming aviation hub.', 
+    imageUrl: generateImage('Residential', 7) 
+  },
+  { 
+    id: 'y4', title: 'Ace Verde', city: 'Yamuna', location: 'Sec 22', category: 'buy', tag: 'Fresh', type: 'Residential', price: 8000000, area: 1500, 
+    description: 'Experience living amidst lush green surroundings and ultimate modern comfort at Ace Verde in Sector 22, Yamuna Expressway. This eco-friendly residential project is designed for those who appreciate nature without compromising on urban luxury. The expansive homes feature large wrap-around balconies, premium fixtures, and a layout that guarantees complete privacy. The community boasts an enormous forested central park, organic farming zones, an elite clubhouse, and a crystal-clear swimming pool. Positioned right on the expressway, it provides high-speed connectivity to Greater Noida and Agra, making it a perfect retreat for families looking for a pristine environment combined with cutting-edge amenities.', 
+    imageUrl: generateImage('Residential', 0) 
+  },
 
   // RESALE PROPERTIES - NOIDA
-  ...['Lotus Panache – Sec 110', 'Lotus Boulevard – Sec 100', 'Great Value Sharnam – Sec 107', 'Prateek Stylome – Sec 45', 'Mahagun Moderne – Sec 78', 'Ajnara Grand – Sec 74', 'Godrej Woods – Sec 43', 'ABA Cleo County – Sec 121', 'Amrapali Heartbeat City – Sec 107', 'Gulshan Dynasty – Sec 144', 'Ivy County – Sec 75', 'County 107 – Sec 107', 'Prateek Edifice – Sec 107'].map((name, i) => ({
-    id: `rs${i}`, title: name.split(' – ')[0], city: 'Noida', location: name.split(' – ')[1], category: 'buy', tag: 'Resale', type: 'Residential', price: 12000000 + (i * 1000000), area: 1500 + (i * 100), description: `Excellent resale opportunity in ${name.split(' – ')[0]}. Ready to move in immediately.`, imageUrl: generateImage(name + ' Resale')
-  })),
+  ...[
+    'Lotus Panache – Sec 110', 'Lotus Boulevard – Sec 100', 'Great Value Sharnam – Sec 107', 
+    'Prateek Stylome – Sec 45', 'Mahagun Moderne – Sec 78', 'Ajnara Grand – Sec 74', 
+    'Godrej Woods – Sec 43', 'ABA Cleo County – Sec 121', 'Amrapali Heartbeat City – Sec 107', 
+    'Gulshan Dynasty – Sec 144', 'Ivy County – Sec 75', 'County 107 – Sec 107', 'Prateek Edifice – Sec 107'
+  ].map((name, i) => {
+    const title = name.split(' – ')[0];
+    const location = name.split(' – ')[1];
+    return {
+      id: `rs${i}`, 
+      title: title, 
+      city: 'Noida', 
+      location: location, 
+      category: 'buy', 
+      tag: 'Resale', 
+      type: 'Residential', 
+      price: 12000000 + (i * 1000000), 
+      area: 1500 + (i * 100), 
+      description: `Presenting an exceptional resale opportunity at ${title}, prominently located in the highly desirable ${location} of Noida. This magnificent ready-to-move-in residential property offers an unparalleled lifestyle, seamlessly combining modern architectural brilliance with everyday functional comfort. Spanning a generous ${1500 + (i * 100)} square feet, the apartment features meticulously crafted interiors, premium imported flooring, modular wardrobes, and expansive balconies that offer breathtaking, unobstructed views of the surrounding skyline. The living spaces are bathed in natural light and highly ventilated, ensuring a warm, inviting, and healthy atmosphere for your family. Residents will have exclusive, immediate access to a wide array of premium, fully operational amenities, including a resort-style swimming pool, a state-of-the-art fitness center, landscaped podium gardens, indoor sports courts, and 24/7 multi-tier security. Its strategic location ensures effortless connectivity to key commercial IT hubs, top-tier international schools, and world-class healthcare facilities, making it a spectacular choice for discerning homebuyers seeking immediate possession of luxury and convenience.`, 
+      imageUrl: generateImage('Residential', i + 2)
+    };
+  }),
 
   // RENT PROPERTIES - NOIDA
-  ...['Lotus Panache – Sec 110', 'Lotus Boulevard – Sec 100', 'Great Value Sharnam – Sec 107', 'Prateek Stylome – Sec 45', 'Mahagun Moderne – Sec 78', 'Ajnara Grand – Sec 74', 'Godrej Woods – Sec 43', 'ABA Cleo County – Sec 121', 'Amrapali Heartbeat City – Sec 107', 'Gulshan Dynasty – Sec 144', 'Ivy County – Sec 75', 'County 107 – Sec 107', 'Prateek Edifice – Sec 107'].map((name, i) => ({
-    id: `rt${i}`, title: name.split(' – ')[0], city: 'Noida', location: name.split(' – ')[1], category: 'rent', tag: 'Rent', type: 'Residential', price: 35000 + (i * 5000), area: 1500 + (i * 100), description: `Spacious property available for rent in ${name.split(' – ')[0]}. Prime location with top amenities.`, imageUrl: generateImage(name + ' Rent')
-  }))
+  ...[
+    'Lotus Panache – Sec 110', 'Lotus Boulevard – Sec 100', 'Great Value Sharnam – Sec 107', 
+    'Prateek Stylome – Sec 45', 'Mahagun Moderne – Sec 78', 'Ajnara Grand – Sec 74', 
+    'Godrej Woods – Sec 43', 'ABA Cleo County – Sec 121', 'Amrapali Heartbeat City – Sec 107', 
+    'Gulshan Dynasty – Sec 144', 'Ivy County – Sec 75', 'County 107 – Sec 107', 'Prateek Edifice – Sec 107'
+  ].map((name, i) => {
+    const title = name.split(' – ')[0];
+    const location = name.split(' – ')[1];
+    return {
+      id: `rt${i}`, 
+      title: title, 
+      city: 'Noida', 
+      location: location, 
+      category: 'rent', 
+      tag: 'Rent', 
+      type: 'Residential', 
+      price: 35000 + (i * 5000), 
+      area: 1500 + (i * 100), 
+      description: `Experience elevated urban living by renting this stunning, highly sought-after apartment at ${title}, located in the prime neighborhood of ${location}, Noida. This incredibly spacious property is designed to cater to all your modern lifestyle needs, offering a massive ${1500 + (i * 100)} square feet of beautifully designed living space. The apartment comes equipped with top-of-the-line fixtures, a highly functional modular kitchen, spacious bedrooms with ample storage, and large sun-drenched balconies that provide a serene view of the beautifully landscaped community. By choosing to reside here, you gain unlimited access to the society's world-class amenities, which include an opulent clubhouse, a massive sparkling swimming pool, a fully-equipped modern gymnasium, dedicated children's play areas, and beautifully maintained walking tracks. The property features comprehensive CCTV surveillance and power backup for absolute peace of mind. Perfectly situated near major expressways, premium shopping malls, and highly reputed corporate offices, this rental home offers the ultimate blend of luxury, prestige, and unmatched everyday convenience for professionals and families alike.`, 
+      imageUrl: generateImage('Residential', i + 4)
+    };
+  })
 ];
-
 // --- MOCK CONTENT FILLERS ---
 const trendingCities = [
   { name: "Mumbai", image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=400&q=80", props: "1,200+" },
