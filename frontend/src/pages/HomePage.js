@@ -12,31 +12,28 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 // --- HARDCODED PROPERTY DATA WITH UNIQUE IMAGES ---
-// Using picsum seeds with the property name guarantees a distinct, high-quality placeholder for every plot
-// Helper function to provide professional real estate images (Flats, Houses, Commercial)
 const generateImage = (category, index) => {
   const residentialImages = [
-    'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80', // Modern House Exterior
-    'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80', // Luxury Flat Interior
-    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80', // Apartment Living Room
-    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80', // Villa Exterior
-    'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80', // Modern Apartment Setup
-    'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1200&q=80', // House with Pool
-    'https://images.unsplash.com/photo-1502672260266-1c1de2d96674?auto=format&fit=crop&w=1200&q=80', // High-rise Balcony View
-    'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=80'  // Luxury Condo
+    'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80', 
+    'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80', 
+    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80', 
+    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80', 
+    'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80', 
+    'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1200&q=80', 
+    'https://images.unsplash.com/photo-1502672260266-1c1de2d96674?auto=format&fit=crop&w=1200&q=80', 
+    'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=80'  
   ];
 
   const commercialImages = [
-    'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80', // Glass Office Building
-    'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80', // Modern Office Interior
-    'https://images.unsplash.com/photo-1416331108676-a22ccb276e35?auto=format&fit=crop&w=1200&q=80'  // Corporate Exterior
+    'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80', 
+    'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80', 
+    'https://images.unsplash.com/photo-1416331108676-a22ccb276e35?auto=format&fit=crop&w=1200&q=80'  
   ];
 
   if (category === 'Commercial') {
     return commercialImages[index % commercialImages.length];
   }
   
-  // Calculate a pseudo-random index based on string length so it stays consistent
   const safeIndex = (typeof index === 'number' ? index : index?.length || 0) % residentialImages.length;
   return residentialImages[safeIndex];
 };
@@ -198,33 +195,12 @@ export const propertiesData = [
     };
   })
 ];
-// --- MOCK CONTENT FILLERS ---
-const trendingCities = [
-  { name: "Mumbai", image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=400&q=80", props: "1,200+" },
-  { name: "Bangalore", image: "https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&w=400&q=80", props: "3,400+" },
-  { name: "Delhi NCR", image: "https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&w=400&q=80", props: "2,800+" },
-  { name: "Pune", image: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=400&q=80", props: "1,900+" },
-];
-
-const topCollections = [
-  { title: "Premium Villas", desc: "Luxury living at its best", icon: Home, count: "450+ Options" },
-  { title: "Commercial Spaces", desc: "For your growing business", icon: Building, count: "800+ Options" },
-  { title: "Plots & Land", desc: "Build your dream home", icon: Map, count: "1,200+ Options" },
-  { title: "Ready to Move", desc: "Shift immediately", icon: Key, count: "3,000+ Options" },
-];
-
-const articles = [
-  { title: "Real Estate Trends 2026: Where to Invest?", date: "March 5, 2026", category: "Investment" },
-  { title: "5 Things to Check Before Buying a Plot", date: "March 2, 2026", category: "Guide" },
-  { title: "Home Loan Interest Rates Compared", date: "Feb 28, 2026", category: "Finance" }
-];
 
 export default function HomePage() {
   const navigate = useNavigate();
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   
-
   // CHATBOT STATE
   const [isChatOpen, setIsChatOpen] = useState(false);
   const chatSubjects = [
@@ -268,9 +244,9 @@ export default function HomePage() {
   }, [loanAmount, interestRate, loanTenure]);
 
   useEffect(() => {
-    // Simulating API fetch but prioritizing our extensive hardcoded listings
+    // FIX: Replaced `propertyListings` with the correct exported variable `propertiesData`
     setTimeout(() => {
-      setProperties(propertyListings);
+      setProperties(propertiesData);
       setLoading(false);
     }, 800);
   }, []);
@@ -279,7 +255,6 @@ export default function HomePage() {
   const buyProperties = properties.filter(p => p.tag === 'Resale' || p.tag === 'Commercial').slice(0, 8);
   const rentProperties = properties.filter(p => p.category === 'rent').slice(0, 8);
 
-  // REUSABLE PROPERTY GRID WITH REDIRECT TO PROPERTY DETAILS
   const PropertyGrid = ({ title, subtitle, items }) => (
     <section className="py-16 px-6 bg-white border-b border-slate-100">
       <div className="max-w-7xl mx-auto">
@@ -488,13 +463,59 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- FOOTER --- */}
+      {/* --- FOOTER (Upgraded to match detail page) --- */}
       <footer className="bg-[#0A0A0A] text-white pt-20 pb-10 px-6 border-t border-slate-800">
-         <div className="max-w-7xl mx-auto text-center md:text-left">
-            <h3 className="text-3xl font-black tracking-tight mb-4">ANK Realty<span className="text-red-600">.</span></h3>
-            <p className="text-slate-400 text-sm">The Red Carpet of Real Estate. End-to-end property solutions across India.</p>
-            <p className="text-slate-500 mt-10 text-xs">&copy; {new Date().getFullYear()} ANK Realty. All rights reserved.</p>
-         </div>
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+            <div className="space-y-6">
+              <h3 className="text-3xl font-extrabold tracking-tight">ANK Realty<span className="text-red-600">.</span></h3>
+              <p className="text-slate-400 text-sm leading-relaxed pr-4 font-medium">
+                The Red Carpet of Real Estate. We are committed to providing the highest level of service, transparency, and expertise in the Indian real estate market.
+              </p>
+              <div className="flex space-x-3">
+                  <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer"><Mail className="w-4 h-4"/></div>
+                  <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer"><Phone className="w-4 h-4"/></div>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="font-bold text-lg mb-6 text-slate-100">Quick Links</h4>
+              <ul className="space-y-4 text-slate-400 font-medium text-sm">
+                <li><Link to="/buy" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Buy Property</Link></li>
+                <li><Link to="/sell" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Sell Property</Link></li>
+                <li><Link to="/rent" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Rent Property</Link></li>
+                <li><Link to="/contact" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Contact Us</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-bold text-lg mb-6 text-slate-100">Categories</h4>
+              <ul className="space-y-4 text-slate-400 font-medium text-sm">
+                <li><Link to="/buy" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Apartments</Link></li>
+                <li><Link to="/buy" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Villas</Link></li>
+                <li><Link to="/buy" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Plots / Land</Link></li>
+                <li><Link to="/buy" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Commercial Space</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-bold text-lg mb-6 text-slate-100">Contact Us</h4>
+              <div className="space-y-4 text-slate-400 font-medium text-sm">
+                <p className="flex items-start"><MapPin className="w-5 h-5 mr-3 text-red-600 shrink-0"/> 123 Business Avenue, Tech Park, Mumbai, 400001</p>
+                <p className="flex items-center"><Mail className="w-5 h-5 mr-3 text-red-600 shrink-0"/> info@ankrealty.com</p>
+                <p className="flex items-center"><Phone className="w-5 h-5 mr-3 text-red-600 shrink-0"/> +91 98765 43210</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-slate-500 font-medium">
+            <p>&copy; {new Date().getFullYear()} ANK Realty. All rights reserved.</p>
+            <div className="flex space-x-6 mt-4 md:mt-0">
+                <Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+                <Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+            </div>
+          </div>
+        </div>
       </footer>
 
       {/* --- FLOATING CHATBOT --- */}
