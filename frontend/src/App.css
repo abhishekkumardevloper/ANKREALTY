@@ -1,0 +1,84 @@
+.App {
+  min-height: 100vh;
+}
+
+.property-card-image {
+  transition: transform 0.3s ease-out;
+}
+
+.property-card:hover .property-card-image {
+  transform: scale(1.05);
+}
+
+.btn-primary {
+  background-color: #C8102E;
+  color: white;
+  padding: 0.75rem 2rem;
+  border-radius: 0.125rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 14px 0 rgba(200, 16, 46, 0.39);
+}
+
+.btn-primary:hover {
+  background-color: #A00C24;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(200, 16, 46, 0.4);
+}
+
+.btn-secondary {
+  border: 2px solid #0D0D0D;
+  color: #0D0D0D;
+  padding: 0.75rem 2rem;
+  border-radius: 0.125rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.btn-secondary:hover {
+  background-color: #0D0D0D;
+  color: white;
+}
+
+.hero-section {
+  position: relative;
+  height: 70vh;
+  min-height: 500px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6));
+}
+
+.glass-nav {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.search-toggle {
+  display: inline-flex;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  border-radius: 0.25rem;
+  padding: 0.25rem;
+}
+
+.search-toggle button {
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.125rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  color: white;
+}
+
+.search-toggle button.active {
+  background: #C8102E;
+  box-shadow: 0 2px 8px rgba(200, 16, 46, 0.4);
+}
