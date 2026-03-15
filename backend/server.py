@@ -13,13 +13,27 @@ from datetime import datetime, timezone, timedelta
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 
+# Setup Logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# Load environment variables (Useful for local dev, Render will use its own dashboard variables)
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
+# Safely get DB credentials
+mongo_url = os.environ.get('MONGO_URL')
+db_name = os.environ.get('DB_NAME', 'ank_realty_db')
+
+if not mongo_url:
+    logger.warning("MONGO_URL environment variable is not set. The app will fail to connect to the database.")
+
 # MongoDB connection
-mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+db = client[db_name]
 
 # Security
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -29,8 +43,25 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 
 security = HTTPBearer()
 
-app = FastAPI()
+# Initialize App
+app = FastAPI(title="ANK Realty API")
+
+# Setup CORS (Must be done before adding routes)
+cors_origins = os.environ.get('CORS_ORIGINS', '*').split(',')
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 api_router = APIRouter(prefix="/api")
+
+# --- ROOT HEALTH CHECK FOR RENDER ---
+@app.get("/")
+async def root():
+    return {"status": "online", "message": "ANK Realty API is running", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 # Password helpers
 def hash_password(password: str) -> str:
@@ -177,12 +208,10 @@ class Appointment(BaseModel):
 # Auth Routes
 @api_router.post("/auth/register")
 async def register(user_data: UserRegister):
-    # Check if user exists
     existing_user = await db.users.find_one({"email": user_data.email}, {"_id": 0})
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    # Create user
     user_id = str(uuid.uuid4())
     user_doc = {
         "id": user_id,
@@ -195,8 +224,6 @@ async def register(user_data: UserRegister):
     }
     
     await db.users.insert_one(user_doc)
-    
-    # Create token
     access_token = create_access_token(data={"sub": user_id})
     
     return {
@@ -314,7 +341,6 @@ async def get_property(property_id: str):
     if not property_doc:
         raise HTTPException(status_code=404, detail="Property not found")
     
-    # Increment views
     await db.properties.update_one({"id": property_id}, {"$inc": {"views": 1}})
     property_doc["views"] = property_doc.get("views", 0) + 1
     
@@ -354,7 +380,6 @@ async def delete_property(property_id: str, current_user: dict = Depends(get_cur
 # Favorites
 @api_router.post("/favorites")
 async def add_favorite(favorite_data: FavoriteCreate, current_user: dict = Depends(get_current_user)):
-    # Check if already favorited
     existing = await db.favorites.find_one({
         "user_id": current_user["id"],
         "property_id": favorite_data.property_id
@@ -378,7 +403,6 @@ async def add_favorite(favorite_data: FavoriteCreate, current_user: dict = Depen
 async def get_favorites(current_user: dict = Depends(get_current_user)):
     favorites = await db.favorites.find({"user_id": current_user["id"]}, {"_id": 0}).to_list(100)
     
-    # Get property details
     property_ids = [fav["property_id"] for fav in favorites]
     properties = await db.properties.find({"id": {"$in": property_ids}}, {"_id": 0}).to_list(100)
     
@@ -420,7 +444,6 @@ async def create_inquiry(inquiry_data: InquiryCreate, current_user: dict = Depen
 
 @api_router.get("/inquiries")
 async def get_inquiries(current_user: dict = Depends(get_current_user)):
-    # Get inquiries where user is sender or receiver
     inquiries = await db.inquiries.find({
         "$or": [
             {"from_user_id": current_user["id"]},
@@ -538,20 +561,6 @@ async def update_property_status(
     return {"message": f"Property {status} successfully"}
 
 app.include_router(api_router)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
