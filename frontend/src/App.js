@@ -11,6 +11,7 @@ import UserDashboard from "./pages/UserDashboard";
 import AuthPage from "./pages/AuthPage";
 
 import AboutPage from "./pages/about";
+import CrmDashboard from "./pages/CrmDashboard";
 import ContactPage from "./pages/contact";
 
 import BuyPage from "./pages/buy";
@@ -77,6 +78,7 @@ function AppRoutes() {
       <Route path="/blog" element={<BlogPage />} />
       <Route path="/videos" element={<VideosPage />} />
       <Route path="/insights" element={<InsightsPage />} />
+      <Route path="/CrmDashboard" element={<CrmDashboard />} />
       <Route path="/careers" element={<CareersPage />} />
 
       <Route path="/properties" element={<PropertyListingPage />} />
