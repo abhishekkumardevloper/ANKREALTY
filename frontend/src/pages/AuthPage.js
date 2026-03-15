@@ -24,7 +24,7 @@ export default function AuthPage() {
     email: "",
     password: "",
     phone: "",
-    role: "user",
+    role: "user", // Default role
   });
 
   // ================= LOGIN =================
@@ -33,7 +33,7 @@ export default function AuthPage() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_URL}/auth/login`, {
+      const response = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -72,7 +72,7 @@ export default function AuthPage() {
     setLoading(true);
 
     try {
-     const response = await fetch(`${API_URL}/auth/register`, {
+      const response = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -218,11 +218,11 @@ export default function AuthPage() {
                         role: e.target.value,
                       })
                     }
-                    className="w-full h-10 px-3 border rounded-sm"
+                    className="w-full h-10 px-3 border rounded-sm outline-none focus:ring-2 focus:ring-red-200 focus:border-red-500 transition-all"
                   >
-                    <option value="user">User</option>
-                    <option value="agent">Agent</option>
-                    <option value="admin">Admin</option>
+                    <option value="user">Property Buyer / User</option>
+                    <option value="agent">Real Estate Agent</option>
+                    {/* Admin option removed for security */}
                   </select>
                 </div>
 
