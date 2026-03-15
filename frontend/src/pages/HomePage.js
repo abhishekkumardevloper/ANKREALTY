@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 
 // --- LOGO ARRAYS FOR ANIMATION ---
 const topRowLogos = [
-  "/images (7).jpeg",
+  "/images (7).png",
   "/images (2).png",
   "/images (1).png",
   "/logo (2).png",
@@ -24,10 +24,9 @@ const topRowLogos = [
 
 const bottomRowLogos = [
   "/images.png",
-  "/images (6).jpeg",
+  "/images (6).png",
   "/Max_Estates_logo.svg.png",
-  "/M3M-Jacob-and-Co-logo.webp",
-  "/images (8).jpeg",
+  "/M3M-Jacob-and-Co-logo.png",
 ];
 
 // --- HARDCODED PROPERTY DATA WITH UNIQUE IMAGES ---
