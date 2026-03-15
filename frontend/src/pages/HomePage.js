@@ -15,19 +15,19 @@ import { Input } from '@/components/ui/input';
 
 // --- LOGO ARRAYS FOR ANIMATION ---
 const topRowLogos = [
-  "/sankalp logo.png",
-  "/one step logo.png",
-  "/blve & blessed logo.png",
-  "/rexine house logo.png",
-  "/ashadeep clinic logo.png",
+  "/images (7).jpeg",
+  "/images (2).png",
+  "/images (1).png",
+  "/logo (2).png",
+  "/183f468e401f4220bce9e4f7b1e3ffd820251112162925170.png",
 ];
 
 const bottomRowLogos = [
-  "/arch build logo.png",
-  "/birdcart logo.png",
-  "/raj automobiles.png",
-  "/sasta plots logo.png",
-  "/ampush logo.png",
+  "/images.png",
+  "/images (6).jpeg",
+  "/Max_Estates_logo.svg.png",
+  "/M3M-Jacob-and-Co-logo.webp",
+  "/images (8).jpeg",
 ];
 
 // --- HARDCODED PROPERTY DATA WITH UNIQUE IMAGES ---
