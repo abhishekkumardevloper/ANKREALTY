@@ -5,7 +5,8 @@ import {
   Search, MapPin, Home, Heart, ArrowRight, Star, 
   Building, CheckCircle, Key, FileText, Loader2, Mail, 
   TrendingUp, Calculator, Shield, BookOpen, Phone,
-  ChevronRight, Map, Banknote, X, MessageSquare, Send
+  ChevronRight, Map, Banknote, X, MessageSquare, Send,
+  Building2, Briefcase, Ruler, Users, Award, ThumbsUp, Quote, Newspaper, Bell
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { Button } from '@/components/ui/button';
@@ -17,205 +18,65 @@ const generateImage = (category, index) => {
     'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80', 
     'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80', 
     'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80', 
-    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80', 
-    'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80', 
-    'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1200&q=80', 
-    'https://images.unsplash.com/photo-1502672260266-1c1de2d96674?auto=format&fit=crop&w=1200&q=80', 
-    'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=80'  
+    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80'  
   ];
-
   const commercialImages = [
     'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80', 
-    'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80', 
-    'https://images.unsplash.com/photo-1416331108676-a22ccb276e35?auto=format&fit=crop&w=1200&q=80'  
+    'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80'  
   ];
 
-  if (category === 'Commercial') {
-    return commercialImages[index % commercialImages.length];
-  }
-  
+  if (category === 'Commercial') return commercialImages[index % commercialImages.length];
   const safeIndex = (typeof index === 'number' ? index : index?.length || 0) % residentialImages.length;
   return residentialImages[safeIndex];
 };
 
+// Data Hydration Helper
+const enrichProperty = (p) => ({
+  ...p,
+  builder: p.title.split(' ')[0],
+  bhk: p.category === 'Commercial' ? 'Retail / Office' : (Math.floor(Math.random() * 3) + 2) + ' BHK',
+  status: p.tag === 'Fresh' ? 'Under Construction' : 'Ready to Move',
+  rera: `UPRERA-PRJ${Math.floor(1000 + Math.random() * 9000)}`
+});
+
 export const propertiesData = [
-  // FRESH PROPERTIES - NOIDA RESIDENTIAL
-  { 
-    id: 'f1', title: 'Experion Saatori', city: 'Noida', location: 'Sec 151', category: 'buy', tag: 'Fresh', type: 'Residential', price: 18500000, area: 2400, 
-    description: 'Discover the epitome of luxury living at Experion Saatori, strategically located in the highly sought-after Sector 151, Noida. This premium residential development offers a harmonious blend of contemporary architecture and lush green landscapes, providing residents with a serene retreat from the bustling city. The meticulously designed apartments feature expansive layouts, floor-to-ceiling windows, and top-tier finishes that redefine modern elegance. Residents can indulge in a plethora of world-class amenities, including a state-of-the-art clubhouse, infinity swimming pool, fully equipped gymnasium, and dedicated sports facilities. With seamless connectivity to major expressways, corporate hubs, and premier educational institutions, Experion Saatori is not just a home, but a lifestyle statement for those who seek the very best in urban living and unparalleled comfort.', 
-    imageUrl: generateImage('Residential', 0) 
-  },
-  { 
-    id: 'f2', title: 'Smart World Elie Saab', city: 'Noida', location: 'Sec 98', category: 'buy', tag: 'Fresh', type: 'Residential', price: 22000000, area: 3100, 
-    description: 'Step into a realm of unmatched elegance at Smart World Elie Saab, an exclusive designer residential enclave situated in the heart of Sector 98. Conceptualized by globally renowned designers, this iconic property brings haute couture to real estate. Every inch of these majestic residences exudes sophistication, featuring bespoke interiors, imported marble flooring, and panoramic views of the city skyline. The development boasts an exclusive residents-only lounge, a temperature-controlled indoor pool, private cabanas, and a wellness spa that rivals five-star resorts. Designed for the elite few, the property ensures absolute privacy with dedicated elevators and multi-tier security. Its prime location guarantees that high-end shopping avenues, fine dining restaurants, and top corporate centers are merely a stone’s throw away.', 
-    imageUrl: generateImage('Residential', 1) 
-  },
-  { 
-    id: 'f3', title: 'M3M Jacob & Co', city: 'Noida', location: 'Sec 97', category: 'buy', tag: 'Fresh', type: 'Residential', price: 35000000, area: 4500, 
-    description: 'Experience the pinnacle of ultra-luxury real estate at M3M Jacob & Co in Sector 97. This architectural masterpiece is inspired by the meticulous craftsmanship of luxury horology and fine jewelry. The magnificent towers pierce the skyline, offering opulent, sweeping residences that redefine grand living. Each apartment is a sprawling canvas of luxury, featuring double-height ceilings, private plunge pools, and expansive terraces that invite natural light and fresh air. The extravagant clubhouse is an architectural marvel in itself, offering a private cinema, a cigar lounge, a gourmet restaurant, and a cascading infinity pool. Living here means embracing a lifestyle reserved for global citizens, surrounded by impeccable aesthetics and the very highest standards of personalized concierge services.', 
-    imageUrl: generateImage('Residential', 2) 
-  },
-  { 
-    id: 'f4', title: 'Max Estate', city: 'Noida', location: 'Sec 105', category: 'buy', tag: 'Fresh', type: 'Residential', price: 17500000, area: 2200, 
-    description: 'Max Estate in Sector 105 represents the future of sustainable and tranquil residential living. Built on the philosophy of holistic well-being, this property seamlessly integrates nature with modern urban conveniences. The meticulously planned apartments are designed to maximize cross-ventilation and natural sunlight, significantly reducing the carbon footprint. Surrounded by acres of beautifully curated botanical gardens, therapeutic walkways, and pristine water bodies, it offers a peaceful sanctuary for families. The property includes a specialized wellness center, organic cafes, co-working spaces, and dedicated zones for yoga and meditation. With a strong focus on community living and eco-friendly infrastructure, Max Estate provides a unique opportunity to live a balanced, healthy, and elevated lifestyle right in the center of Noida.', 
-    imageUrl: generateImage('Residential', 3) 
-  },
-  { 
-    id: 'f5', title: 'RG Mirage', city: 'Noida', location: 'Sec 120', category: 'buy', tag: 'Fresh', type: 'Residential', price: 11000000, area: 1600, 
-    description: 'Welcome to RG Mirage, a premier residential destination in Sector 120 that promises a perfect blend of comfort, style, and exceptional value. These thoughtfully designed modern apartments cater specifically to the dynamic needs of contemporary urban families. Featuring smart space utilization, modular kitchens, and premium bath fittings, the interiors are both highly functional and aesthetically pleasing. The vibrant community features a sprawling central courtyard, safe kids’ play zones, a multi-purpose banquet hall, and a well-maintained swimming pool. Its strategic location provides residents with immediate access to reputed schools, mega commercial markets, and advanced healthcare facilities. RG Mirage is designed to foster a warm community atmosphere while offering the privacy and luxury you deserve.', 
-    imageUrl: generateImage('Residential', 4) 
-  },
-  { 
-    id: 'f6', title: 'Godrej Riverine', city: 'Noida', location: 'Sec 44', category: 'buy', tag: 'Fresh', type: 'Residential', price: 21000000, area: 2800, 
-    description: 'Godrej Riverine in Sector 44 offers an extraordinary riverside luxury living experience crafted by one of India’s most trusted developers. Wake up to the soothing sights of gentle waters and lush green belts that surround this magnificent property. The residences are a masterclass in elegant design, offering expansive living areas, wrap-around balconies, and smart-home automation features. The project is heavily focused on creating an active and healthy lifestyle, featuring miles of jogging and cycling tracks, outdoor sports courts, a grand clubhouse, and dedicated pet parks. Situated in a highly developed and pristine neighborhood, it provides a quiet, pollution-free environment while keeping you seamlessly connected to South Delhi and major business hubs across the NCR.', 
-    imageUrl: generateImage('Residential', 5) 
-  },
-  { 
-    id: 'f7', title: 'M3M Cullinan', city: 'Noida', location: 'Sec 94', category: 'buy', tag: 'Fresh', type: 'Residential', price: 40000000, area: 5500, 
-    description: 'M3M Cullinan stands as a monumental landmark of bespoke mega-luxury in Sector 94. Named after the world’s largest diamond, this property is the crown jewel of Noida’s real estate. It features palatial apartments that offer a sweeping, uninterrupted 360-degree view of the city and the river. Every residence is meticulously crafted with the finest global materials, offering features like private elevators, massive walk-in closets, and personal bar areas. The ultra-exclusive community amenities include a rooftop helipad, a high-end luxury retail boulevard at the podium level, a world-class spa, and fine dining establishments. This is an address of absolute prestige and power, designed for industry leaders and those who compromise on nothing.', 
-    imageUrl: generateImage('Residential', 6) 
-  },
-  { 
-    id: 'f8', title: 'Great Value Ekanam', city: 'Noida', location: 'Sec 107', category: 'buy', tag: 'Fresh', type: 'Residential', price: 14000000, area: 1950, 
-    description: 'Great Value Ekanam in Sector 107 is synonymous with spacious, well-ventilated, and premium family homes. The architectural design places a heavy emphasis on Vastu compliance, ensuring positive energy and harmony within every apartment. The residences feature large bay windows, imported wooden flooring in master bedrooms, and highly efficient floor plans that eliminate dead spaces. The community is enveloped in lush greenery, featuring thematic gardens, a state-of-the-art fitness center, a sparkling swimming pool, and an exclusive residents’ club. Sector 107 is renowned for its tranquil environment and rapid infrastructural growth, making Great Value Ekanam an incredibly smart investment for those seeking a peaceful yet highly connected urban lifestyle.', 
-    imageUrl: generateImage('Residential', 7) 
-  },
-
-  // FRESH PROPERTIES - NOIDA COMMERCIAL
-  { 
-    id: 'c1', title: 'M3M Line', city: 'Noida', location: 'Sec 72', category: 'buy', tag: 'Commercial', type: 'Commercial', price: 8000000, area: 500, 
-    description: 'M3M Line is poised to become the ultimate high-street commercial destination in Sector 72. Designed to attract massive daily footfall, this state-of-the-art commercial hub offers a brilliant mix of premium retail spaces, gourmet food courts, and modern office suites. The architecture features an open-to-sky courtyard, striking glass facades, and high-speed escalators, ensuring maximum visibility for every brand. With multi-level basement parking and round-the-clock security, it provides a seamless experience for both business owners and consumers. Its location in a densely populated upscale residential catchment area guarantees high returns on investment and unmatched business growth opportunities for retail brands, cafes, and boutique businesses.', 
-    imageUrl: generateImage('Commercial', 0) 
-  },
-  { 
-    id: 'c2', title: 'Max Estate', city: 'Noida', location: 'Sec 105', category: 'buy', tag: 'Commercial', type: 'Commercial', price: 12000000, area: 1200, 
-    description: 'Redefine your corporate identity at Max Estate, Sector 105, offering elite Grade A office spaces. This architectural marvel is designed to foster productivity, innovation, and employee well-being. The building is LEED-certified, featuring smart climate control, energy-efficient lighting, and advanced air filtration systems. Tenants will enjoy grand double-height lobbies, high-speed destination-controlled elevators, and beautifully landscaped breakout zones. The property also houses premium cafeterias, conference facilities, and an executive lounge. Perfect for multinational corporations and fast-growing startups, Max Estate provides an unparalleled professional environment that leaves a lasting impression on clients and ensures a thriving workplace culture.', 
-    imageUrl: generateImage('Commercial', 1) 
-  },
-  { 
-    id: 'c3', title: 'Paras Avenue', city: 'Noida', location: 'Sec 129', category: 'buy', tag: 'Commercial', type: 'Commercial', price: 6500000, area: 450, 
-    description: 'Paras Avenue in Sector 129 is a revolutionary premium high-street retail and lifestyle destination. This brilliantly conceptualized commercial project combines the luxury of a mall with the vibrancy of an open-air market. The development features double-height retail shops, creating grand storefronts that demand attention. Alongside premium retail, it offers dedicated floors for entertainment, wellness centers, and fine dining restaurants with open-air terrace seating. Situated right on the Noida-Greater Noida Expressway, Paras Avenue boasts unparalleled visibility and accessibility. It is surrounded by affluent residential sectors and massive IT parks, ensuring a continuous stream of premium customers and guaranteeing highly lucrative rental yields for investors.', 
-    imageUrl: generateImage('Commercial', 2) 
-  },
-
-  // FRESH PROPERTIES - GREATER NOIDA WEST
-  { 
-    id: 'gw1', title: 'Fusion – The Brook', city: 'Greater Noida West', location: 'Sec 12', category: 'buy', tag: 'Fresh', type: 'Residential', price: 8500000, area: 1300, 
-    description: 'Embrace a serene, nature-inspired lifestyle at Fusion – The Brook, located in the rapidly developing Sector 12 of Greater Noida West. This property is designed around central water features and lush landscaping, offering a tranquil escape from city noise. The apartments are meticulously crafted to provide maximum natural light, featuring spacious balconies that overlook the beautiful central courtyard. Residents can enjoy an array of premium amenities, including a lavish clubhouse, a modern gymnasium, a swimming pool, and dedicated jogging tracks. With close proximity to upcoming metro stations, reputed schools, and shopping arcades, it offers an ideal environment for families looking for a balanced and vibrant lifestyle.', 
-    imageUrl: generateImage('Residential', 0) 
-  },
-  { 
-    id: 'gw2', title: 'Yatharth Eternia', city: 'Greater Noida West', location: 'Tech Zone 4', category: 'buy', tag: 'Fresh', type: 'Residential', price: 9200000, area: 1450, 
-    description: 'Yatharth Eternia brings modern, upscale living right to the heart of Tech Zone 4 in Greater Noida West. This highly sought-after residential project is defined by its robust construction quality and elegant architectural design. The spacious apartments are tailored for modern families, featuring open-plan living areas, designer fittings, and smart security systems. The project is packed with world-class facilities, including an Olympic-sized swimming pool, indoor sports arenas, a massive community hall, and beautifully manicured gardens. Its strategic location right next to major IT hubs and commercial parks makes it incredibly convenient for working professionals, offering a minimal commute and maximum time for family and recreation.', 
-    imageUrl: generateImage('Residential', 1) 
-  },
-  { 
-    id: 'gw3', title: 'VVIP Addresses', city: 'Greater Noida West', location: 'Sec 12', category: 'buy', tag: 'Fresh', type: 'Residential', price: 10500000, area: 1650, 
-    description: 'Live like royalty at VVIP Addresses, a highly prestigious residential enclave in Sector 12, Greater Noida West. This development sets a new benchmark for luxury in the region, offering grand, well-appointed homes with sophisticated interiors. The property features a majestic entrance gate, sweeping driveways, and magnificent towers that offer panoramic views of the city. The clubhouse is a masterpiece of leisure, offering everything from a lavish spa and salon to a private bowling alley and an elegant restaurant. Designed for modern families who desire a status-driven lifestyle, the project ensures top-tier security, immaculate maintenance, and a vibrant community atmosphere of like-minded individuals.', 
-    imageUrl: generateImage('Residential', 2) 
-  },
-  { 
-    id: 'gw4', title: 'Eldeco La Vida Bella', city: 'Greater Noida West', location: 'Sec 12', category: 'buy', tag: 'Fresh', type: 'Residential', price: 11500000, area: 1800, 
-    description: 'Transport yourself to the charm of Europe with Eldeco La Vida Bella, a beautifully crafted Spanish-themed residential development in Sector 12. From the stunning terracotta-tiled roofs to the ornate ironwork balconies and vibrant central plazas, every detail of this property exudes Mediterranean elegance. The spacious homes are bathed in natural light and feature premium, classic finishes. The community is built around social interaction, featuring beautiful courtyards, cobblestone pathways, al-fresco cafes, and a stunning resort-style pool. It offers a unique, holiday-like lifestyle every single day, while still providing rapid connectivity to the core commercial sectors of Noida and Greater Noida.', 
-    imageUrl: generateImage('Residential', 3) 
-  },
-  { 
-    id: 'gw5', title: 'Elite X', city: 'Greater Noida West', location: 'Sec 10', category: 'buy', tag: 'Fresh', type: 'Residential', price: 7800000, area: 1250, 
-    description: 'Welcome to Elite X in Sector 10, a futuristic residential project designed specifically for the smart, tech-savvy generation. These homes seamlessly integrate advanced home automation, allowing residents to control lighting, climate, and security with a touch of a button. The architecture is ultra-modern, featuring sleek lines and large glass facades. The development focuses heavily on co-living and networking, offering high-speed Wi-Fi zones, modern co-working spaces, a fully equipped fitness center, and a vibrant rooftop lounge. Perfect for young professionals and small families, Elite X offers an energetic, modern lifestyle at a highly competitive price point, right in the heart of Greater Noida West’s growth corridor.', 
-    imageUrl: generateImage('Residential', 4) 
-  },
-
-  // FRESH PROPERTIES - YAMUNA
-  { 
-    id: 'y1', title: 'Ace Hive', city: 'Yamuna', location: 'Sec 22A', category: 'buy', tag: 'Fresh', type: 'Residential', price: 6000000, area: 1100, 
-    description: 'Ace Hive is a rapidly emerging luxury destination strategically located in Sector 22A, near the Yamuna Expressway. This vibrant residential complex is designed to offer a premium lifestyle at an excellent value. The masterfully planned apartments offer highly efficient layouts, elegant flooring, and scenic views of the vast, open surroundings. Residents have access to a massive central park, an interactive children’s play area, a modern gym, and a multi-cuisine cafeteria. With the upcoming Noida International Airport and Film City just a short drive away, Ace Hive represents not just a beautiful home, but a golden investment opportunity in one of India’s fastest-growing real estate corridors.', 
-    imageUrl: generateImage('Residential', 5) 
-  },
-  { 
-    id: 'y2', title: 'Eldeco Whispers of Wow', city: 'Yamuna', location: 'Sec 22D', category: 'buy', tag: 'Fresh', type: 'Residential', price: 7200000, area: 1350, 
-    description: 'Discover serene and majestic living at Eldeco Whispers of Wow in Sector 22D, Yamuna Expressway. This property is a sanctuary of peace, offering low-density living spaces surrounded by vast, pristine green landscapes. The residences are exceptionally spacious, featuring large windows that invite the outdoors in. The property is equipped with top-class amenities, including a luxury club, a grand swimming pool, extensive sporting facilities, and dedicated yoga pavilions. Situated right next to the upcoming mega infrastructural developments, it offers the perfect balance of living in a quiet, pollution-free oasis while being poised to benefit from massive future capital appreciation.', 
-    imageUrl: generateImage('Residential', 6) 
-  },
-  { 
-    id: 'y3', title: 'Gaur Chrysalis', city: 'Yamuna', location: 'Sec 22D', category: 'buy', tag: 'Fresh', type: 'Residential', price: 6500000, area: 1200, 
-    description: 'Gaur Chrysalis in Sector 22D is a magnificent mixed-use development offering a blend of premium high-rise apartments and plotted developments. Crafted by the renowned Gaur Group, this township is a city within a city. The apartments are built to rigorous standards, offering plush interiors and modern conveniences. The sprawling township features its own commercial complex, an international standard school, a hospital, and acres of beautifully landscaped parks. Whether you are taking an evening stroll by the water bodies or enjoying a game at the sports complex, Gaur Chrysalis provides a comprehensive, self-sustained luxury lifestyle just minutes away from the upcoming aviation hub.', 
-    imageUrl: generateImage('Residential', 7) 
-  },
-  { 
-    id: 'y4', title: 'Ace Verde', city: 'Yamuna', location: 'Sec 22', category: 'buy', tag: 'Fresh', type: 'Residential', price: 8000000, area: 1500, 
-    description: 'Experience living amidst lush green surroundings and ultimate modern comfort at Ace Verde in Sector 22, Yamuna Expressway. This eco-friendly residential project is designed for those who appreciate nature without compromising on urban luxury. The expansive homes feature large wrap-around balconies, premium fixtures, and a layout that guarantees complete privacy. The community boasts an enormous forested central park, organic farming zones, an elite clubhouse, and a crystal-clear swimming pool. Positioned right on the expressway, it provides high-speed connectivity to Greater Noida and Agra, making it a perfect retreat for families looking for a pristine environment combined with cutting-edge amenities.', 
-    imageUrl: generateImage('Residential', 0) 
-  },
-
-  // RESALE PROPERTIES - NOIDA
+  { id: 'f1', title: 'Experion Saatori', city: 'Noida', location: 'Sec 151', category: 'buy', tag: 'Fresh', type: 'Residential', price: 18500000, area: 2400, description: 'Premium residential development offering a harmonious blend of contemporary architecture.', imageUrl: generateImage('Residential', 0) },
+  { id: 'f2', title: 'Smart World Elie Saab', city: 'Noida', location: 'Sec 98', category: 'buy', tag: 'Fresh', type: 'Residential', price: 22000000, area: 3100, description: 'Exclusive designer residential enclave conceptualized by globally renowned designers.', imageUrl: generateImage('Residential', 1) },
+  { id: 'f3', title: 'M3M Jacob & Co', city: 'Noida', location: 'Sec 97', category: 'buy', tag: 'Fresh', type: 'Residential', price: 35000000, area: 4500, description: 'Pinnacle of ultra-luxury real estate inspired by meticulous craftsmanship.', imageUrl: generateImage('Residential', 2) },
+  { id: 'f4', title: 'Max Estate', city: 'Noida', location: 'Sec 105', category: 'buy', tag: 'Fresh', type: 'Residential', price: 17500000, area: 2200, description: 'Future of sustainable and tranquil residential living.', imageUrl: generateImage('Residential', 3) },
+  { id: 'c1', title: 'M3M Line', city: 'Noida', location: 'Sec 72', category: 'buy', tag: 'Commercial', type: 'Commercial', price: 8000000, area: 500, description: 'Ultimate high-street commercial destination offering a brilliant mix of premium retail spaces.', imageUrl: generateImage('Commercial', 0) },
+  { id: 'c2', title: 'Max Estate Commercial', city: 'Noida', location: 'Sec 105', category: 'buy', tag: 'Commercial', type: 'Commercial', price: 12000000, area: 1200, description: 'Redefine your corporate identity offering elite Grade A office spaces.', imageUrl: generateImage('Commercial', 1) },
   ...[
     'Lotus Panache – Sec 110', 'Lotus Boulevard – Sec 100', 'Great Value Sharnam – Sec 107', 
-    'Prateek Stylome – Sec 45', 'Mahagun Moderne – Sec 78', 'Ajnara Grand – Sec 74', 
-    'Godrej Woods – Sec 43', 'ABA Cleo County – Sec 121', 'Amrapali Heartbeat City – Sec 107', 
-    'Gulshan Dynasty – Sec 144', 'Ivy County – Sec 75', 'County 107 – Sec 107', 'Prateek Edifice – Sec 107'
+    'Prateek Stylome – Sec 45', 'Mahagun Moderne – Sec 78'
   ].map((name, i) => {
     const title = name.split(' – ')[0];
     const location = name.split(' – ')[1];
     return {
-      id: `rs${i}`, 
-      title: title, 
-      city: 'Noida', 
-      location: location, 
-      category: 'buy', 
-      tag: 'Resale', 
-      type: 'Residential', 
-      price: 12000000 + (i * 1000000), 
-      area: 1500 + (i * 100), 
-      description: `Presenting an exceptional resale opportunity at ${title}, prominently located in the highly desirable ${location} of Noida. This magnificent ready-to-move-in residential property offers an unparalleled lifestyle, seamlessly combining modern architectural brilliance with everyday functional comfort. Spanning a generous ${1500 + (i * 100)} square feet, the apartment features meticulously crafted interiors, premium imported flooring, modular wardrobes, and expansive balconies that offer breathtaking, unobstructed views of the surrounding skyline. The living spaces are bathed in natural light and highly ventilated, ensuring a warm, inviting, and healthy atmosphere for your family. Residents will have exclusive, immediate access to a wide array of premium, fully operational amenities, including a resort-style swimming pool, a state-of-the-art fitness center, landscaped podium gardens, indoor sports courts, and 24/7 multi-tier security. Its strategic location ensures effortless connectivity to key commercial IT hubs, top-tier international schools, and world-class healthcare facilities, making it a spectacular choice for discerning homebuyers seeking immediate possession of luxury and convenience.`, 
-      imageUrl: generateImage('Residential', i + 2)
-    };
-  }),
-
-  // RENT PROPERTIES - NOIDA
-  ...[
-    'Lotus Panache – Sec 110', 'Lotus Boulevard – Sec 100', 'Great Value Sharnam – Sec 107', 
-    'Prateek Stylome – Sec 45', 'Mahagun Moderne – Sec 78', 'Ajnara Grand – Sec 74', 
-    'Godrej Woods – Sec 43', 'ABA Cleo County – Sec 121', 'Amrapali Heartbeat City – Sec 107', 
-    'Gulshan Dynasty – Sec 144', 'Ivy County – Sec 75', 'County 107 – Sec 107', 'Prateek Edifice – Sec 107'
-  ].map((name, i) => {
-    const title = name.split(' – ')[0];
-    const location = name.split(' – ')[1];
-    return {
-      id: `rt${i}`, 
-      title: title, 
-      city: 'Noida', 
-      location: location, 
-      category: 'rent', 
-      tag: 'Rent', 
-      type: 'Residential', 
-      price: 35000 + (i * 5000), 
-      area: 1500 + (i * 100), 
-      description: `Experience elevated urban living by renting this stunning, highly sought-after apartment at ${title}, located in the prime neighborhood of ${location}, Noida. This incredibly spacious property is designed to cater to all your modern lifestyle needs, offering a massive ${1500 + (i * 100)} square feet of beautifully designed living space. The apartment comes equipped with top-of-the-line fixtures, a highly functional modular kitchen, spacious bedrooms with ample storage, and large sun-drenched balconies that provide a serene view of the beautifully landscaped community. By choosing to reside here, you gain unlimited access to the society's world-class amenities, which include an opulent clubhouse, a massive sparkling swimming pool, a fully-equipped modern gymnasium, dedicated children's play areas, and beautifully maintained walking tracks. The property features comprehensive CCTV surveillance and power backup for absolute peace of mind. Perfectly situated near major expressways, premium shopping malls, and highly reputed corporate offices, this rental home offers the ultimate blend of luxury, prestige, and unmatched everyday convenience for professionals and families alike.`, 
-      imageUrl: generateImage('Residential', i + 4)
+      id: `rs${i}`, title: title, city: 'Noida', location: location, category: 'buy', tag: 'Resale', type: 'Residential', price: 12000000 + (i * 1000000), area: 1500 + (i * 100), description: `Exceptional resale opportunity at ${title}.`, imageUrl: generateImage('Residential', i + 2)
     };
   })
+].map(enrichProperty);
+
+const testimonialsData = [
+  { name: "Rahul Sharma", role: "IT Professional", review: "ANK Realty made finding our dream home in Noida a breeze. Their transparency and legal verification checks gave us complete peace of mind. Highly recommended!", rating: 5 },
+  { name: "Priya Desai", role: "Business Owner", review: "I invested in a commercial space through ANK Realty. Their market insights were spot on, and the ROI has already exceeded my expectations within a year.", rating: 5 },
+  { name: "Amit Verma", role: "NRI Investor", review: "Managing property investments from abroad is tough, but the team at ANK Realty handled everything perfectly—from virtual tours to the final registry.", rating: 5 }
+];
+
+const blogsData = [
+  { title: "Top 5 Emerging Localities in NCR for 2026", date: "March 10, 2026", category: "Market Trends", img: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80" },
+  { title: "A Complete Guide to Applying for Home Loans", date: "February 28, 2026", category: "Finance", img: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80" },
+  { title: "RERA Guidelines Every Homebuyer Must Know", date: "February 15, 2026", category: "Legal", img: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=600&q=80" }
 ];
 
 export default function HomePage() {
   const navigate = useNavigate();
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-  // CHATBOT STATE
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const chatSubjects = [
-    "Schedule a Visit",
-    "Price Details & Negotiation",
-    "Legal Verification Check",
-    "Home Loan Options",
-    "Property Locations & Tours",
-    "Resale Values & ROI",
-    "Connect with an Agent"
-  ];
-  
   const [searchCategory, setSearchCategory] = useState('buy');
   const [searchLocation, setSearchLocation] = useState('');
-  const [propertyType, setPropertyType] = useState('');
   
   // EMI CALCULATOR
   const [loanAmount, setLoanAmount] = useState(5000000); 
@@ -231,29 +92,91 @@ export default function HomePage() {
     if (p > 0 && r > 0 && n > 0) {
       const emi = (p * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
       const totalPayment = emi * n;
-      const totalInterest = totalPayment - p;
-      
       setEmiResult({
         emi: Math.round(emi),
-        totalInterest: Math.round(totalInterest),
+        totalInterest: Math.round(totalPayment - p),
         totalPayment: Math.round(totalPayment)
       });
-    } else {
-      setEmiResult({ emi: 0, totalInterest: 0, totalPayment: 0 });
     }
   }, [loanAmount, interestRate, loanTenure]);
 
   useEffect(() => {
-    // FIX: Replaced `propertyListings` with the correct exported variable `propertiesData`
     setTimeout(() => {
       setProperties(propertiesData);
       setLoading(false);
     }, 800);
   }, []);
 
-  const featuredProperties = properties.filter(p => p.tag === 'Fresh').slice(0, 8);
-  const buyProperties = properties.filter(p => p.tag === 'Resale' || p.tag === 'Commercial').slice(0, 8);
-  const rentProperties = properties.filter(p => p.category === 'rent').slice(0, 8);
+  const featuredProperties = properties.filter(p => p.tag === 'Fresh').slice(0, 4);
+  const commercialProperties = properties.filter(p => p.tag === 'Commercial').slice(0, 4);
+  const resaleProperties = properties.filter(p => p.tag === 'Resale').slice(0, 4);
+
+  // Reusable Rich Property Card
+  const PropertyCard = ({ property }) => (
+    <div 
+      onClick={() => navigate(`/property/${property.id}`, { state: { property } })}
+      className="group bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col cursor-pointer"
+    >
+      <div className="relative h-60 overflow-hidden">
+        <img src={property.imageUrl} alt={property.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+        <div className="absolute top-3 left-3 flex flex-col gap-2">
+          <span className="bg-emerald-500/90 backdrop-blur-sm text-white px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-wider shadow-sm flex items-center">
+            <CheckCircle className="w-3 h-3 mr-1"/> {property.rera}
+          </span>
+          <span className="bg-slate-900/90 backdrop-blur-sm text-white px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-wider shadow-sm w-fit">
+            {property.status}
+          </span>
+        </div>
+      </div>
+      
+      <div className="p-5 flex-1 flex flex-col">
+        <div className="flex justify-between items-start mb-2">
+          <div>
+            <h3 className="text-xl font-extrabold text-slate-900 group-hover:text-red-600 transition-colors line-clamp-1">
+              {property.title}
+            </h3>
+            <p className="text-sm text-slate-500 font-medium flex items-center mt-1">
+              <Building2 className="w-4 h-4 mr-1.5 text-slate-400" /> By {property.builder}
+            </p>
+          </div>
+          <div className="bg-red-50 text-red-600 text-xs font-bold px-2 py-1 rounded-lg border border-red-100">
+            {property.tag}
+          </div>
+        </div>
+
+        <p className="text-slate-600 text-sm flex items-center mb-4">
+          <MapPin className="h-4 w-4 mr-1.5 text-red-500"/> {property.location}, {property.city}
+        </p>
+        
+        <div className="grid grid-cols-3 gap-2 mb-5 bg-slate-50 p-3 rounded-xl border border-slate-100">
+          <div className="text-center border-r border-slate-200 last:border-0">
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Typology</p>
+            <p className="text-sm font-bold text-slate-800">{property.bhk}</p>
+          </div>
+          <div className="text-center border-r border-slate-200">
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Area</p>
+            <p className="text-sm font-bold text-slate-800 flex items-center justify-center"><Ruler className="w-3 h-3 mr-1"/>{property.area}</p>
+          </div>
+          <div className="text-center">
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Type</p>
+            <p className="text-sm font-bold text-slate-800 truncate px-1">{property.type}</p>
+          </div>
+        </div>
+
+        <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
+          <div>
+            <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Starting Price</p>
+            <p className="text-2xl font-black text-slate-900">
+              ₹{property.price >= 10000000 ? (property.price / 10000000).toFixed(2) + ' Cr' : (property.price / 100000).toFixed(2) + ' L'}
+            </p>
+          </div>
+          <Button variant="outline" className="h-10 px-5 border-slate-200 text-slate-700 hover:bg-red-600 hover:text-white hover:border-red-600 text-sm font-bold rounded-xl transition-all">
+            Details <ArrowRight className="w-4 h-4 ml-1" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
 
   const PropertyGrid = ({ title, subtitle, items }) => (
     <section className="py-16 px-6 bg-white border-b border-slate-100">
@@ -263,77 +186,16 @@ export default function HomePage() {
             <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-3 tracking-tight">{title}</h2>
             <p className="text-lg text-slate-500">{subtitle}</p>
           </div>
+          <Button variant="link" className="text-red-600 font-bold hover:text-red-700 p-0 hidden md:flex">
+            View All Projects <ChevronRight className="w-4 h-4 ml-1" />
+          </Button>
         </div>
 
         {loading ? (
           <div className="flex justify-center py-20"><Loader2 className="w-12 h-12 animate-spin text-red-600" /></div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-            {items.map((property) => (
-              <div 
-                key={property.id} 
-                onClick={() => navigate(`/property/${property.id}`, { state: { property } })}
-                className="group bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col cursor-pointer"
-              >
-                <div className="relative h-56 overflow-hidden">
-                  <img
-                    src={property.imageUrl}
-                    alt={property.title}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                  <div className="absolute top-3 left-3 flex flex-col gap-2">
-                    <span className="bg-white/95 text-slate-900 px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-wider shadow-sm flex items-center">
-                      <CheckCircle className="w-3 h-3 mr-1 text-green-600"/> Verified
-                    </span>
-                    <span className="bg-red-600 text-white px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-wider shadow-sm w-fit">
-                      {property.tag}
-                    </span>
-                  </div>
-                  <div className="absolute bottom-3 left-3">
-                    <span className="bg-black/60 backdrop-blur-md text-white text-xs font-medium px-2.5 py-1 rounded-lg flex items-center">
-                      <MapPin className="h-3 w-3 mr-1"/> {property.location}, {property.city}
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="p-5 flex-1 flex flex-col">
-                  <h3 className="text-lg font-bold text-slate-900 group-hover:text-red-600 transition-colors line-clamp-1 mb-1">
-                    {property.title}
-                  </h3>
-                  <p className="text-slate-500 text-sm mb-4 line-clamp-1">{property.description}</p>
-                  
-                  <div className="grid grid-cols-2 gap-2 mb-4">
-                    <div className="bg-slate-50 p-2 rounded-lg text-center border border-slate-100">
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Area</p>
-                      <p className="text-sm font-bold text-slate-800">{property.area} <span className="text-xs font-normal">sqft</span></p>
-                    </div>
-                    <div className="bg-slate-50 p-2 rounded-lg text-center border border-slate-100">
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Type</p>
-                      <p className="text-sm font-bold text-slate-800">{property.type}</p>
-                    </div>
-                  </div>
-
-                  <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
-                    <div>
-                      <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Price</p>
-                      <p className="text-xl font-black text-slate-900">
-                        ₹{property.price >= 10000000 ? (property.price / 10000000).toFixed(2) + ' Cr' : (property.price / 100000).toFixed(2) + ' Lac'}
-                      </p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      className="h-9 px-4 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-600 text-xs font-bold rounded-lg"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        navigate(`/property/${property.id}`, { state: { property } });
-                      }}
-                    >
-                      View Details
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))}
+            {items.map((property) => <PropertyCard key={property.id} property={property} />)}
           </div>
         )}
       </div>
@@ -350,25 +212,27 @@ export default function HomePage() {
           className="absolute inset-0 z-0 scale-105"
           style={{ backgroundImage: `url('https://images.unsplash.com/photo-1582407947304-fd86f028f716?q=80&w=2000&auto=format&fit=crop')`, backgroundSize: 'cover', backgroundPosition: 'center' }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/90 via-slate-900/70 to-slate-900/95 z-10" />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/95 via-slate-900/80 to-slate-900/95 z-10" />
 
         <div className="relative z-20 w-full max-w-6xl mx-auto text-center mt-10">
+          <div className="inline-block mb-6 px-4 py-1.5 rounded-full bg-red-500/20 border border-red-500/30 text-red-400 text-sm font-bold tracking-wide backdrop-blur-sm">
+            Discover Your Next Investment
+          </div>
           <h1 className="text-5xl md:text-7xl font-black text-white mb-6 leading-[1.1] tracking-tight drop-shadow-2xl">
-            Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-red-600">ANK Realty.</span><br/>
-            <span className="text-3xl md:text-5xl font-bold text-slate-200">India's Premium Property Portal</span>
+            India's Premium <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-red-600">Real Estate</span> Hub.
           </h1>
           <p className="text-lg md:text-xl text-slate-300 mb-12 max-w-2xl mx-auto font-light">
-            Search from over 12,000+ verified properties, plots, and commercial spaces across top Indian cities.
+            Explore 12,000+ verified projects, plots, and commercial spaces from top developers across the country.
           </p>
           
-          {/* Advanced Search */}
-          <div className="bg-white rounded-3xl shadow-2xl p-3 md:p-4 max-w-4xl mx-auto w-full">
-            <div className="flex justify-center md:justify-start gap-2 mb-4 px-2 pt-2">
-              {['buy', 'rent', 'sell', 'commercial'].map((cat) => (
+          {/* Advanced Search Portal Style */}
+          <div className="bg-white rounded-[2rem] shadow-2xl p-4 md:p-6 max-w-5xl mx-auto w-full">
+            <div className="flex justify-center md:justify-start gap-4 mb-6 px-2 border-b border-slate-100 pb-4">
+              {['New Projects', 'Resale', 'Commercial', 'Plots'].map((cat, idx) => (
                 <button
                   key={cat} onClick={() => setSearchCategory(cat)}
-                  className={`px-5 py-2 text-sm font-bold capitalize rounded-full transition-all ${
-                    searchCategory === cat ? 'bg-slate-900 text-white shadow-md' : 'bg-transparent text-slate-500 hover:bg-slate-100'
+                  className={`text-sm md:text-base font-bold capitalize transition-all pb-4 -mb-[17px] border-b-2 ${
+                    searchCategory === cat ? 'text-red-600 border-red-600' : 'text-slate-500 border-transparent hover:text-slate-800'
                   }`}
                 >
                   {cat}
@@ -376,22 +240,32 @@ export default function HomePage() {
               ))}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-              <div className="md:col-span-5 relative">
-                 <MapPin className="absolute left-4 top-4 h-5 w-5 text-slate-400" />
-                 <Input placeholder="Enter City, Locality, or Landmark" value={searchLocation} onChange={(e) => setSearchLocation(e.target.value)} className="h-14 pl-12 bg-slate-50 border-slate-200 focus:ring-2 focus:ring-red-500 w-full text-slate-900 rounded-2xl text-base" />
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <div className="relative border-r border-slate-200">
+                 <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                 <Input placeholder="City or Micro-market" className="h-14 pl-12 bg-transparent border-0 focus-visible:ring-0 text-slate-900 text-base shadow-none" />
               </div>
-              <div className="md:col-span-4 relative">
-                 <Home className="absolute left-4 top-4 h-5 w-5 text-slate-400" />
-                 <select className="h-14 pl-12 pr-4 bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-red-500 w-full text-slate-700 rounded-2xl text-base appearance-none outline-none" value={propertyType} onChange={(e) => setPropertyType(e.target.value)}>
+              <div className="relative border-r border-slate-200">
+                 <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                 <select className="h-14 pl-12 pr-4 bg-transparent border-0 focus:ring-0 w-full text-slate-700 text-base appearance-none outline-none shadow-none cursor-pointer">
                    <option value="">Property Type</option>
-                   <option value="apartment">Apartment / Flat</option>
-                   <option value="villa">Villa / Independent House</option>
-                   <option value="plot">Plot / Land</option>
+                   <option value="apartment">Luxury Apartment</option>
+                   <option value="villa">Villa / Penthouse</option>
+                   <option value="office">Office Space</option>
                  </select>
               </div>
-              <div className="md:col-span-3">
-                <Button className="w-full h-14 bg-red-600 hover:bg-red-700 text-white font-bold text-lg rounded-2xl shadow-lg shadow-red-600/30 transition-all">
+              <div className="relative">
+                 <Banknote className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                 <select className="h-14 pl-12 pr-4 bg-transparent border-0 focus:ring-0 w-full text-slate-700 text-base appearance-none outline-none shadow-none cursor-pointer">
+                   <option value="">Budget</option>
+                   <option value="1cr">₹50 Lac - ₹1 Cr</option>
+                   <option value="2cr">₹1 Cr - ₹3 Cr</option>
+                   <option value="5cr">₹3 Cr - ₹5 Cr</option>
+                   <option value="5cr+">₹5 Cr +</option>
+                 </select>
+              </div>
+              <div>
+                <Button className="w-full h-14 bg-red-600 hover:bg-red-700 text-white font-bold text-lg rounded-xl shadow-lg shadow-red-600/30 transition-all">
                   <Search className="mr-2 h-5 w-5" /> Search
                 </Button>
               </div>
@@ -400,13 +274,137 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* --- QUICK CATEGORIES (NEW SECTION) --- */}
+      <section className="py-12 bg-white border-b border-slate-100 relative -mt-10 z-20 rounded-t-[3rem] shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+            {[
+              { title: "Apartments", icon: Building2 },
+              { title: "Villas", icon: Home },
+              { title: "Commercial", icon: Briefcase },
+              { title: "Plots", icon: Map },
+              { title: "New Launch", icon: Star },
+              { title: "Ready to Move", icon: Key }
+            ].map((item, idx) => (
+              <div key={idx} className="flex flex-col items-center justify-center p-6 rounded-2xl bg-slate-50 border border-slate-100 hover:border-red-200 hover:bg-red-50 hover:-translate-y-1 transition-all cursor-pointer group">
+                <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center mb-3 shadow-sm group-hover:shadow-md transition-all">
+                  <item.icon className="w-6 h-6 text-slate-600 group-hover:text-red-600" />
+                </div>
+                <p className="font-bold text-slate-800 text-sm">{item.title}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* --- TRENDING MICRO-MARKETS --- */}
+      <section className="py-16 px-6 bg-slate-50 border-b border-slate-100">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-10 max-w-2xl mx-auto">
+            <h2 className="text-3xl font-black text-slate-900 mb-3 tracking-tight">Explore Top Localities</h2>
+            <p className="text-slate-500">Discover premium properties in the most sought-after investment corridors.</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            {[
+              { name: 'Yamuna Expressway', count: '120+ Projects', img: 'https://images.unsplash.com/photo-1449844908441-8829872d2607?auto=format&fit=crop&w=600&q=80' },
+              { name: 'Noida Sector 150', count: '85+ Projects', img: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=600&q=80' },
+              { name: 'Greater Noida West', count: '200+ Projects', img: 'https://images.unsplash.com/photo-1515263487990-61b07816bc32?auto=format&fit=crop&w=600&q=80' },
+              { name: 'Golf Course Ext.', count: '45+ Projects', img: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80' }
+            ].map((loc, idx) => (
+              <div key={idx} className="relative h-40 md:h-56 rounded-2xl overflow-hidden group cursor-pointer shadow-sm">
+                <img src={loc.img} alt={loc.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent"></div>
+                <div className="absolute bottom-4 left-4 right-4">
+                  <h4 className="text-white font-bold text-lg leading-tight mb-1">{loc.name}</h4>
+                  <p className="text-red-300 text-xs font-bold uppercase tracking-wide">{loc.count}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* --- DYNAMIC PROPERTY SECTIONS --- */}
-      <PropertyGrid title="Fresh Properties" subtitle="Brand new residential and commercial developments" items={featuredProperties} />
-      <PropertyGrid title="Resale & Commercial Properties" subtitle="Prime investments across premium sectors" items={buyProperties} />
-      <PropertyGrid title="Properties on Rent" subtitle="Spacious and secure living available immediately" items={rentProperties} />
+      <PropertyGrid title="New & Upcoming Projects" subtitle="Discover exclusive launches from A-grade developers." items={featuredProperties} />
+      
+      {/* --- WHY CHOOSE US (STATS BANNER) --- */}
+      <section className="py-20 bg-slate-900 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-red-600/10 rounded-full blur-[100px]"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-600/10 rounded-full blur-[100px]"></div>
+        <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
+           <h2 className="text-3xl md:text-4xl font-black text-white mb-4">Why India Trusts <span className="text-red-500">ANK Realty.</span></h2>
+           <p className="text-slate-400 mb-16 max-w-2xl mx-auto text-lg">We bring transparency, exclusive deals, and zero-hassle paperwork to your property buying journey.</p>
+           
+           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
+             {[
+               { icon: Users, num: "15,000+", label: "Happy Families" },
+               { icon: Building2, num: "500+", label: "Projects Delivered" },
+               { icon: Award, num: "15+ Years", label: "Industry Experience" },
+               { icon: ThumbsUp, num: "100%", label: "Transparency" }
+             ].map((stat, idx) => (
+               <div key={idx} className="flex flex-col items-center">
+                 <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center mb-4 border border-slate-700 shadow-inner">
+                   <stat.icon className="w-8 h-8 text-red-500" />
+                 </div>
+                 <h3 className="text-4xl font-black text-white mb-1 font-mono">{stat.num}</h3>
+                 <p className="text-slate-400 font-bold uppercase tracking-wider text-sm">{stat.label}</p>
+               </div>
+             ))}
+           </div>
+        </div>
+      </section>
+
+      <PropertyGrid title="Premium Commercial Spaces" subtitle="High-ROI retail shops, food courts, and corporate offices." items={commercialProperties} />
+      
+      {/* --- TOP BUILDERS --- */}
+      <section className="py-16 px-6 bg-slate-50 border-y border-slate-200">
+         <div className="max-w-7xl mx-auto text-center">
+            <h2 className="text-3xl font-black text-slate-900 mb-3 tracking-tight">Partnered With Top Developers</h2>
+            <p className="text-slate-500 mb-10">We only list properties from trusted, RERA-approved builders.</p>
+            <div className="flex flex-wrap justify-center gap-6 md:gap-10 opacity-60 hover:opacity-100 transition-opacity duration-500">
+               {['M3M Group', 'Godrej Properties', 'Max Estates', 'Experion', 'Eldeco', 'Gaurons'].map((builder, idx) => (
+                 <div key={idx} className="bg-white border border-slate-200 px-8 py-4 rounded-xl flex items-center justify-center min-w-[160px] font-black text-slate-400 hover:text-red-600 hover:border-red-200 transition-colors text-xl tracking-tighter shadow-sm">
+                   {builder}
+                 </div>
+               ))}
+            </div>
+         </div>
+      </section>
+
+      <PropertyGrid title="Ready To Move & Resale" subtitle="Skip the wait. Move into your dream home today." items={resaleProperties} />
+
+      {/* --- CLIENT TESTIMONIALS --- */}
+      <section className="py-20 px-6 bg-white border-b border-slate-100">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-3 tracking-tight">Hear From Our Clients</h2>
+            <p className="text-slate-500">Don't just take our word for it. See what our community says.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {testimonialsData.map((test, idx) => (
+              <div key={idx} className="bg-slate-50 p-8 rounded-3xl border border-slate-100 relative">
+                <Quote className="absolute top-6 right-6 w-12 h-12 text-slate-200" />
+                <div className="flex text-yellow-400 mb-6">
+                  {[...Array(test.rating)].map((_, i) => <Star key={i} className="w-5 h-5 fill-current" />)}
+                </div>
+                <p className="text-slate-700 italic mb-8 leading-relaxed relative z-10">"{test.review}"</p>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-lg">
+                    {test.name.charAt(0)}
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900">{test.name}</h4>
+                    <p className="text-xs text-slate-500 font-bold uppercase">{test.role}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* --- EMI CALCULATOR & SERVICES --- */}
-      <section className="py-20 px-6 bg-slate-50 border-y border-slate-200">
+      <section className="py-20 px-6 bg-slate-50 border-b border-slate-200">
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-16 items-center">
           <div className="lg:w-7/12 w-full">
             <div className="inline-block mb-4 px-4 py-1.5 rounded-full bg-red-100 text-red-600 text-sm font-bold tracking-wide">🌟 ANK Realty Exclusive</div>
@@ -463,8 +461,57 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- FOOTER (Upgraded to match detail page) --- */}
-      <footer className="bg-[#0A0A0A] text-white pt-20 pb-10 px-6 border-t border-slate-800">
+      {/* --- REAL ESTATE INSIGHTS / BLOGS --- */}
+      <section className="py-20 px-6 bg-white border-b border-slate-100">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-10">
+            <div className="max-w-2xl">
+              <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-3 tracking-tight">News & Insights</h2>
+              <p className="text-lg text-slate-500">Stay updated with the latest real estate trends and market analysis.</p>
+            </div>
+            <Button variant="link" className="text-red-600 font-bold hover:text-red-700 p-0 hidden md:flex items-center">
+              <Newspaper className="w-4 h-4 mr-2" /> View All Articles
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+             {blogsData.map((blog, idx) => (
+               <div key={idx} className="group cursor-pointer">
+                 <div className="relative h-60 rounded-3xl overflow-hidden mb-5">
+                   <img src={blog.img} alt={blog.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                   <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-slate-900 shadow-sm">
+                     {blog.category}
+                   </div>
+                 </div>
+                 <p className="text-sm text-red-600 font-bold mb-2">{blog.date}</p>
+                 <h3 className="text-xl font-bold text-slate-900 group-hover:text-red-600 transition-colors leading-snug mb-3">
+                   {blog.title}
+                 </h3>
+                 <p className="text-slate-500 font-medium group-hover:underline flex items-center">Read Article <ArrowRight className="w-4 h-4 ml-1" /></p>
+               </div>
+             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* --- NEWSLETTER CTA --- */}
+      <section className="py-16 px-6 bg-gradient-to-br from-red-600 to-red-800 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+        <div className="max-w-4xl mx-auto text-center relative z-10">
+          <Bell className="w-12 h-12 text-white/80 mx-auto mb-6" />
+          <h2 className="text-3xl md:text-5xl font-black text-white mb-4 tracking-tight">Never Miss a Property Deal</h2>
+          <p className="text-red-100 text-lg mb-8 max-w-2xl mx-auto">Subscribe to our VIP newsletter and get early access to pre-launches, exclusive discounts, and market reports.</p>
+          <div className="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto">
+             <input type="email" placeholder="Enter your email address" className="flex-1 h-14 rounded-xl px-5 border-0 focus:ring-4 focus:ring-white/20 text-slate-900 font-medium shadow-lg" />
+             <Button className="h-14 px-8 bg-slate-900 hover:bg-black text-white font-bold rounded-xl shadow-lg transition-colors">
+               Subscribe Now
+             </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* --- FOOTER --- */}
+      <footer className="bg-[#0A0A0A] text-white pt-20 pb-10 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
             <div className="space-y-6">
@@ -491,8 +538,8 @@ export default function HomePage() {
             <div>
               <h4 className="font-bold text-lg mb-6 text-slate-100">Categories</h4>
               <ul className="space-y-4 text-slate-400 font-medium text-sm">
-                <li><Link to="/buy" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Apartments</Link></li>
-                <li><Link to="/buy" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Villas</Link></li>
+                <li><Link to="/buy" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Luxury Apartments</Link></li>
+                <li><Link to="/buy" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Villas & Penthouses</Link></li>
                 <li><Link to="/buy" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Plots / Land</Link></li>
                 <li><Link to="/buy" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Commercial Space</Link></li>
               </ul>
@@ -533,7 +580,7 @@ export default function HomePage() {
             <div className="p-4 flex-1 bg-slate-50 flex flex-col gap-3 h-[380px] overflow-y-auto">
               <div className="flex gap-2">
                 <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center shrink-0">
-                   <Building className="w-4 h-4 text-red-600"/>
+                   <Building2 className="w-4 h-4 text-red-600"/>
                 </div>
                 <div className="bg-white p-3 rounded-2xl rounded-tl-sm shadow-sm text-sm border border-slate-100 text-slate-700">
                   Welcome to ANK Realty! I am your virtual assistant. Please choose a subject below so I can assist you better:
@@ -541,7 +588,10 @@ export default function HomePage() {
               </div>
               
               <div className="flex flex-col gap-2 mt-2 pl-10">
-                {chatSubjects.map((subject, i) => (
+                {[
+                  "Schedule a Visit", "Price Details & Negotiation", "Legal Verification Check",
+                  "Home Loan Options", "Property Locations & Tours", "Connect with an Agent"
+                ].map((subject, i) => (
                   <button key={i} className="text-left bg-white hover:bg-red-50 text-slate-700 hover:text-red-700 p-2.5 rounded-xl text-sm font-medium transition-all border border-slate-200 hover:border-red-200 shadow-sm">
                     {subject}
                   </button>
