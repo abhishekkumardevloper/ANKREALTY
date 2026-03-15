@@ -18,7 +18,7 @@ const topRowLogos = [
   "/images (3).png",
   "/images__9_-removebg-preview.png",
   "/images (1).png",
-  "/logo (2).png",
+  "/images (2).png",
   "/183f468e401f4220bce9e4f7b1e3ffd820251112162925170.png",
 ];
 
