@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { 
   Search, MapPin, Home, Heart, ArrowRight, Star, 
   Building, CheckCircle, Key, FileText, Loader2, Mail, 
@@ -11,6 +12,23 @@ import {
 import Navbar from '../components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+
+// --- LOGO ARRAYS FOR ANIMATION ---
+const topRowLogos = [
+  "/sankalp logo.png",
+  "/one step logo.png",
+  "/blve & blessed logo.png",
+  "/rexine house logo.png",
+  "/ashadeep clinic logo.png",
+];
+
+const bottomRowLogos = [
+  "/arch build logo.png",
+  "/birdcart logo.png",
+  "/raj automobiles.png",
+  "/sasta plots logo.png",
+  "/ampush logo.png",
+];
 
 // --- HARDCODED PROPERTY DATA WITH UNIQUE IMAGES ---
 const generateImage = (category, index) => {
@@ -76,7 +94,6 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [searchCategory, setSearchCategory] = useState('buy');
-  const [searchLocation, setSearchLocation] = useState('');
   
   // EMI CALCULATOR
   const [loanAmount, setLoanAmount] = useState(5000000); 
@@ -274,8 +291,65 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- QUICK CATEGORIES (NEW SECTION) --- */}
-      <section className="py-12 bg-white border-b border-slate-100 relative -mt-10 z-20 rounded-t-[3rem] shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+      {/* --- TRUSTED BRANDS ANIMATION --- */}
+      <section className="py-12 sm:py-16 relative w-full overflow-hidden bg-white -mt-10 z-20 rounded-t-[3rem] shadow-[0_-10px_40px_rgba(0,0,0,0.05)] border-b border-slate-100">
+        <div className="w-full">
+          {/* Heading */}
+          <h2 className="text-xs sm:text-sm font-bold uppercase tracking-widest text-slate-400 mb-8 sm:mb-12 text-center">
+            Trusted by leading brands across India
+          </h2>
+          
+          <div className="relative flex flex-col gap-8 sm:gap-12 overflow-hidden w-full">
+            
+            {/* First Row: Moving Left */}
+            <motion.div
+              animate={{ x: ["0%", "-50%"] }}
+              transition={{ duration: 30, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+              className="flex gap-8 sm:gap-16 w-max"
+            >
+              {[...topRowLogos, ...topRowLogos, ...topRowLogos, ...topRowLogos].map((src, i) => (
+                <div
+                  key={`top-${i}`}
+                  className="flex-shrink-0 w-32 sm:w-48 h-16 sm:h-20 flex items-center justify-center"
+                >
+                  <img 
+                    src={src} 
+                    alt={`Client logo ${i}`} 
+                    className="max-w-full max-h-full object-contain filter brightness-0 opacity-40 hover:opacity-100 transition-opacity duration-300"
+                  />
+                </div>
+              ))}
+            </motion.div>
+
+            {/* Second Row: Moving Right */}
+            <motion.div
+              animate={{ x: ["-50%", "0%"] }}
+              transition={{ duration: 30, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+              className="flex gap-8 sm:gap-16 w-max"
+            >
+              {[...bottomRowLogos, ...bottomRowLogos, ...bottomRowLogos, ...bottomRowLogos].map((src, i) => (
+                <div
+                  key={`bottom-${i}`}
+                  className="flex-shrink-0 w-32 sm:w-48 h-16 sm:h-20 flex items-center justify-center"
+                >
+                  <img 
+                    src={src} 
+                    alt={`Client logo ${i}`} 
+                    className="max-w-full max-h-full object-contain filter brightness-0 opacity-40 hover:opacity-100 transition-opacity duration-300"
+                  />
+                </div>
+              ))}
+            </motion.div>
+
+            {/* Fade Gradients (Left & Right Edges) */}
+            <div className="absolute inset-y-0 left-0 w-16 sm:w-32 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
+            <div className="absolute inset-y-0 right-0 w-16 sm:w-32 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+          </div>
+        </div>
+      </section>
+
+      {/* --- QUICK CATEGORIES --- */}
+      <section className="py-12 bg-white border-b border-slate-100 relative z-20">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
             {[
@@ -355,21 +429,6 @@ export default function HomePage() {
       </section>
 
       <PropertyGrid title="Premium Commercial Spaces" subtitle="High-ROI retail shops, food courts, and corporate offices." items={commercialProperties} />
-      
-      {/* --- TOP BUILDERS --- */}
-      <section className="py-16 px-6 bg-slate-50 border-y border-slate-200">
-         <div className="max-w-7xl mx-auto text-center">
-            <h2 className="text-3xl font-black text-slate-900 mb-3 tracking-tight">Partnered With Top Developers</h2>
-            <p className="text-slate-500 mb-10">We only list properties from trusted, RERA-approved builders.</p>
-            <div className="flex flex-wrap justify-center gap-6 md:gap-10 opacity-60 hover:opacity-100 transition-opacity duration-500">
-               {['M3M Group', 'Godrej Properties', 'Max Estates', 'Experion', 'Eldeco', 'Gaurons'].map((builder, idx) => (
-                 <div key={idx} className="bg-white border border-slate-200 px-8 py-4 rounded-xl flex items-center justify-center min-w-[160px] font-black text-slate-400 hover:text-red-600 hover:border-red-200 transition-colors text-xl tracking-tighter shadow-sm">
-                   {builder}
-                 </div>
-               ))}
-            </div>
-         </div>
-      </section>
 
       <PropertyGrid title="Ready To Move & Resale" subtitle="Skip the wait. Move into your dream home today." items={resaleProperties} />
 
