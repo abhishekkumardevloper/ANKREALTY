@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
-const API_URL = "http://127.0.0.1:8000";
+// This will use your environment variable if it exists, or safely fall back to your live Render backend
+const API_URL = process.env.REACT_APP_API_BASE || "https://ankrealty.onrender.com";
 
 export default function AuthPage() {
   const navigate = useNavigate();
