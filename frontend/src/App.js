@@ -41,7 +41,7 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
-// ================= Portal Route (For Admins AND Brokers) =================
+// ================= Portal Route (For Admins AND Brokers/Agents) =================
 function PortalRoute({ children }) {
   const { user, loading } = useAuth();
 
@@ -49,8 +49,8 @@ function PortalRoute({ children }) {
 
   if (!user) return <Navigate to="/auth" replace />;
 
-  // Allow access if the user is an admin OR a broker
-  if (user.role !== "admin" && user.role !== "broker") {
+  // Allow access if the user is an admin, broker, or agent
+  if (user.role !== "admin" && user.role !== "broker" && user.role !== "agent") {
     return <Navigate to="/" replace />;
   }
 
@@ -78,7 +78,6 @@ function AppRoutes() {
       <Route path="/blog" element={<BlogPage />} />
       <Route path="/videos" element={<VideosPage />} />
       <Route path="/insights" element={<InsightsPage />} />
-      <Route path="/CrmDashboard" element={<CrmDashboard />} />
       <Route path="/careers" element={<CareersPage />} />
 
       <Route path="/properties" element={<PropertyListingPage />} />
@@ -99,6 +98,17 @@ function AppRoutes() {
       />
 
       {/* -------- ADMIN / BROKER PORTAL -------- */}
+      
+      {/* New CRM Dashboard Route - Secured */}
+      <Route
+        path="/CrmDashboard"
+        element={
+          <PortalRoute>
+            <CrmDashboard />
+          </PortalRoute>
+        }
+      />
+
       {/* Map both /admin and /agent-dashboard to the AdminPanel component */}
       <Route
         path="/admin"
