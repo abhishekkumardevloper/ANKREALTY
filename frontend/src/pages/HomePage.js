@@ -24,7 +24,7 @@ const topRowLogos = [
 
 const bottomRowLogos = [
   "/images.png",
-  "/4f3bb698972531.Y3JvcCw5NTAsNzQzLDIyMywyMQ.png",
+  "/4f3bb698972531.Y3JvcCw5NTAsNzQzLDIyMywyMQ-removebg-preview.png",
   "/Max_Estates_logo.svg.png",
   "/M3M-Jacob-and-Co-logo.png",
 ];
