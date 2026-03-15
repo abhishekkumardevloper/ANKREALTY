@@ -380,7 +380,7 @@ export default function HomePage() {
             {[
               { name: 'Yamuna Expressway', count: '120+ Projects', img: 'https://images.unsplash.com/photo-1449844908441-8829872d2607?auto=format&fit=crop&w=600&q=80' },
               { name: 'Noida Sector 150', count: '85+ Projects', img: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=600&q=80' },
-              { name: 'Greater Noida West', count: '200+ Projects', img: 'https://images.unsplash.com/photo-1515263487990-61b07816bc32?auto=format&fit=crop&w=600&q=80' },
+              { name: 'Greater Noida West', count: '200+ Projects', img: 'https://images.unsplash.com/photo-1449844908441-8829872d2607?auto=format&fit=crop&w=600&q=80' },
               { name: 'Golf Course Ext.', count: '45+ Projects', img: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80' }
             ].map((loc, idx) => (
               <div key={idx} className="relative h-40 md:h-56 rounded-2xl overflow-hidden group cursor-pointer shadow-sm">
