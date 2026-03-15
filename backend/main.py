@@ -1,12 +1,12 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, UploadFile, File, Form
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
+from supabase import create_client, Client
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, EmailStr, ConfigDict
+from pydantic import BaseModel, EmailStr, ConfigDict
 from typing import List, Optional
 import uuid
 from datetime import datetime, timezone, timedelta
@@ -20,20 +20,18 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Load environment variables (Useful for local dev, Render will use its own dashboard variables)
+# Load environment variables
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# Safely get DB credentials
-mongo_url = os.environ.get('MONGO_URL')
-db_name = os.environ.get('DB_NAME', 'ank_realty_db')
+# Supabase connection
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
-if not mongo_url:
-    logger.warning("MONGO_URL environment variable is not set. The app will fail to connect to the database.")
+if not SUPABASE_URL or not SUPABASE_KEY:
+    logger.warning("SUPABASE_URL or SUPABASE_KEY is missing. App will fail to connect to the database.")
 
-# MongoDB connection
-client = AsyncIOMotorClient(mongo_url)
-db = client[db_name]
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Security
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -46,7 +44,7 @@ security = HTTPBearer()
 # Initialize App
 app = FastAPI(title="ANK Realty API")
 
-# Setup CORS (Must be done before adding routes)
+# Setup CORS
 cors_origins = os.environ.get('CORS_ORIGINS', '*').split(',')
 app.add_middleware(
     CORSMiddleware,
@@ -60,8 +58,8 @@ api_router = APIRouter(prefix="/api")
 
 # --- ROOT HEALTH CHECK FOR RENDER ---
 @app.get("/")
-async def root():
-    return {"status": "online", "message": "ANK Realty API is running", "timestamp": datetime.now(timezone.utc).isoformat()}
+def root():
+    return {"status": "online", "message": "ANK Realty Supabase API is running", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 # Password helpers
 def hash_password(password: str) -> str:
@@ -80,7 +78,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -90,7 +88,9 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid authentication credentials")
     
-    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    res = supabase.table("users").select("*").eq("id", user_id).limit(1).execute()
+    user = res.data[0] if res.data else None
+    
     if user is None:
         raise HTTPException(status_code=401, detail="User not found")
     return user
@@ -123,11 +123,11 @@ class PropertyCreate(BaseModel):
     location: str
     city: str
     state: str
-    property_type: str  # apartment, villa, house, commercial
-    category: str  # buy, sell, rent
+    property_type: str 
+    category: str
     bhk: Optional[int] = None
-    area: float  # in sqft
-    furnishing: str = "unfurnished"  # furnished, semi-furnished, unfurnished
+    area: float
+    furnishing: str = "unfurnished"
     amenities: List[str] = []
     images: List[str] = []
     latitude: Optional[float] = None
@@ -154,7 +154,7 @@ class Property(BaseModel):
     images: List[str]
     latitude: Optional[float]
     longitude: Optional[float]
-    status: str = "pending"  # pending, approved, rejected
+    status: str = "pending"
     verified: bool = False
     featured: bool = False
     created_at: str
@@ -163,27 +163,9 @@ class Property(BaseModel):
 class FavoriteCreate(BaseModel):
     property_id: str
 
-class Favorite(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str
-    user_id: str
-    property_id: str
-    created_at: str
-
 class InquiryCreate(BaseModel):
     property_id: str
     message: str
-
-class Inquiry(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str
-    from_user_id: str
-    from_user_name: str
-    to_user_id: str
-    property_id: str
-    message: str
-    created_at: str
-    read: bool = False
 
 class AppointmentCreate(BaseModel):
     property_id: str
@@ -191,25 +173,12 @@ class AppointmentCreate(BaseModel):
     time: str
     message: Optional[str] = None
 
-class Appointment(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str
-    user_id: str
-    user_name: str
-    user_phone: str
-    property_id: str
-    property_title: str
-    date: str
-    time: str
-    message: Optional[str]
-    status: str = "pending"  # pending, confirmed, cancelled
-    created_at: str
 
-# Auth Routes
+# --- Auth Routes ---
 @api_router.post("/auth/register")
-async def register(user_data: UserRegister):
-    existing_user = await db.users.find_one({"email": user_data.email}, {"_id": 0})
-    if existing_user:
+def register(user_data: UserRegister):
+    res = supabase.table("users").select("*").eq("email", user_data.email).limit(1).execute()
+    if res.data:
         raise HTTPException(status_code=400, detail="Email already registered")
     
     user_id = str(uuid.uuid4())
@@ -223,7 +192,7 @@ async def register(user_data: UserRegister):
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
-    await db.users.insert_one(user_doc)
+    supabase.table("users").insert(user_doc).execute()
     access_token = create_access_token(data={"sub": user_id})
     
     return {
@@ -238,8 +207,10 @@ async def register(user_data: UserRegister):
     }
 
 @api_router.post("/auth/login")
-async def login(credentials: UserLogin):
-    user = await db.users.find_one({"email": credentials.email}, {"_id": 0})
+def login(credentials: UserLogin):
+    res = supabase.table("users").select("*").eq("email", credentials.email).limit(1).execute()
+    user = res.data[0] if res.data else None
+    
     if not user or not verify_password(credentials.password, user["password"]):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
@@ -257,7 +228,7 @@ async def login(credentials: UserLogin):
     }
 
 @api_router.get("/auth/me")
-async def get_me(current_user: dict = Depends(get_current_user)):
+def get_me(current_user: dict = Depends(get_current_user)):
     return {
         "id": current_user["id"],
         "email": current_user["email"],
@@ -266,9 +237,9 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         "role": current_user["role"]
     }
 
-# Property Routes
+# --- Property Routes ---
 @api_router.post("/properties", response_model=Property)
-async def create_property(property_data: PropertyCreate, current_user: dict = Depends(get_current_user)):
+def create_property(property_data: PropertyCreate, current_user: dict = Depends(get_current_user)):
     property_id = str(uuid.uuid4())
     property_doc = {
         "id": property_id,
@@ -283,11 +254,11 @@ async def create_property(property_data: PropertyCreate, current_user: dict = De
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
-    await db.properties.insert_one(property_doc)
+    supabase.table("properties").insert(property_doc).execute()
     return Property(**property_doc)
 
 @api_router.get("/properties", response_model=List[Property])
-async def get_properties(
+def get_properties(
     category: Optional[str] = None,
     property_type: Optional[str] = None,
     city: Optional[str] = None,
@@ -297,95 +268,93 @@ async def get_properties(
     furnishing: Optional[str] = None,
     limit: int = 50
 ):
-    query = {"status": "approved"}
+    query = supabase.table("properties").select("*").eq("status", "approved")
     
     if category:
-        query["category"] = category
+        query = query.eq("category", category)
     if property_type:
-        query["property_type"] = property_type
+        query = query.eq("property_type", property_type)
     if city:
-        query["city"] = {"$regex": city, "$options": "i"}
+        query = query.ilike("city", f"%{city}%")
     if min_price is not None:
-        query["price"] = query.get("price", {})
-        query["price"]["$gte"] = min_price
+        query = query.gte("price", min_price)
     if max_price is not None:
-        query["price"] = query.get("price", {})
-        query["price"]["$lte"] = max_price
+        query = query.lte("price", max_price)
     if bhk is not None:
-        query["bhk"] = bhk
+        query = query.eq("bhk", bhk)
     if furnishing:
-        query["furnishing"] = furnishing
+        query = query.eq("furnishing", furnishing)
     
-    properties = await db.properties.find(query, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
-    return properties
+    res = query.order("created_at", desc=True).limit(limit).execute()
+    return res.data
 
 @api_router.get("/properties/featured", response_model=List[Property])
-async def get_featured_properties():
-    properties = await db.properties.find(
-        {"status": "approved", "featured": True},
-        {"_id": 0}
-    ).limit(6).to_list(6)
+def get_featured_properties():
+    res = supabase.table("properties").select("*").eq("status", "approved").eq("featured", True).limit(6).execute()
+    properties = res.data
     
     if len(properties) < 6:
-        additional = await db.properties.find(
-            {"status": "approved"},
-            {"_id": 0}
-        ).sort("created_at", -1).limit(6 - len(properties)).to_list(6 - len(properties))
-        properties.extend(additional)
+        needed = 6 - len(properties)
+        res_add = supabase.table("properties").select("*").eq("status", "approved").order("created_at", desc=True).limit(needed).execute()
+        properties.extend(res_add.data)
     
-    return properties
+    return properties[:6]
 
 @api_router.get("/properties/{property_id}", response_model=Property)
-async def get_property(property_id: str):
-    property_doc = await db.properties.find_one({"id": property_id}, {"_id": 0})
-    if not property_doc:
+def get_property(property_id: str):
+    res = supabase.table("properties").select("*").eq("id", property_id).limit(1).execute()
+    prop = res.data[0] if res.data else None
+    
+    if not prop:
         raise HTTPException(status_code=404, detail="Property not found")
     
-    await db.properties.update_one({"id": property_id}, {"$inc": {"views": 1}})
-    property_doc["views"] = property_doc.get("views", 0) + 1
+    new_views = prop.get("views", 0) + 1
+    supabase.table("properties").update({"views": new_views}).eq("id", property_id).execute()
+    prop["views"] = new_views
     
-    return Property(**property_doc)
+    return Property(**prop)
 
 @api_router.put("/properties/{property_id}", response_model=Property)
-async def update_property(
+def update_property(
     property_id: str,
     property_data: PropertyCreate,
     current_user: dict = Depends(get_current_user)
 ):
-    property_doc = await db.properties.find_one({"id": property_id}, {"_id": 0})
-    if not property_doc:
+    res = supabase.table("properties").select("*").eq("id", property_id).limit(1).execute()
+    prop = res.data[0] if res.data else None
+    
+    if not prop:
         raise HTTPException(status_code=404, detail="Property not found")
     
-    if property_doc["owner_id"] != current_user["id"] and current_user["role"] != "admin":
+    if prop["owner_id"] != current_user["id"] and current_user["role"] != "admin":
         raise HTTPException(status_code=403, detail="Not authorized")
     
     update_data = property_data.model_dump()
-    await db.properties.update_one({"id": property_id}, {"$set": update_data})
+    supabase.table("properties").update(update_data).eq("id", property_id).execute()
     
-    updated_property = await db.properties.find_one({"id": property_id}, {"_id": 0})
-    return Property(**updated_property)
+    updated_res = supabase.table("properties").select("*").eq("id", property_id).limit(1).execute()
+    return Property(**updated_res.data[0])
 
 @api_router.delete("/properties/{property_id}")
-async def delete_property(property_id: str, current_user: dict = Depends(get_current_user)):
-    property_doc = await db.properties.find_one({"id": property_id}, {"_id": 0})
-    if not property_doc:
+def delete_property(property_id: str, current_user: dict = Depends(get_current_user)):
+    res = supabase.table("properties").select("*").eq("id", property_id).limit(1).execute()
+    prop = res.data[0] if res.data else None
+    
+    if not prop:
         raise HTTPException(status_code=404, detail="Property not found")
     
-    if property_doc["owner_id"] != current_user["id"] and current_user["role"] != "admin":
+    if prop["owner_id"] != current_user["id"] and current_user["role"] != "admin":
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    await db.properties.delete_one({"id": property_id})
+    supabase.table("properties").delete().eq("id", property_id).execute()
     return {"message": "Property deleted successfully"}
 
-# Favorites
+# --- Favorites ---
 @api_router.post("/favorites")
-async def add_favorite(favorite_data: FavoriteCreate, current_user: dict = Depends(get_current_user)):
-    existing = await db.favorites.find_one({
-        "user_id": current_user["id"],
-        "property_id": favorite_data.property_id
-    })
+def add_favorite(favorite_data: FavoriteCreate, current_user: dict = Depends(get_current_user)):
+    existing = supabase.table("favorites").select("*").eq("user_id", current_user["id"]).eq("property_id", favorite_data.property_id).execute()
     
-    if existing:
+    if existing.data:
         return {"message": "Already in favorites"}
     
     favorite_id = str(uuid.uuid4())
@@ -396,35 +365,35 @@ async def add_favorite(favorite_data: FavoriteCreate, current_user: dict = Depen
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
-    await db.favorites.insert_one(favorite_doc)
+    supabase.table("favorites").insert(favorite_doc).execute()
     return {"message": "Added to favorites", "id": favorite_id}
 
 @api_router.get("/favorites")
-async def get_favorites(current_user: dict = Depends(get_current_user)):
-    favorites = await db.favorites.find({"user_id": current_user["id"]}, {"_id": 0}).to_list(100)
+def get_favorites(current_user: dict = Depends(get_current_user)):
+    fav_res = supabase.table("favorites").select("*").eq("user_id", current_user["id"]).execute()
+    property_ids = [fav["property_id"] for fav in fav_res.data]
     
-    property_ids = [fav["property_id"] for fav in favorites]
-    properties = await db.properties.find({"id": {"$in": property_ids}}, {"_id": 0}).to_list(100)
-    
-    return properties
+    if not property_ids:
+        return []
+        
+    prop_res = supabase.table("properties").select("*").in_("id", property_ids).execute()
+    return prop_res.data
 
 @api_router.delete("/favorites/{property_id}")
-async def remove_favorite(property_id: str, current_user: dict = Depends(get_current_user)):
-    result = await db.favorites.delete_one({
-        "user_id": current_user["id"],
-        "property_id": property_id
-    })
+def remove_favorite(property_id: str, current_user: dict = Depends(get_current_user)):
+    res = supabase.table("favorites").delete().eq("user_id", current_user["id"]).eq("property_id", property_id).execute()
     
-    if result.deleted_count == 0:
+    if not res.data:
         raise HTTPException(status_code=404, detail="Favorite not found")
-    
     return {"message": "Removed from favorites"}
 
-# Inquiries
+# --- Inquiries ---
 @api_router.post("/inquiries")
-async def create_inquiry(inquiry_data: InquiryCreate, current_user: dict = Depends(get_current_user)):
-    property_doc = await db.properties.find_one({"id": inquiry_data.property_id}, {"_id": 0})
-    if not property_doc:
+def create_inquiry(inquiry_data: InquiryCreate, current_user: dict = Depends(get_current_user)):
+    res = supabase.table("properties").select("*").eq("id", inquiry_data.property_id).limit(1).execute()
+    prop = res.data[0] if res.data else None
+    
+    if not prop:
         raise HTTPException(status_code=404, detail="Property not found")
     
     inquiry_id = str(uuid.uuid4())
@@ -432,32 +401,28 @@ async def create_inquiry(inquiry_data: InquiryCreate, current_user: dict = Depen
         "id": inquiry_id,
         "from_user_id": current_user["id"],
         "from_user_name": current_user["name"],
-        "to_user_id": property_doc["owner_id"],
+        "to_user_id": prop["owner_id"],
         "property_id": inquiry_data.property_id,
         "message": inquiry_data.message,
         "read": False,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
-    await db.inquiries.insert_one(inquiry_doc)
+    supabase.table("inquiries").insert(inquiry_doc).execute()
     return {"message": "Inquiry sent successfully", "id": inquiry_id}
 
 @api_router.get("/inquiries")
-async def get_inquiries(current_user: dict = Depends(get_current_user)):
-    inquiries = await db.inquiries.find({
-        "$or": [
-            {"from_user_id": current_user["id"]},
-            {"to_user_id": current_user["id"]}
-        ]
-    }, {"_id": 0}).sort("created_at", -1).to_list(100)
-    
-    return inquiries
+def get_inquiries(current_user: dict = Depends(get_current_user)):
+    res = supabase.table("inquiries").select("*").or_(f"from_user_id.eq.{current_user['id']},to_user_id.eq.{current_user['id']}").order("created_at", desc=True).limit(100).execute()
+    return res.data
 
-# Appointments
+# --- Appointments ---
 @api_router.post("/appointments")
-async def create_appointment(appointment_data: AppointmentCreate, current_user: dict = Depends(get_current_user)):
-    property_doc = await db.properties.find_one({"id": appointment_data.property_id}, {"_id": 0})
-    if not property_doc:
+def create_appointment(appointment_data: AppointmentCreate, current_user: dict = Depends(get_current_user)):
+    res = supabase.table("properties").select("*").eq("id", appointment_data.property_id).limit(1).execute()
+    prop = res.data[0] if res.data else None
+    
+    if not prop:
         raise HTTPException(status_code=404, detail="Property not found")
     
     appointment_id = str(uuid.uuid4())
@@ -467,7 +432,7 @@ async def create_appointment(appointment_data: AppointmentCreate, current_user: 
         "user_name": current_user["name"],
         "user_phone": current_user["phone"],
         "property_id": appointment_data.property_id,
-        "property_title": property_doc["title"],
+        "property_title": prop["title"],
         "date": appointment_data.date,
         "time": appointment_data.time,
         "message": appointment_data.message,
@@ -475,71 +440,67 @@ async def create_appointment(appointment_data: AppointmentCreate, current_user: 
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
-    await db.appointments.insert_one(appointment_doc)
+    supabase.table("appointments").insert(appointment_doc).execute()
     return {"message": "Appointment scheduled successfully", "id": appointment_id}
 
 @api_router.get("/appointments")
-async def get_appointments(current_user: dict = Depends(get_current_user)):
-    appointments = await db.appointments.find(
-        {"user_id": current_user["id"]},
-        {"_id": 0}
-    ).sort("created_at", -1).to_list(100)
-    
-    return appointments
+def get_appointments(current_user: dict = Depends(get_current_user)):
+    res = supabase.table("appointments").select("*").eq("user_id", current_user["id"]).order("created_at", desc=True).limit(100).execute()
+    return res.data
 
-# Dashboard
+# --- Dashboards ---
 @api_router.get("/dashboard/user")
-async def get_user_dashboard(current_user: dict = Depends(get_current_user)):
-    favorites = await db.favorites.find({"user_id": current_user["id"]}, {"_id": 0}).to_list(100)
-    appointments = await db.appointments.find({"user_id": current_user["id"]}, {"_id": 0}).sort("created_at", -1).limit(10).to_list(10)
-    inquiries = await db.inquiries.find({"from_user_id": current_user["id"]}, {"_id": 0}).sort("created_at", -1).limit(10).to_list(10)
+def get_user_dashboard(current_user: dict = Depends(get_current_user)):
+    fav_res = supabase.table("favorites").select("*", count="exact").eq("user_id", current_user["id"]).execute()
+    app_res = supabase.table("appointments").select("*").eq("user_id", current_user["id"]).order("created_at", desc=True).limit(10).execute()
+    inq_res = supabase.table("inquiries").select("*").eq("from_user_id", current_user["id"]).order("created_at", desc=True).limit(10).execute()
     
     return {
-        "favorites_count": len(favorites),
-        "appointments": appointments,
-        "inquiries": inquiries
+        "favorites_count": fav_res.count if fav_res.count else 0,
+        "appointments": app_res.data,
+        "inquiries": inq_res.data
     }
 
 @api_router.get("/dashboard/agent")
-async def get_agent_dashboard(current_user: dict = Depends(get_current_user)):
+def get_agent_dashboard(current_user: dict = Depends(get_current_user)):
     if current_user["role"] not in ["agent", "admin"]:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    my_properties = await db.properties.find({"owner_id": current_user["id"]}, {"_id": 0}).to_list(100)
+    prop_res = supabase.table("properties").select("*").eq("owner_id", current_user["id"]).execute()
+    my_properties = prop_res.data
     
-    property_ids = [prop["id"] for prop in my_properties]
-    inquiries = await db.inquiries.find({"to_user_id": current_user["id"]}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    inq_res = supabase.table("inquiries").select("*").eq("to_user_id", current_user["id"]).order("created_at", desc=True).limit(100).execute()
     
     total_views = sum(prop.get("views", 0) for prop in my_properties)
     
     return {
         "total_listings": len(my_properties),
         "total_views": total_views,
-        "total_inquiries": len(inquiries),
+        "total_inquiries": len(inq_res.data),
         "properties": my_properties,
-        "inquiries": inquiries
+        "inquiries": inq_res.data
     }
 
 @api_router.get("/dashboard/admin")
-async def get_admin_dashboard(current_user: dict = Depends(get_current_user)):
+def get_admin_dashboard(current_user: dict = Depends(get_current_user)):
     if current_user["role"] != "admin":
         raise HTTPException(status_code=403, detail="Access denied")
     
-    total_properties = await db.properties.count_documents({})
-    pending_properties = await db.properties.count_documents({"status": "pending"})
-    total_users = await db.users.count_documents({})
+    total_props = supabase.table("properties").select("*", count="exact").execute().count
+    pending_props = supabase.table("properties").select("*", count="exact").eq("status", "pending").execute().count
+    total_users = supabase.table("users").select("*", count="exact").execute().count
     
-    pending_list = await db.properties.find({"status": "pending"}, {"_id": 0}).sort("created_at", -1).to_list(50)
+    pending_list = supabase.table("properties").select("*").eq("status", "pending").order("created_at", desc=True).limit(50).execute().data
     
     return {
-        "total_properties": total_properties,
-        "pending_properties": pending_properties,
-        "total_users": total_users,
+        "total_properties": total_props or 0,
+        "pending_properties": pending_props or 0,
+        "total_users": total_users or 0,
         "pending_list": pending_list
     }
 
 @api_router.put("/admin/properties/{property_id}/status")
-async def update_property_status(
+def update_property_status(
     property_id: str,
     status: str,
     current_user: dict = Depends(get_current_user)
@@ -550,18 +511,11 @@ async def update_property_status(
     if status not in ["approved", "rejected"]:
         raise HTTPException(status_code=400, detail="Invalid status")
     
-    result = await db.properties.update_one(
-        {"id": property_id},
-        {"$set": {"status": status, "verified": status == "approved"}}
-    )
+    res = supabase.table("properties").update({"status": status, "verified": status == "approved"}).eq("id", property_id).execute()
     
-    if result.matched_count == 0:
+    if not res.data:
         raise HTTPException(status_code=404, detail="Property not found")
     
     return {"message": f"Property {status} successfully"}
 
 app.include_router(api_router)
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()
