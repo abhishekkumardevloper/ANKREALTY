@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
 // This will use your environment variable if it exists, or safely fall back to your live Render backend
-const API_URL = process.env.REACT_APP_API_BASE || "https://ankrealty.onrender.com";
+const API_URL = "https://ankrealty.onrender.com/api";
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -33,7 +33,7 @@ export default function AuthPage() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_URL}/api/auth/login`, {
+    const response = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -72,7 +72,7 @@ export default function AuthPage() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_URL}/api/auth/register`, {
+      const response = await fetch(`${API_URL}/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
