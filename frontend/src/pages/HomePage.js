@@ -314,7 +314,7 @@ export default function HomePage() {
                   <img 
                     src={src} 
                     alt={`Client logo ${i}`} 
-                    className="max-w-full max-h-full object-contain filter brightness-0 opacity-40 hover:opacity-100 transition-opacity duration-300"
+                    className="max-w-full max-h-full object-contain filter brightness-0 opacity-80 hover:opacity-100 transition-opacity duration-300"
                   />
                 </div>
               ))}
@@ -334,7 +334,7 @@ export default function HomePage() {
                   <img 
                     src={src} 
                     alt={`Client logo ${i}`} 
-                    className="max-w-full max-h-full object-contain filter brightness-0 opacity-40 hover:opacity-100 transition-opacity duration-300"
+                    className="max-w-full max-h-full object-contain filter brightness-0 opacity-80 hover:opacity-100 transition-opacity duration-300"
                   />
                 </div>
               ))}
@@ -346,7 +346,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
       {/* --- QUICK CATEGORIES --- */}
       <section className="py-12 bg-white border-b border-slate-100 relative z-20">
         <div className="max-w-7xl mx-auto px-6">
