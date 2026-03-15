@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 
 // --- LOGO ARRAYS FOR ANIMATION ---
 const topRowLogos = [
-  "/images (7).png",
+  "/images (3).png",
   "/images (2).png",
   "/images (1).png",
   "/logo (2).png",
@@ -24,7 +24,7 @@ const topRowLogos = [
 
 const bottomRowLogos = [
   "/images.png",
-  "/images (6).png",
+  "/4f3bb698972531.Y3JvcCw5NTAsNzQzLDIyMywyMQ.png",
   "/Max_Estates_logo.svg.png",
   "/M3M-Jacob-and-Co-logo.png",
 ];
