@@ -10,6 +10,7 @@ import {
   Building2, Briefcase, Ruler, Users, Award, ThumbsUp, Quote, Newspaper, Bell
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import RegisterPopup from '../components/RegisterPopup'; // ✅ IMPORTED HERE
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -221,6 +222,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-red-200 relative">
       <Navbar />
+      <RegisterPopup /> {/* ✅ ADDED COMPONENT HERE */}
 
       {/* --- HERO SECTION --- */}
       <section className="relative pt-32 pb-40 px-4 md:px-6 flex items-center justify-center overflow-hidden min-h-[85vh]">
