@@ -1,10 +1,4 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback
-} from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import axios from "axios";
 
 const AuthContext = createContext();
@@ -13,10 +7,8 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
-/* ✅ IMPORTANT:
-   NO trailing slash at end
-*/
-const API_BASE = "http://127.0.0.1:8000/api";
+/* ✅ IMPORTANT: Pointing to the live Render backend */
+const API_BASE = "https://ankrealty.onrender.com/api";
 
 /* ✅ Create axios instance */
 const api = axios.create({
@@ -25,13 +17,11 @@ const api = axios.create({
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(() =>
-    localStorage.getItem("token")
-  );
+  const [token, setToken] = useState(() => localStorage.getItem("token"));
   const [loading, setLoading] = useState(true);
 
   // ---------------- SET TOKEN ----------------
-  const setAuthToken = (newToken) => {
+  const setAuthToken = useCallback((newToken) => {
     if (newToken) {
       localStorage.setItem("token", newToken);
       api.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
@@ -40,13 +30,13 @@ export function AuthProvider({ children }) {
       delete api.defaults.headers.common["Authorization"];
     }
     setToken(newToken);
-  };
+  }, []);
 
   // ---------------- LOGOUT ----------------
   const logout = useCallback(() => {
     setAuthToken(null);
     setUser(null);
-  }, []);
+  }, [setAuthToken]);
 
   // ---------------- FETCH CURRENT USER ----------------
   const fetchUser = useCallback(async () => {
@@ -62,39 +52,27 @@ export function AuthProvider({ children }) {
   }, [logout]);
 
   // ---------------- INITIAL LOAD ----------------
- // ---------------- INITIAL LOAD ----------------
   useEffect(() => {
     const initializeAuth = async () => {
       if (token) {
-        api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-        // Agar user state mein pehle se hai (jaise login ke baad), toh dobara fetch mat karo
-        if (!user) {
-          await fetchUser();
-        } else {
-          setLoading(false);
-        }
+        setAuthToken(token); // ✅ Set the header globally before fetching
+        await fetchUser();
       } else {
         setLoading(false);
       }
     };
 
     initializeAuth();
-  }, [token, fetchUser, user]);
+    // ✅ Removed 'user' from dependencies to prevent infinite loops
+  }, [token, fetchUser, setAuthToken]);
 
   // ---------------- LOGIN ----------------
   const login = async (email, password) => {
     try {
-      const response = await api.post("/auth/login", {
-        email,
-        password
-      });
+      const response = await api.post("/auth/login", { email, password });
+      const newToken = response.data.token || response.data.access_token;
 
-      const newToken =
-        response.data.token || response.data.access_token;
-
-      if (!newToken) {
-        throw new Error("Token missing from backend");
-      }
+      if (!newToken) throw new Error("Token missing from backend");
 
       setAuthToken(newToken);
       setUser(response.data.user);
@@ -107,28 +85,12 @@ export function AuthProvider({ children }) {
   };
 
   // ---------------- REGISTER ----------------
-  const register = async (
-    name,
-    email,
-    password,
-    phone,
-    role = "user"
-  ) => {
+  const register = async (name, email, password, phone, role = "user") => {
     try {
-      const response = await api.post("/auth/register", {
-        name,
-        email,
-        password,
-        phone,
-        role
-      });
+      const response = await api.post("/auth/register", { name, email, password, phone, role });
+      const newToken = response.data.token || response.data.access_token;
 
-      const newToken =
-        response.data.token || response.data.access_token;
-
-      if (!newToken) {
-        throw new Error("Token missing from backend");
-      }
+      if (!newToken) throw new Error("Token missing from backend");
 
       setAuthToken(newToken);
       setUser(response.data.user);
@@ -141,17 +103,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        token,
-        login,
-        register,
-        logout,
-        loading,
-        api   // 🔥 export api for other pages
-      }}
-    >
+    <AuthContext.Provider value={{ user, token, login, register, logout, loading, api }}>
       {children}
     </AuthContext.Provider>
   );
