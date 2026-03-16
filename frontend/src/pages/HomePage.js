@@ -10,7 +10,7 @@ import {
   Building2, Briefcase, Ruler, Users, Award, ThumbsUp, Quote, Newspaper, Bell
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
-import RegisterPopup from '../components/RegisterPopup'; // ✅ IMPORTED HERE
+import RegisterPopup from '../RegisterPopup'; // ✅ IMPORTED HERE
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
