@@ -1,6 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Banknote, Bell, Briefcase, Building2, Calculator, ChevronRight, Handshake, Instagram, Linkedin, Mail, MapPin, MessageCircle, Search, Users, Youtube } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { 
+  ArrowRight, Banknote, Bell, Briefcase, Building2, Calculator, ChevronRight, 
+  Handshake, Instagram, Linkedin, Mail, MapPin, MessageCircle, Search, Users, 
+  Youtube, X, Send, Map, Star, Key, Shield, FileText, TrendingUp, Phone 
+} from 'lucide-react';
 import Navbar from '../components/Navbar';
 import RegisterPopup from './RegisterPopup';
 import { Button } from '@/components/ui/button';
@@ -8,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { bankOffers, exploreLocalities, newsArticles, socialLinks } from '@/lib/siteData';
 import { WHATSAPP_URL, createPropertySearch } from '@/lib/api';
 
+// --- DATA FROM CODE 2 ---
 const featuredProperties = [
   { id: 'p1', title: 'Bajrang Vatika', city: 'Noida Extension', location: 'Sector 10', propertyType: 'plot', category: 'buy', price: '₹ 45 L onwards', image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80' },
   { id: 'f1', title: 'Experion Saatori', city: 'Noida', location: 'Sector 151', propertyType: 'apartment', category: 'buy', price: '₹ 1.85 Cr onwards', image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80' },
@@ -34,13 +40,60 @@ const socialIconMap = {
   whatsapp: MessageCircle,
 };
 
+// --- DATA FROM CODE 3 (Logos for Animation) ---
+const topRowLogos = [
+  "/images (3).png",
+  "/images__9_-removebg-preview.png",
+  "/images (1).png",
+  "/images (2).png",
+  "/183f468e401f4220bce9e4f7b1e3ffd820251112162925170.png",
+];
+
+const bottomRowLogos = [
+  "/images.png",
+  "/4f3bb698972531.Y3JvcCw5NTAsNzQzLDIyMywyMQ-removebg-preview.png",
+  "/Max_Estates_logo.svg.png",
+  "/M3M-Jacob-and-Co-logo.png",
+];
+
 export default function HomePage() {
   const navigate = useNavigate();
+  
+  // Search State (Code 1)
   const [search, setSearch] = useState({ category: 'buy', city: '', property_type: '', max_price: '' });
   const [searchFocused, setSearchFocused] = useState(false);
+  
+  // Newsletter & Loan State (Code 1)
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [loanLead, setLoanLead] = useState({ name: '', phone: '' });
 
+  // Chatbot State (Code 3)
+  const [isChatOpen, setIsChatOpen] = useState(false);
+
+  // EMI Calculator State (Code 3)
+  const [loanAmount, setLoanAmount] = useState(5000000); 
+  const [interestRate, setInterestRate] = useState(8.5); 
+  const [loanTenure, setLoanTenure] = useState(20); 
+  const [emiResult, setEmiResult] = useState({ emi: 0, totalInterest: 0, totalPayment: 0 });
+
+  // EMI Calculation Effect (Code 3)
+  useEffect(() => {
+    const p = loanAmount;
+    const r = interestRate / 12 / 100;
+    const n = loanTenure * 12;
+
+    if (p > 0 && r > 0 && n > 0) {
+      const emi = (p * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+      const totalPayment = emi * n;
+      setEmiResult({
+        emi: Math.round(emi),
+        totalInterest: Math.round(totalPayment - p),
+        totalPayment: Math.round(totalPayment)
+      });
+    }
+  }, [loanAmount, interestRate, loanTenure]);
+
+  // Search Logic (Code 1)
   const suggestions = useMemo(() => {
     const query = search.city.trim().toLowerCase();
     if (!query) return exploreLocalities;
@@ -48,10 +101,12 @@ export default function HomePage() {
   }, [search.city]);
 
   const handleSearch = () => navigate(createPropertySearch(search));
+  
   const handleNewsletter = () => {
     if (!newsletterEmail.includes('@')) return;
     window.open(`${WHATSAPP_URL}?text=${encodeURIComponent(`Hi ANK Realty, subscribe me for property deals. My email is ${newsletterEmail}.`)}`, '_blank', 'noopener,noreferrer');
   };
+  
   const handleLoanLead = () => {
     if (!loanLead.name || loanLead.phone.replace(/\D/g, '').length < 10) return;
     window.open(`${WHATSAPP_URL}?text=${encodeURIComponent(`Hi ANK Realty, I want a home-loan comparison. Name: ${loanLead.name}, Phone: ${loanLead.phone}.`)}`, '_blank', 'noopener,noreferrer');
@@ -62,6 +117,7 @@ export default function HomePage() {
       <Navbar />
       <RegisterPopup />
 
+      {/* --- HERO SECTION (From Code 1) --- */}
       <section className="relative pt-32 pb-28 px-4 md:px-6 overflow-hidden min-h-[85vh]">
         <div className="absolute inset-0 z-0" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1582407947304-fd86f028f716?q=80&w=2000&auto=format&fit=crop')`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
         <div className="absolute inset-0 bg-slate-900/85 z-10" />
@@ -114,7 +170,47 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-16 bg-white rounded-t-[3rem] -mt-10 relative z-20 border-b border-slate-100">
+      {/* --- TRUSTED BRANDS ANIMATION (From Code 3) --- */}
+      <section className="py-12 sm:py-16 relative w-full overflow-hidden bg-white -mt-10 z-20 rounded-t-[3rem] shadow-[0_-10px_40px_rgba(0,0,0,0.05)] border-b border-slate-100">
+        <div className="w-full">
+          <h2 className="text-xs sm:text-sm font-bold uppercase tracking-widest text-slate-400 mb-8 sm:mb-12 text-center">
+            Trusted by leading brands across India
+          </h2>
+          <div className="relative flex flex-col gap-8 sm:gap-12 overflow-hidden w-full">
+            {/* First Row: Moving Left */}
+            <motion.div
+              animate={{ x: ["0%", "-50%"] }}
+              transition={{ duration: 30, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+              className="flex gap-8 sm:gap-16 w-max"
+            >
+              {[...topRowLogos, ...topRowLogos, ...topRowLogos, ...topRowLogos].map((src, i) => (
+                <div key={`top-${i}`} className="flex-shrink-0 w-32 sm:w-48 h-16 sm:h-20 flex items-center justify-center">
+                  <img src={src} alt={`Client logo ${i}`} className="max-w-full max-h-full object-contain filter brightness-0 opacity-80 hover:opacity-100 transition-opacity duration-300" />
+                </div>
+              ))}
+            </motion.div>
+
+            {/* Second Row: Moving Right */}
+            <motion.div
+              animate={{ x: ["-50%", "0%"] }}
+              transition={{ duration: 30, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+              className="flex gap-8 sm:gap-16 w-max"
+            >
+              {[...bottomRowLogos, ...bottomRowLogos, ...bottomRowLogos, ...bottomRowLogos].map((src, i) => (
+                <div key={`bottom-${i}`} className="flex-shrink-0 w-32 sm:w-48 h-16 sm:h-20 flex items-center justify-center">
+                  <img src={src} alt={`Client logo ${i}`} className="max-w-full max-h-full object-contain filter brightness-0 opacity-80 hover:opacity-100 transition-opacity duration-300" />
+                </div>
+              ))}
+            </motion.div>
+            
+            <div className="absolute inset-y-0 left-0 w-16 sm:w-32 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
+            <div className="absolute inset-y-0 right-0 w-16 sm:w-32 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+          </div>
+        </div>
+      </section>
+
+      {/* --- EXPLORE LOCALITIES (From Code 1) --- */}
+      <section className="py-16 bg-white relative z-20 border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
             <div>
@@ -136,6 +232,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* --- FEATURED PROPERTIES (From Code 1 & 2) --- */}
       <section className="py-20 px-6 bg-slate-50 border-b border-slate-200">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-end mb-10 gap-4">
@@ -147,14 +244,16 @@ export default function HomePage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {featuredProperties.map((property) => (
-              <div key={property.id} onClick={() => navigate(`/property/${property.id}`, { state: { property } })} className="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition cursor-pointer">
-                <img src={property.image} alt={property.title} className="h-56 w-full object-cover" />
+              <div key={property.id} onClick={() => navigate(`/property/${property.id}`, { state: { property } })} className="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition cursor-pointer group">
+                <div className="relative h-56 overflow-hidden">
+                   <img src={property.image} alt={property.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                </div>
                 <div className="p-6">
                   <p className="text-xs font-bold uppercase tracking-[0.2em] text-red-600 mb-3">{property.category} • {property.propertyType}</p>
-                  <h3 className="text-2xl font-black text-slate-900 mb-2">{property.title}</h3>
+                  <h3 className="text-2xl font-black text-slate-900 mb-2 group-hover:text-red-600 transition-colors">{property.title}</h3>
                   <p className="text-slate-500 mb-3">{property.location}, {property.city}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="font-black text-slate-900">{property.price}</span>
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
+                    <span className="font-black text-slate-900 text-lg">{property.price}</span>
                     <span className="text-red-600 font-bold flex items-center">View details <ArrowRight className="w-4 h-4 ml-2" /></span>
                   </div>
                 </div>
@@ -164,6 +263,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* --- WHY INDIA & EMI CALCULATOR (Combined Code 1 & 3) --- */}
       <section className="py-20 px-6 bg-white border-b border-slate-100">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-start">
           <div>
@@ -184,59 +284,46 @@ export default function HomePage() {
               ))}
             </div>
           </div>
-          <div className="bg-slate-900 text-white rounded-[2.5rem] p-8 md:p-10 shadow-2xl">
-            <div className="flex items-center gap-3 mb-8"><Calculator className="w-7 h-7 text-red-500" /><h3 className="text-3xl font-black">Apply Loan</h3></div>
-            <div className="space-y-4 mb-8">
-              {bankOffers.map((offer) => (
-                <div key={offer.bank} className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-start justify-between gap-4">
-                  <div>
-                    <p className="font-black text-lg">{offer.bank}</p>
-                    <p className="text-slate-300 text-sm">{offer.note}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-red-400 font-black">{offer.rate}</p>
-                    <p className="text-xs text-slate-400">Indicative rate</p>
-                  </div>
-                </div>
-              ))}
+
+          {/* EMI Calculator from Code 3 injected here for better utility than simple input form */}
+          <div className="bg-slate-900 rounded-[2.5rem] p-8 md:p-10 shadow-2xl text-white">
+            <div className="flex items-center gap-3 mb-6 relative z-10">
+              <div className="bg-slate-800 p-2.5 rounded-xl"><Calculator className="w-6 h-6 text-red-500" /></div>
+              <div><h3 className="text-3xl font-black">Plan Your Investment</h3></div>
             </div>
-            <div className="grid md:grid-cols-2 gap-4 mb-4">
-              <Input value={loanLead.name} onChange={(e) => setLoanLead((prev) => ({ ...prev, name: e.target.value }))} placeholder="Your name" className="bg-white text-slate-900" />
-              <Input value={loanLead.phone} onChange={(e) => setLoanLead((prev) => ({ ...prev, phone: e.target.value }))} placeholder="Phone number" className="bg-white text-slate-900" />
+            
+            <div className="space-y-6 mb-8">
+              <div>
+                <div className="flex justify-between text-sm mb-2"><span className="text-slate-300">Loan Amount</span><span className="font-bold text-base text-white font-mono">₹{loanAmount.toLocaleString('en-IN')}</span></div>
+                <input type="range" min="500000" max="50000000" step="100000" value={loanAmount} onChange={(e) => setLoanAmount(Number(e.target.value))} className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500" />
+              </div>
+              <div>
+                <div className="flex justify-between text-sm mb-2"><span className="text-slate-300">Interest Rate</span><span className="font-bold text-base text-white font-mono">{interestRate}%</span></div>
+                <input type="range" min="5" max="15" step="0.1" value={interestRate} onChange={(e) => setInterestRate(Number(e.target.value))} className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500" />
+              </div>
+              <div>
+                <div className="flex justify-between text-sm mb-2"><span className="text-slate-300">Loan Tenure</span><span className="font-bold text-base text-white font-mono">{loanTenure} Years</span></div>
+                <input type="range" min="1" max="30" step="1" value={loanTenure} onChange={(e) => setLoanTenure(Number(e.target.value))} className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500" />
+              </div>
             </div>
-            <div className="flex flex-wrap gap-3">
-              <Button onClick={handleLoanLead} className="bg-red-600 hover:bg-red-700">Request callback</Button>
-              <a href={WHATSAPP_URL} target="_blank" rel="noreferrer"><Button variant="outline" className="border-white/20 text-white hover:bg-white/10">Contact on WhatsApp</Button></a>
+
+            <div className="bg-slate-800/80 backdrop-blur-md rounded-2xl p-6 border border-slate-700 text-center mb-6">
+              <p className="text-slate-400 text-xs font-semibold mb-2 uppercase tracking-wider">Your Monthly EMI</p>
+              <p className="text-4xl font-black text-red-500 font-mono">₹{emiResult.emi.toLocaleString('en-IN')}</p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <Input value={loanLead.name} onChange={(e) => setLoanLead((prev) => ({ ...prev, name: e.target.value }))} placeholder="Your name" className="bg-white/10 text-white border-white/20 h-12" />
+              <Input value={loanLead.phone} onChange={(e) => setLoanLead((prev) => ({ ...prev, phone: e.target.value }))} placeholder="Phone number" className="bg-white/10 text-white border-white/20 h-12" />
+            </div>
+            <div className="flex flex-wrap gap-3 mt-4">
+              <Button onClick={handleLoanLead} className="bg-red-600 hover:bg-red-700 h-12 flex-1 font-bold text-base">Request loan callback</Button>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="py-20 px-6 bg-slate-50 border-b border-slate-200">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
-            <div>
-              <p className="text-red-600 font-bold uppercase tracking-[0.25em] text-xs mb-3">News & Insights</p>
-              <h2 className="text-3xl md:text-4xl font-black">Dynamic content blocks for buyers, sellers, and investors</h2>
-            </div>
-            <Link to="/blog"><Button variant="outline">Open resource center</Button></Link>
-          </div>
-          <div className="grid md:grid-cols-3 gap-6">
-            {newsArticles.map((article) => (
-              <Link key={article.id} to="/blog" className="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition-all">
-                <img src={article.image} alt={article.title} className="h-52 w-full object-cover" />
-                <div className="p-6">
-                  <p className="text-xs uppercase tracking-[0.25em] text-red-500 font-bold mb-3">{article.category}</p>
-                  <h3 className="text-xl font-black text-slate-900 mb-3">{article.title}</h3>
-                  <p className="text-slate-500 text-sm leading-7 mb-4">{article.excerpt}</p>
-                  <div className="text-sm text-slate-400">{article.date} • {article.readTime}</div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
+      {/* --- QUICK CATEGORIES (From Code 1) --- */}
       <section className="py-20 px-6 bg-white border-b border-slate-100">
         <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-6">
           {[
@@ -254,6 +341,38 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* --- NEWS & INSIGHTS (From Code 1 & 2) --- */}
+      <section className="py-20 px-6 bg-slate-50 border-b border-slate-200">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+            <div>
+              <p className="text-red-600 font-bold uppercase tracking-[0.25em] text-xs mb-3">News & Insights</p>
+              <h2 className="text-3xl md:text-4xl font-black">Dynamic content blocks for buyers, sellers, and investors</h2>
+            </div>
+            <Link to="/blog"><Button variant="outline">Open resource center</Button></Link>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            {newsArticles.map((article) => (
+              <Link key={article.id} to="/blog" className="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition-all group">
+                <div className="h-52 overflow-hidden">
+                   <img src={article.image} alt={article.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                </div>
+                <div className="p-6">
+                  <p className="text-xs uppercase tracking-[0.25em] text-red-500 font-bold mb-3">{article.category}</p>
+                  <h3 className="text-xl font-black text-slate-900 mb-3 group-hover:text-red-600 transition-colors">{article.title}</h3>
+                  <p className="text-slate-500 text-sm leading-7 mb-4 line-clamp-2">{article.excerpt}</p>
+                  <div className="text-sm text-slate-400 font-medium flex items-center justify-between">
+                    <span>{article.date} • {article.readTime}</span>
+                    <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-red-600" />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* --- NEWSLETTER SECTION (From Code 1) --- */}
       <section className="py-20 px-6 bg-slate-900 text-white">
         <div className="max-w-4xl mx-auto text-center">
           <Bell className="w-14 h-14 text-red-500 mx-auto mb-6" />
@@ -267,6 +386,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* --- FOOTER (From Code 1) --- */}
       <footer className="bg-[#0A0A0A] text-white pt-20 pb-10 px-6 border-t-[8px] border-red-600">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
@@ -316,6 +436,61 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+
+      {/* --- FLOATING CHATBOT (From Code 3) --- */}
+      <div className="fixed bottom-6 right-6 z-50">
+        {isChatOpen ? (
+          <div className="bg-white rounded-2xl shadow-2xl w-80 sm:w-96 border border-slate-200 overflow-hidden flex flex-col animate-in slide-in-from-bottom-5">
+            <div className="bg-slate-900 text-white p-4 font-bold flex justify-between items-center shadow-md relative z-10">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                ANK AI Assistant
+              </div>
+              <button onClick={() => setIsChatOpen(false)} className="hover:bg-slate-700 p-1 rounded-md transition-colors"><X className="w-4 h-4"/></button>
+            </div>
+            
+            <div className="p-4 flex-1 bg-slate-50 flex flex-col gap-3 h-[380px] overflow-y-auto">
+              <div className="flex gap-2">
+                <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                   <Building2 className="w-4 h-4 text-red-600"/>
+                </div>
+                <div className="bg-white p-3 rounded-2xl rounded-tl-sm shadow-sm text-sm border border-slate-100 text-slate-700">
+                  Welcome to ANK Realty! I am your virtual assistant. Please choose a subject below so I can assist you better:
+                </div>
+              </div>
+              
+              <div className="flex flex-col gap-2 mt-2 pl-10">
+                {[
+                  "Schedule a Visit", "Price Details & Negotiation", "Legal Verification Check",
+                  "Home Loan Options", "Property Locations & Tours", "Connect with an Agent"
+                ].map((subject, i) => (
+                  <button key={i} className="text-left bg-white hover:bg-red-50 text-slate-700 hover:text-red-700 p-2.5 rounded-xl text-sm font-medium transition-all border border-slate-200 hover:border-red-200 shadow-sm">
+                    {subject}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="p-3 bg-white border-t border-slate-100 flex items-center gap-2">
+              <input type="text" placeholder="Type your message..." className="flex-1 bg-slate-50 border border-slate-200 rounded-full px-4 py-2 text-sm outline-none focus:border-red-400" />
+              <button className="bg-red-600 text-white p-2 rounded-full hover:bg-red-700 transition-colors">
+                <Send className="w-4 h-4 ml-0.5" />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button 
+            onClick={() => setIsChatOpen(true)} 
+            className="bg-red-600 hover:bg-red-700 text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-transform flex items-center justify-center group"
+          >
+            <MessageSquare className="w-7 h-7" />
+            <span className="absolute right-full mr-4 bg-slate-900 text-white text-xs font-bold py-1.5 px-3 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+              Chat with us!
+            </span>
+          </button>
+        )}
+      </div>
+
     </div>
   );
 }
