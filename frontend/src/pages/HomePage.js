@@ -12,7 +12,7 @@ import {
   ShieldCheck, Coffee, Zap, ArrowUpDown, Dumbbell, Droplets, Wind
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
-import RegisterPopup from "../RegisterPopup"; 
+import RegisterPopup from "/RegisterPopup"; 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
