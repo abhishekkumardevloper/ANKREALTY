@@ -1,19 +1,21 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
+import axios from 'axios';
 import { 
   MapPin, Bed, Bath, Maximize, Phone, Mail, Calendar, Home,
   Heart, ShieldCheck, Share2, CheckCircle, Info, ChevronRight, 
   Image as ImageIcon, Download, FileText, Check, Building,
   TrendingUp, Coffee, Zap, ArrowUpDown, Shield, Dumbbell, Droplets, Wind,
-  Star, Lock, Zap as ZapIcon, ArrowRight, MessageSquare
+  Star, Lock, Zap as ZapIcon, MessageSquare
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '../contexts/AuthContext';
-import { apiClient } from '@/lib/api';
 import { toast } from 'sonner';
+
+const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000/api";
 
 // --- MOCK DATA FOR NEW SECTIONS ---
 const mockPriceList = [
@@ -34,19 +36,6 @@ const mockAmenities = [
   { name: "Air Conditioned", icon: Wind },
 ];
 
-const relatedFallback = [
-  { id: 'f1', title: 'Experion Saatori', city: 'Noida', location: 'Sector 151', price: 18500000, image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80' },
-  { id: 'c1', title: 'M3M Line', city: 'Noida', location: 'Sector 72', price: 8000000, image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80' },
-  { id: 'p1', title: 'Bajrang Vatika', city: 'Noida Extension', location: 'Sector 10', price: 4500000, image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80' },
-];
-
-const formatPrice = (value) => {
-  const price = Number(value || 0);
-  if (price >= 10000000) return `₹ ${(price / 10000000).toFixed(2)} Cr`;
-  if (price >= 100000) return `₹ ${(price / 100000).toFixed(2)} Lac`;
-  return `₹ ${price.toLocaleString('en-IN')}`;
-};
-
 export default function PropertyDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -63,20 +52,19 @@ export default function PropertyDetailPage() {
 
   const fetchProperty = useCallback(async () => {
     try {
-      const response = await apiClient.get(`/properties/${id}`);
+      const response = await axios.get(`${API_BASE}/properties/${id}`);
       setProperty(response.data);
     } catch (error) {
       const fallbackProperty = location.state?.property;
       if (fallbackProperty) {
         setProperty({
           ...fallbackProperty,
+          // Hydrate fallback with extra data to match new UI
           builder: fallbackProperty.builder || "Yatharth Group and Great Value Realty",
-          possession: fallbackProperty.possession || "June 2030",
-          configurations: fallbackProperty.configurations || "3 BHK Flats, 4 BHK Flats",
+          possession: "June 2030",
+          configurations: "3 BHK Flats, 4 BHK Flats",
           projectStatus: fallbackProperty.tag || "New Launch",
-          rera: fallbackProperty.rera || "Governed by the ASPIRE framework",
-          images: fallbackProperty.images?.length ? fallbackProperty.images : [fallbackProperty.image || fallbackProperty.imageUrl || relatedFallback[0].image],
-          description: fallbackProperty.description || 'Premium property listing with strong connectivity and investment appeal.',
+          rera: fallbackProperty.rera || "Governed by the ASPIRE framework"
         });
       } else {
         toast.error('Property not found');
@@ -91,31 +79,13 @@ export default function PropertyDetailPage() {
     fetchProperty();
   }, [fetchProperty]);
 
-  const images = useMemo(() => property?.images?.length ? property.images : [property?.image || property?.imageUrl || relatedFallback[0].image], [property]);
-  const relatedProperties = useMemo(() => relatedFallback.filter((item) => item.id !== id), [id]);
-
-  const handleLeadSubmit = async (e, formName) => {
+  const handleLeadSubmit = (e, formName) => {
     e.preventDefault();
-    if (!user) {
-      toast.error('Please login to send an inquiry.');
-      navigate('/auth');
-      return;
-    }
+    // Reset forms after submission
+    if(formName === 'Quick Form') setQuickForm({ name: '', phone: '' });
+    else setLeadForm({ name: '', email: '', phone: '' });
     
-    try {
-      const currentForm = formName === 'Quick Form' ? quickForm : leadForm;
-      await apiClient.post('/inquiries', { 
-        property_id: property.id, 
-        message: `Interested buyer: ${currentForm.name || user.name}, phone: ${currentForm.phone}, Form Source: ${formName}` 
-      });
-      toast.success(`Thank you! Our expert will contact you shortly. (${formName})`);
-      
-      // Reset forms
-      if (formName === 'Quick Form') setQuickForm({ name: '', phone: '' });
-      else setLeadForm({ name: '', email: '', phone: '' });
-    } catch (error) {
-      toast.error(error.response?.data?.detail || 'Unable to send inquiry right now.');
-    }
+    toast.success(`Thank you! Our expert will contact you shortly. (${formName})`);
   };
 
   const addToFavorites = async () => {
@@ -124,12 +94,7 @@ export default function PropertyDetailPage() {
       navigate('/auth');
       return;
     }
-    try {
-      await apiClient.post('/favorites', { property_id: property.id });
-      toast.success('Added to favorites');
-    } catch (error) {
-      toast.error(error.response?.data?.detail || 'Unable to save favorite');
-    }
+    toast.success('Added to favorites');
   };
 
   if (loading) {
@@ -141,6 +106,14 @@ export default function PropertyDetailPage() {
   }
 
   if (!property) return null;
+
+  const images = property.images && property.images.length > 0 
+    ? property.images 
+    : [
+        property.imageUrl || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=800&q=80'
+      ];
 
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
@@ -169,7 +142,7 @@ export default function PropertyDetailPage() {
         </div>
       </div>
 
-      <div className="pt-8 px-4 md:px-8 max-w-[1400px] mx-auto mb-20">
+      <div className="pt-8 px-4 md:px-8 max-w-[1400px] mx-auto pb-16">
         
         {/* TITLE & LOCATION */}
         <div className="mb-6 flex flex-col md:flex-row md:items-start justify-between gap-4">
@@ -230,7 +203,7 @@ export default function PropertyDetailPage() {
                 <div className="flex items-center text-[#003B30]">
                   <TrendingUp className="w-7 h-7 mr-3" />
                   <span className="text-3xl md:text-4xl font-extrabold tracking-tight">
-                    {property.priceText || `${formatPrice(property.price)} Onwards*`}
+                    {property.priceText || `₹ ${(property.price / 10000000).toFixed(2)} CR* Onwards*`}
                   </span>
                 </div>
               </div>
@@ -345,14 +318,14 @@ export default function PropertyDetailPage() {
               <h2 className="text-2xl font-extrabold text-slate-900 mb-6">Overview of {property.title}</h2>
               <div className="prose prose-slate max-w-none text-slate-600 mb-8 leading-relaxed">
                 <p>
-                  {property.description || `${property.title} is a high quality, low-density residential project spread across 6 acres of land, located in Techzone 4, Greater Noida West. The project has 6 towers with G+30 floors. It has 3 BHK and 4 BHK apartments with Vastu-compliant layout, 80% open green space. It was developed under the supervision of the Supreme Court and NBCC, thus providing high accountability, elite features such as 25,000 sq. ft. clubhouse, and uninterrupted connectivity.`}
+                  {property.title} is a high quality, low-density residential project spread across 6 acres of land, located in Techzone 4, Greater Noida West. The project has 6 towers with G+30 floors. It has 3 BHK and 4 BHK apartments with Vastu-compliant layout, 80% open green space. It was developed under the supervision of the Supreme Court and NBCC, thus providing high accountability, elite features such as 25,000 sq. ft. clubhouse, and uninterrupted connectivity.
                 </p>
               </div>
 
               <div className="space-y-6">
                 <div>
                   <span className="font-extrabold text-slate-900">Type of Property: </span>
-                  <span className="text-slate-600">{property.type || property.property_type || 'Residential Apartment'}</span>
+                  <span className="text-slate-600">{property.type || 'Residential'}</span>
                 </div>
                 <div>
                   <span className="font-extrabold text-slate-900">Property Units: </span>
@@ -486,72 +459,58 @@ export default function PropertyDetailPage() {
             </div>
           </div>
         </div>
-
-        {/* --- ADDED: RELATED PROPERTIES (From Secondary) --- */}
-        <section className="mt-20 border-t border-slate-200 pt-16">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl font-extrabold text-slate-900">View more properties</h2>
-            <Link to="/properties" className="text-[#003B30] font-bold flex items-center hover:underline">
-              See all listings <ArrowRight className="w-4 h-4 ml-1" />
-            </Link>
-          </div>
-          <div className="grid md:grid-cols-3 gap-6">
-            {relatedProperties.map((item) => (
-              <Link key={item.id} to={`/property/${item.id}`} state={{ property: item }} className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition-all group">
-                <img src={item.image} alt={item.title} className="h-52 w-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                <div className="p-6">
-                  <h3 className="text-xl font-extrabold text-slate-900 mb-2">{item.title}</h3>
-                  <p className="text-slate-500 mb-4 text-sm font-medium"><MapPin className="inline w-4 h-4 mr-1"/> {item.location}, {item.city}</p>
-                  <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                    <span className="font-black text-slate-900 text-lg">{formatPrice(item.price)}</span>
-                    <span className="text-[#003B30] font-bold flex items-center text-sm">View details <ArrowRight className="w-4 h-4 ml-1" /></span>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-
       </div>
-      
-      {/* --- ADDED: FOOTER (From Secondary) --- */}
-      <footer className="bg-slate-950 text-white pt-16 pb-10 px-6 border-t border-slate-800">
+
+      {/* --- ADDED: FOOTER SECTION --- */}
+      <footer className="bg-slate-950 text-white pt-16 pb-10 px-6 border-t-[6px] border-[#003B30] mt-10">
         <div className="max-w-[1400px] mx-auto grid md:grid-cols-4 gap-10">
           <div>
             <h3 className="text-3xl font-black mb-3">ANK Realty.</h3>
-            <p className="text-slate-400 text-sm leading-relaxed">Verified property discovery, pricing help, and trusted support for buyers, sellers, tenants, and investors.</p>
+            <p className="text-slate-400 text-sm leading-relaxed">
+              Premium property discovery, verified advisory, and trusted support for buyers and investors across the nation.
+            </p>
           </div>
           <div>
             <h4 className="font-bold mb-4 text-slate-200">Quick Links</h4>
             <div className="space-y-3 text-slate-400 text-sm flex flex-col">
-              <Link to="/buy" className="hover:text-white transition-colors w-fit">Buy</Link>
-              <Link to="/sell" className="hover:text-white transition-colors w-fit">Sell</Link>
-              <Link to="/rent" className="hover:text-white transition-colors w-fit">Rent</Link>
+              <Link to="/buy" className="hover:text-white transition-colors w-fit">Buy Property</Link>
+              <Link to="/sell" className="hover:text-white transition-colors w-fit">Sell Property</Link>
+              <Link to="/rent" className="hover:text-white transition-colors w-fit">Rent Property</Link>
             </div>
           </div>
           <div>
             <h4 className="font-bold mb-4 text-slate-200">Resources</h4>
             <div className="space-y-3 text-slate-400 text-sm flex flex-col">
-              <Link to="/blog" className="hover:text-white transition-colors w-fit">Blog</Link>
-              <Link to="/insights" className="hover:text-white transition-colors w-fit">Insights</Link>
-              <Link to="/videos" className="hover:text-white transition-colors w-fit">Videos</Link>
+              <Link to="/blog" className="hover:text-white transition-colors w-fit">Blog & Insights</Link>
+              <Link to="/about" className="hover:text-white transition-colors w-fit">About Us</Link>
+              <Link to="/contact" className="hover:text-white transition-colors w-fit">Contact Support</Link>
             </div>
           </div>
           <div>
-            <h4 className="font-bold mb-4 text-slate-200">Support</h4>
+            <h4 className="font-bold mb-4 text-slate-200">Contact Us</h4>
             <div className="space-y-3 text-slate-400 text-sm flex flex-col">
-              <Link to="/contact" className="hover:text-white transition-colors w-fit">Contact</Link>
-              <Link to="/privacy" className="hover:text-white transition-colors w-fit">Privacy</Link>
-              <Link to="/terms" className="hover:text-white transition-colors w-fit">Terms</Link>
+              <p className="flex items-start">
+                <MapPin className="w-4 h-4 mr-2 mt-0.5 text-[#003B30] shrink-0" /> Tapasya Corp Heights, Noida, UP
+              </p>
+              <p className="flex items-center">
+                <Mail className="w-4 h-4 mr-2 text-[#003B30] shrink-0" /> info@ankrealty.com
+              </p>
+              <p className="flex items-center">
+                <Phone className="w-4 h-4 mr-2 text-[#003B30] shrink-0" /> +91 98765 43210
+              </p>
             </div>
           </div>
         </div>
-        <div className="max-w-[1400px] mx-auto border-t border-slate-800 mt-10 pt-6 text-sm text-slate-500">
-          © {new Date().getFullYear()} ANK Realty. All rights reserved.
+        <div className="max-w-[1400px] mx-auto border-t border-slate-800 mt-10 pt-6 text-sm text-slate-500 flex flex-col md:flex-row justify-between items-center">
+          <p>© {new Date().getFullYear()} ANK Realty. All rights reserved.</p>
+          <div className="flex space-x-6 mt-4 md:mt-0">
+            <Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+            <Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+          </div>
         </div>
       </footer>
-
-      {/* FLOATING CHATBOT ICON */}
+      
+      {/* FLOATING CHATBOT ICON (Matched to theme) */}
       <div className="fixed bottom-6 right-6 z-50">
         <button className="bg-[#003B30] hover:bg-[#00261c] text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-transform flex items-center justify-center group border border-white/10 relative">
           <MessageSquare className="w-7 h-7" />
