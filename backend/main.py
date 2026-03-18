@@ -7,7 +7,7 @@ from supabase import create_client, Client
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, EmailStr, ConfigDict
+from pydantic import BaseModel, EmailStr, ConfigDict, field_validator
 from typing import List, Optional, Any
 import uuid
 from datetime import datetime, timezone, timedelta
@@ -170,11 +170,48 @@ class UserRegister(BaseModel):
     password: str
     name: str
     phone: str
-    role: str = "user"
+    role: str = "client"
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        if len(value) < 8:
+            raise ValueError("Password must be at least 8 characters long")
+        if not any(ch.isalpha() for ch in value) or not any(ch.isdigit() for ch in value):
+            raise ValueError("Password must include at least one letter and one number")
+        return value
+
+    @field_validator("phone")
+    @classmethod
+    def validate_phone(cls, value: str) -> str:
+        digits = ''.join(ch for ch in value if ch.isdigit())
+        if len(digits) < 10:
+            raise ValueError("Phone number must contain at least 10 digits")
+        return value.strip()
+
+    @field_validator("role")
+    @classmethod
+    def validate_role(cls, value: str) -> str:
+        normalized = value.strip().lower()
+        if normalized == "user":
+            normalized = "client"
+        if normalized not in {"client", "agent", "broker", "admin"}:
+            raise ValueError("Role must be one of client, agent, broker, or admin")
+        return normalized
 
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        if len(value.strip()) < 8:
+            raise ValueError("Password must be at least 8 characters long")
+        return value
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
 
 class User(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -311,6 +348,24 @@ def login(credentials: UserLogin):
         raise
     except Exception as e:
         logger.exception("Unexpected error during login: %s", e)
+        detail = str(e) if DEBUG else "Internal server error"
+        raise HTTPException(status_code=500, detail=detail)
+
+@api_router.post("/auth/forgot-password")
+def forgot_password(request: ForgotPasswordRequest):
+    if supabase is None:
+        raise HTTPException(status_code=500, detail="Database not configured")
+    try:
+        res = supabase.table("users").select("id,email").eq("email", request.email).limit(1).execute()
+        check_res_or_raise(res, "checking forgot-password user")
+        return {
+            "message": "If an account exists for this email, password reset instructions have been shared.",
+            "email": request.email
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Unexpected error during forgot-password: %s", e)
         detail = str(e) if DEBUG else "Internal server error"
         raise HTTPException(status_code=500, detail=detail)
 

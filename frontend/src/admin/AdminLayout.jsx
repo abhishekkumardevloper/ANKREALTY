@@ -45,19 +45,8 @@ export default function AdminLayout({ children, page = "dashboard", setPage = ()
     { key: "rent", label: "Rent Properties", adminOnly: false, icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 11l9-6 9 6v7a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-7z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M9 22V12h6v10" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
     )},
-    
-    // --- ADMIN ONLY SECTIONS ---
-    { key: "queries", label: "Contact Queries", adminOnly: true, icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-    )},
-    { key: "blogs", label: "Blog Management", adminOnly: true, icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-    )},
-    { key: "videos", label: "Video Tours", adminOnly: true, icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M10 8l6 4-6 4V8z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-    )},
-    { key: "reports", label: "Market Reports", adminOnly: true, icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 20V10M12 20V4M6 20v-6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+    { key: "add-property", label: "Add Property", adminOnly: false, icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
     )},
   ];
 
@@ -68,7 +57,7 @@ export default function AdminLayout({ children, page = "dashboard", setPage = ()
     // Clear auth data and redirect to login
     localStorage.removeItem("token");
     localStorage.removeItem("role");
-    window.location.href = "/login"; // Adjust this to your actual login route
+    window.location.href = "/auth";
   }
 
   return (
