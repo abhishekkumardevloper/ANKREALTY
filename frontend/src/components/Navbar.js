@@ -35,6 +35,7 @@ export default function Navbar() {
     { name: 'Buy', path: '/buy' },
     { name: 'Rent', path: '/rent' },
     { name: 'Sell', path: '/sell' },
+    { name: 'Corporate Leasing', path: '/corporate-leasing' },
     { name: 'Contact', path: '/contact' },
   ];
 
