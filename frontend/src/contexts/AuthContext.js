@@ -62,7 +62,7 @@ export function AuthProvider({ children }) {
     return response.data.user;
   };
 
-  const register = async (name, email, password, phone, role = 'user') => {
+  const register = async (name, email, password, phone, role = 'client') => {
     const response = await apiClient.post('/auth/register', { name, email, password, phone, role });
     const newToken = response.data.token || response.data.access_token;
     if (!newToken) throw new Error('Token missing from backend');

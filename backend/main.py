@@ -7,7 +7,7 @@ from supabase import create_client, Client
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, EmailStr, ConfigDict, field_validator
+from pydantic import BaseModel, EmailStr, ConfigDict, Field, field_validator
 from typing import List, Optional, Any
 import uuid
 from datetime import datetime, timezone, timedelta
@@ -229,15 +229,37 @@ class PropertyCreate(BaseModel):
     location: str
     city: str
     state: str
-    property_type: str 
+    property_type: str
     category: str
     bhk: Optional[int] = None
     area: float
     furnishing: str = "unfurnished"
-    amenities: List[str] = []
-    images: List[str] = []
+    amenities: List[str] = Field(default_factory=list)
+    images: List[str] = Field(default_factory=list)
     latitude: Optional[float] = None
     longitude: Optional[float] = None
+
+    @field_validator("title", "description", "location", "city", "state", "property_type", "category", "furnishing")
+    @classmethod
+    def validate_non_empty_text(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("This field is required")
+        return normalized
+
+    @field_validator("price", "area")
+    @classmethod
+    def validate_positive_numbers(cls, value: float) -> float:
+        if value <= 0:
+            raise ValueError("Value must be greater than 0")
+        return value
+
+    @field_validator("bhk")
+    @classmethod
+    def validate_bhk(cls, value: Optional[int]) -> Optional[int]:
+        if value is not None and value < 0:
+            raise ValueError("BHK cannot be negative")
+        return value
 
 class Property(BaseModel):
     model_config = ConfigDict(extra="ignore")

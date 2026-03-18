@@ -27,6 +27,7 @@ export default function AuthPage() {
   const [forgotEmail, setForgotEmail] = useState('');
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [registerData, setRegisterData] = useState({ name: '', email: '', password: '', phone: '', role: 'client' });
+  const allowedRoles = ['client', 'agent', 'broker'];
 
   const passwordStrength = useMemo(() => {
     const score = [registerData.password.length >= 8, /[A-Za-z]/.test(registerData.password), /[0-9]/.test(registerData.password)].filter(Boolean).length;
@@ -49,6 +50,7 @@ export default function AuthPage() {
     const passwordError = validatePassword(registerData.password.trim());
     if (passwordError) next.registerPassword = passwordError;
     if (!phoneRegex.test(registerData.phone.replace(/\D/g, ''))) next.registerPhone = 'Enter a valid phone number with at least 10 digits.';
+    if (!allowedRoles.includes(registerData.role)) next.registerRole = 'Please choose a valid account type.';
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -136,7 +138,7 @@ export default function AuthPage() {
                 <div><Label>Email</Label><Input type="email" value={registerData.email} onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })} placeholder="name@example.com" required /><FieldError message={errors.registerEmail} /></div>
                 <div><Label>Phone</Label><Input type="tel" value={registerData.phone} onChange={(e) => setRegisterData({ ...registerData, phone: e.target.value })} placeholder="9876543210" required /><FieldError message={errors.registerPhone} /></div>
                 <div><Label>Password</Label><Input type="password" value={registerData.password} onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })} placeholder="Use letters and numbers" required /><p className="mt-1 text-xs text-slate-500">Password strength: <span className="font-bold">{passwordStrength}</span></p><FieldError message={errors.registerPassword} /></div>
-                <div><Label>I am a</Label><select value={registerData.role} onChange={(e) => setRegisterData({ ...registerData, role: e.target.value })} className="w-full h-10 px-3 border rounded-md outline-none focus:ring-2 focus:ring-red-200 focus:border-red-500 transition-all"><option value="client">Property Buyer / Client</option><option value="agent">Real Estate Agent</option></select></div>
+                <div><Label>I am a</Label><select value={registerData.role} onChange={(e) => setRegisterData({ ...registerData, role: e.target.value })} className="w-full h-10 px-3 border rounded-md outline-none focus:ring-2 focus:ring-red-200 focus:border-red-500 transition-all"><option value="client">Property Buyer / Client</option><option value="agent">Real Estate Agent</option><option value="broker">Broker / Channel Partner</option></select><FieldError message={errors.registerRole} /></div>
                 <Button type="submit" className="w-full" disabled={loading}>{loading ? 'Creating account...' : 'Create Account'}</Button>
               </form>
             </TabsContent>
