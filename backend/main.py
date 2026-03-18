@@ -7,7 +7,7 @@ from supabase import create_client, Client
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, EmailStr, ConfigDict, field_validator
+from pydantic import BaseModel, EmailStr, ConfigDict, Field, field_validator
 from typing import List, Optional, Any
 import uuid
 from datetime import datetime, timezone, timedelta
@@ -170,7 +170,34 @@ class UserRegister(BaseModel):
     password: str
     name: str
     phone: str
-    role: str = "user"
+    role: str = "client"
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        if len(value) < 8:
+            raise ValueError("Password must be at least 8 characters long")
+        if not any(ch.isalpha() for ch in value) or not any(ch.isdigit() for ch in value):
+            raise ValueError("Password must include at least one letter and one number")
+        return value
+
+    @field_validator("phone")
+    @classmethod
+    def validate_phone(cls, value: str) -> str:
+        digits = ''.join(ch for ch in value if ch.isdigit())
+        if len(digits) < 10:
+            raise ValueError("Phone number must contain at least 10 digits")
+        return value.strip()
+
+    @field_validator("role")
+    @classmethod
+    def validate_role(cls, value: str) -> str:
+        normalized = value.strip().lower()
+        if normalized == "user":
+            normalized = "client"
+        if normalized not in {"client", "agent", "broker", "admin"}:
+            raise ValueError("Role must be one of client, agent, broker, or admin")
+        return normalized
 
     @field_validator("password")
     @classmethod
@@ -200,6 +227,9 @@ class UserLogin(BaseModel):
             raise ValueError("Password must be at least 8 characters long")
         return value
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
 class User(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
@@ -216,15 +246,37 @@ class PropertyCreate(BaseModel):
     location: str
     city: str
     state: str
-    property_type: str 
+    property_type: str
     category: str
     bhk: Optional[int] = None
     area: float
     furnishing: str = "unfurnished"
-    amenities: List[str] = []
-    images: List[str] = []
+    amenities: List[str] = Field(default_factory=list)
+    images: List[str] = Field(default_factory=list)
     latitude: Optional[float] = None
     longitude: Optional[float] = None
+
+    @field_validator("title", "description", "location", "city", "state", "property_type", "category", "furnishing")
+    @classmethod
+    def validate_non_empty_text(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("This field is required")
+        return normalized
+
+    @field_validator("price", "area")
+    @classmethod
+    def validate_positive_numbers(cls, value: float) -> float:
+        if value <= 0:
+            raise ValueError("Value must be greater than 0")
+        return value
+
+    @field_validator("bhk")
+    @classmethod
+    def validate_bhk(cls, value: Optional[int]) -> Optional[int]:
+        if value is not None and value < 0:
+            raise ValueError("BHK cannot be negative")
+        return value
 
 class Property(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -335,6 +387,24 @@ def login(credentials: UserLogin):
         raise
     except Exception as e:
         logger.exception("Unexpected error during login: %s", e)
+        detail = str(e) if DEBUG else "Internal server error"
+        raise HTTPException(status_code=500, detail=detail)
+
+@api_router.post("/auth/forgot-password")
+def forgot_password(request: ForgotPasswordRequest):
+    if supabase is None:
+        raise HTTPException(status_code=500, detail="Database not configured")
+    try:
+        res = supabase.table("users").select("id,email").eq("email", request.email).limit(1).execute()
+        check_res_or_raise(res, "checking forgot-password user")
+        return {
+            "message": "If an account exists for this email, password reset instructions have been shared.",
+            "email": request.email
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Unexpected error during forgot-password: %s", e)
         detail = str(e) if DEBUG else "Internal server error"
         raise HTTPException(status_code=500, detail=detail)
 
