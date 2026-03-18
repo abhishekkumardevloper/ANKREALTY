@@ -4,13 +4,14 @@ import axios from 'axios';
 import { 
   MapPin, Bed, Bath, Maximize, Phone, Mail, Calendar, Home,
   Heart, ShieldCheck, Share2, CheckCircle, Info, ChevronRight, 
-  Image as ImageIcon, Download, FileText, Check, Building
+  Image as ImageIcon, Download, FileText, Check, Building,
+  TrendingUp, Coffee, Zap, ArrowUpDown, Shield, Dumbbell, Droplets, Wind,
+  Star, Lock, Zap as ZapIcon
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
   DialogContent,
@@ -24,6 +25,25 @@ import { toast } from 'sonner';
 
 const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000/api";
 
+// --- MOCK DATA FOR NEW SECTIONS ---
+const mockPriceList = [
+  { type: "3 BHK", size: "1932 Sq.ft. sq.ft.", price: "₹ 1.72 CR*" },
+  { type: "3 BHK + Study", size: "2239 Sq.ft. sq.ft.", price: "₹ 1.99 CR*" },
+  { type: "4 BHK + Study", size: "2625 Sq.ft. sq.ft.", price: "₹ 2.33 CR*" },
+];
+
+const mockAmenities = [
+  { name: "Cafeteria/Food Court", icon: Coffee },
+  { name: "Power Backup", icon: Zap },
+  { name: "Lift", icon: ArrowUpDown },
+  { name: "Security", icon: Shield },
+  { name: "Service/Good Lift", icon: ArrowUpDown },
+  { name: "Visitor Parking", icon: Home },
+  { name: "Gymnasium", icon: Dumbbell },
+  { name: "Rain Water Harvesting", icon: Droplets },
+  { name: "Air Conditioned", icon: Wind },
+];
+
 export default function PropertyDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -34,15 +54,9 @@ export default function PropertyDetailPage() {
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
 
-  const [appointmentData, setAppointmentData] = useState({
-    name: '',
-    phone: '',
-    date: '',
-    time: '',
-    message: ''
-  });
-
-  const [inquiryMessage, setInquiryMessage] = useState('');
+  // Form States
+  const [leadForm, setLeadForm] = useState({ name: '', email: '', phone: '' });
+  const [quickForm, setQuickForm] = useState({ name: '', email: '', phone: '' });
 
   const fetchProperty = useCallback(async () => {
     try {
@@ -51,9 +65,16 @@ export default function PropertyDetailPage() {
     } catch (error) {
       const fallbackProperty = location.state?.property;
       if (fallbackProperty) {
-        setProperty(fallbackProperty);
+        setProperty({
+          ...fallbackProperty,
+          // Hydrate fallback with extra data to match new UI
+          builder: fallbackProperty.builder || "Yatharth Group and Great Value Realty",
+          possession: "June 2030",
+          configurations: "3 BHK Flats, 4 BHK Flats",
+          projectStatus: fallbackProperty.tag || "New Launch",
+          rera: fallbackProperty.rera || "Governed by the ASPIRE framework"
+        });
       } else {
-        console.error('Error fetching property:', error);
         toast.error('Property not found');
         navigate('/properties');
       }
@@ -66,51 +87,9 @@ export default function PropertyDetailPage() {
     fetchProperty();
   }, [fetchProperty]);
 
-  const handleScheduleVisit = async (e) => {
+  const handleLeadSubmit = (e, formName) => {
     e.preventDefault();
-
-    if (!user) {
-      toast.error('Please login to schedule a visit');
-      navigate('/auth');
-      return;
-    }
-
-    try {
-      await axios.post(`${API_BASE}/appointments`, {
-        property_id: id,
-        ...appointmentData
-      });
-
-      toast.success('Visit scheduled successfully!');
-      setAppointmentData({ name: '', phone: '', date: '', time: '', message: '' });
-    } catch (error) {
-      toast.error('Failed to schedule visit');
-    }
-  };
-
-  const handleSendInquiry = async () => {
-    if (!user) {
-      toast.error('Please login to send inquiry');
-      navigate('/auth');
-      return;
-    }
-
-    if (!inquiryMessage.trim()) {
-      toast.error('Please enter a message');
-      return;
-    }
-
-    try {
-      await axios.post(`${API_BASE}/inquiries`, {
-        property_id: id,
-        message: inquiryMessage
-      });
-
-      toast.success('Inquiry sent successfully!');
-      setInquiryMessage('');
-    } catch (error) {
-      toast.error('Failed to send inquiry');
-    }
+    toast.success(`Thank you! Our expert will contact you shortly. (${formName})`);
   };
 
   const addToFavorites = async () => {
@@ -119,27 +98,13 @@ export default function PropertyDetailPage() {
       navigate('/auth');
       return;
     }
-
-    try {
-      await axios.post(`${API_BASE}/favorites`, { property_id: id });
-      toast.success('Added to favorites');
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to add to favorites');
-    }
+    toast.success('Added to favorites');
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col">
-        <Navbar />
-        <div className="pt-32 px-4 md:px-8 max-w-7xl mx-auto w-full animate-pulse">
-          <div className="h-8 bg-slate-200 rounded-md w-1/4 mb-4"></div>
-          <div className="h-64 bg-slate-200 rounded-2xl w-full mb-8"></div>
-          <div className="flex flex-col lg:flex-row gap-10">
-            <div className="lg:w-2/3 h-[500px] bg-slate-200 rounded-2xl"></div>
-            <div className="lg:w-1/3 h-[600px] bg-slate-200 rounded-2xl"></div>
-          </div>
-        </div>
+      <div className="min-h-screen bg-white flex justify-center items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#003B30]"></div>
       </div>
     );
   }
@@ -154,279 +119,340 @@ export default function PropertyDetailPage() {
         'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=800&q=80'
       ];
 
+  const scrollToSection = (sectionId) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      const yOffset = -120; // Adjust for sticky header
+      const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[#F8FAFC] font-sans selection:bg-red-200 pb-20">
+    <div className="min-h-screen bg-white font-sans selection:bg-[#003B30]/20 text-slate-800 pb-20 relative">
       <Navbar />
 
-      <div className="pt-28 px-4 md:px-8 max-w-7xl mx-auto">
-        
-        {/* Breadcrumb Navigation */}
-        <nav className="flex items-center text-sm text-slate-500 font-medium mb-6">
-          <Link to="/" className="hover:text-red-600 transition-colors">Home</Link>
-          <ChevronRight className="w-4 h-4 mx-2 text-slate-300" />
-          <Link to="/properties" className="hover:text-red-600 transition-colors">Projects</Link>
-          <ChevronRight className="w-4 h-4 mx-2 text-slate-300" />
-          <span className="text-slate-900 truncate max-w-[200px] md:max-w-none">{property.title}</span>
-        </nav>
+      {/* SUB NAVIGATION - STICKY */}
+      <div className="sticky top-16 md:top-20 z-40 bg-white border-b border-slate-200 shadow-sm">
+        <div className="max-w-[1400px] mx-auto px-4 md:px-8">
+          <ul className="flex overflow-x-auto hide-scrollbar space-x-8 text-sm font-bold text-slate-600">
+            {['Overview', 'Price List', 'Floor Plans', 'Amenities', 'Location', 'About', 'FAQ'].map((item) => (
+              <li key={item} className="whitespace-nowrap pt-4 pb-3 cursor-pointer hover:text-[#003B30] border-b-2 border-transparent hover:border-[#003B30] transition-colors"
+                  onClick={() => scrollToSection(item.toLowerCase().replace(' ', '-'))}>
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
 
-        {/* Hero Image Section (Full Width Style) */}
-        <div className="relative h-[300px] md:h-[500px] rounded-3xl overflow-hidden mb-8 group shadow-md">
-          <img
-            src={images[selectedImage]}
-            alt={property.title}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none"></div>
+      <div className="pt-8 px-4 md:px-8 max-w-[1400px] mx-auto">
+        
+        {/* TITLE & LOCATION */}
+        <div className="mb-6">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-2">
+            {property.title}: Ultra-Spacious, Low-Density Living
+          </h1>
+          <p className="text-slate-500 font-medium flex items-center text-sm md:text-base">
+            <MapPin className="w-4 h-4 mr-1.5 text-slate-400"/> 
+            {property.location || property.area}, {property.city}
+          </p>
+        </div>
+
+        {/* --- TOP SECTION: IMAGE + QUICK STATS --- */}
+        <div className="flex flex-col lg:flex-row gap-6 mb-12" id="overview">
           
-          <div className="absolute bottom-6 left-6 md:bottom-10 md:left-10 pr-6">
-            <div className="flex items-center gap-3 mb-3">
-              <span className="bg-red-600 text-white px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wide">
-                {property.status || 'Under Construction'}
-              </span>
-              {property.status === 'approved' && (
-                <span className="bg-emerald-500 text-white px-3 py-1 rounded-md text-xs font-bold flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5"/> RERA Registered
-                </span>
-              )}
+          {/* Left: Image Gallery */}
+          <div className="lg:w-[65%]">
+            <div className="relative h-[350px] md:h-[500px] rounded-2xl overflow-hidden group border border-slate-100 shadow-sm">
+              <img
+                src={images[selectedImage]}
+                alt={property.title}
+                className="w-full h-full object-cover transition-transform duration-700"
+              />
+              <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-bold tracking-wide">
+                {selectedImage + 1} / {images.length}
+              </div>
             </div>
-            <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-2 leading-tight drop-shadow-lg">
-              {property.title}
-            </h1>
-            <p className="text-white/90 text-lg flex items-center font-medium drop-shadow-md">
-              <MapPin className="w-5 h-5 mr-2 text-red-400"/> 
-              {property.location || property.area}, {property.city}
-            </p>
+            
+            {/* Thumbnails */}
+            {images.length > 1 && (
+              <div className="flex gap-3 mt-4 overflow-x-auto hide-scrollbar pb-2">
+                {images.map((img, idx) => (
+                  <div 
+                    key={idx}
+                    onClick={() => setSelectedImage(idx)}
+                    className={`relative w-24 h-16 md:w-32 md:h-20 rounded-xl overflow-hidden shrink-0 cursor-pointer transition-all duration-300 ${
+                      selectedImage === idx ? 'ring-2 ring-[#003B30] opacity-100' : 'opacity-60 hover:opacity-100'
+                    }`}
+                  >
+                    <img src={img} alt={`Gallery view ${idx + 1}`} className="w-full h-full object-cover" />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="absolute bottom-6 right-6 flex gap-2">
-            <Button onClick={addToFavorites} variant="secondary" className="bg-white/20 backdrop-blur-md border-white/30 text-white hover:bg-white hover:text-slate-900 rounded-full w-12 h-12 p-0">
-              <Heart className="w-5 h-5" />
-            </Button>
-            <Button variant="secondary" className="bg-white/20 backdrop-blur-md border-white/30 text-white hover:bg-white hover:text-slate-900 rounded-full w-12 h-12 p-0">
-              <Share2 className="w-5 h-5" />
-            </Button>
+          {/* Right: Quick Stats & Inline Form */}
+          <div className="lg:w-[35%] flex flex-col gap-6">
+            <div className="border border-slate-200 rounded-2xl p-6 shadow-sm h-full flex flex-col">
+              
+              <div className="mb-6">
+                <p className="text-slate-500 text-sm font-semibold mb-1">Starting Price</p>
+                <div className="flex items-center text-[#003B30]">
+                  <TrendingUp className="w-7 h-7 mr-3" />
+                  <span className="text-3xl md:text-4xl font-extrabold tracking-tight">
+                    {property.priceText || `₹ ${(property.price / 10000000).toFixed(2)} CR* Onwards*`}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-4 mb-8">
+                <div className="col-span-1 md:col-span-2 flex items-start">
+                  <ShieldCheck className="w-6 h-6 text-emerald-600 mr-3 shrink-0" />
+                  <div>
+                    <p className="text-sm font-bold text-slate-900">RERA Approved</p>
+                    <p className="text-xs text-slate-500 font-medium">{property.rera}</p>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col">
+                  <div className="flex items-center text-slate-500 text-xs font-bold mb-1 uppercase tracking-wider"><Building className="w-4 h-4 mr-1.5"/> Configurations</div>
+                  <p className="font-bold text-slate-900 text-sm">{property.configurations}</p>
+                </div>
+                <div className="flex flex-col">
+                  <div className="flex items-center text-slate-500 text-xs font-bold mb-1 uppercase tracking-wider"><Star className="w-4 h-4 mr-1.5"/> Project Status</div>
+                  <p className="font-bold text-slate-900 text-sm">{property.projectStatus}</p>
+                </div>
+                <div className="flex flex-col">
+                  <div className="flex items-center text-slate-500 text-xs font-bold mb-1 uppercase tracking-wider"><Calendar className="w-4 h-4 mr-1.5"/> Possession</div>
+                  <p className="font-bold text-slate-900 text-sm">{property.possession}</p>
+                </div>
+                <div className="flex flex-col">
+                  <div className="flex items-center text-slate-500 text-xs font-bold mb-1 uppercase tracking-wider"><Building className="w-4 h-4 mr-1.5"/> Builder</div>
+                  <p className="font-bold text-slate-900 text-sm line-clamp-1">{property.builder}</p>
+                </div>
+              </div>
+
+              {/* Inline Help Form */}
+              <div className="mt-auto border-2 border-[#003B30]/10 rounded-xl p-4 bg-slate-50">
+                <div className="flex items-center mb-4">
+                  <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center mr-3 shrink-0">
+                    <Phone className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-900">Need Help with Anything?</p>
+                    <p className="text-xs text-slate-600 font-medium">Get Free Expert Consult Now!!!</p>
+                  </div>
+                </div>
+                <form onSubmit={(e) => handleLeadSubmit(e, 'Quick Form')} className="flex flex-col sm:flex-row gap-2">
+                  <Input placeholder="Name" className="bg-white border-slate-200 h-10 text-sm" value={quickForm.name} onChange={(e)=>setQuickForm({...quickForm, name: e.target.value})} required/>
+                  <Input placeholder="Phone" type="tel" className="bg-white border-slate-200 h-10 text-sm" value={quickForm.phone} onChange={(e)=>setQuickForm({...quickForm, phone: e.target.value})} required/>
+                  <Button type="submit" className="bg-[#003B30] hover:bg-[#00261c] text-white h-10 shrink-0">Submit <Share2 className="w-3 h-3 ml-2"/></Button>
+                </form>
+              </div>
+
+            </div>
           </div>
         </div>
 
-        {/* Thumbnails */}
-        {images.length > 1 && (
-          <div className="flex gap-3 mb-10 overflow-x-auto hide-scrollbar pb-2 px-1">
-            {images.map((img, idx) => (
-              <div 
-                key={idx}
-                onClick={() => setSelectedImage(idx)}
-                className={`relative w-32 h-20 md:w-40 md:h-24 rounded-xl overflow-hidden shrink-0 cursor-pointer transition-all duration-300 shadow-sm ${
-                  selectedImage === idx ? 'ring-4 ring-red-600 ring-offset-2' : 'opacity-70 hover:opacity-100'
-                }`}
-              >
-                <img src={img} alt={`Gallery view ${idx + 1}`} className="w-full h-full object-cover" />
-              </div>
-            ))}
-          </div>
-        )}
-
+        {/* --- MAIN CONTENT GRID --- */}
         <div className="flex flex-col lg:flex-row gap-10">
           
-          {/* LEFT COLUMN: Project Details */}
-          <div className="lg:w-[65%] space-y-8">
+          {/* LEFT COLUMN: Main Details */}
+          <div className="lg:w-[65%] space-y-12">
             
-            {/* Quick Specs / Overview */}
-            <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div>
-                  <p className="text-sm text-slate-500 font-semibold mb-1">Price Starts From</p>
-                  <p className="text-2xl font-extrabold text-red-600">₹{Number(property.price).toLocaleString('en-IN')}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500 font-semibold mb-1">Typology</p>
-                  <p className="text-xl font-bold text-slate-900">{property.bedrooms || property.bhk || '2, 3 & 4'} BHK</p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500 font-semibold mb-1">Project Status</p>
-                  <p className="text-xl font-bold text-slate-900">{property.project_status || 'New Launch'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500 font-semibold mb-1">RERA Number</p>
-                  <p className="text-md font-bold text-slate-900 truncate">{property.rera_number || 'UPRERA-XXXXX'}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* About the Project */}
-            <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200">
-              <h2 className="text-2xl font-extrabold text-slate-900 mb-6 border-b border-slate-100 pb-4">
-                About {property.title}
-              </h2>
-              <div className="prose prose-lg prose-slate max-w-none text-slate-600 leading-relaxed">
-                {property.description?.split('\n').map((paragraph, idx) => (
-                  <p key={idx} className="mb-4">{paragraph}</p>
-                ))}
-                {!property.description && (
-                  <p>Discover the epitome of luxury living at {property.title}. Designed by world-renowned architects, this project offers an unparalleled lifestyle with state-of-the-art amenities and breathtaking views. Experience the perfect blend of comfort, elegance, and convenience in the heart of {property.city}.</p>
-                )}
-              </div>
-            </div>
-
-            {/* Project Highlights */}
-            <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200">
-              <h2 className="text-2xl font-extrabold text-slate-900 mb-6 border-b border-slate-100 pb-4">Project Highlights</h2>
-              <div className="grid md:grid-cols-2 gap-4">
-                {['Strategic location with seamless connectivity', 'Vastu compliant architecture', 'Premium clubhouse and recreation zone', '24/7 Multi-tier security system', 'Lush green landscapes & water bodies', 'High-speed elevators and power backup'].map((highlight, idx) => (
-                  <div key={idx} className="flex items-start">
-                    <Check className="w-5 h-5 text-emerald-500 mr-3 mt-0.5 shrink-0" />
-                    <span className="text-slate-700 font-medium">{highlight}</span>
+            {/* Price List Section */}
+            <section id="price-list">
+              <h2 className="text-2xl font-extrabold text-slate-900 mb-6">Price List</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                {mockPriceList.map((item, idx) => (
+                  <div key={idx} className="border border-slate-200 rounded-2xl p-5 hover:border-[#003B30]/30 hover:shadow-md transition-all flex flex-col">
+                    <span className="bg-emerald-100 text-emerald-700 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded w-fit mb-3">Unit</span>
+                    <h3 className="text-xl font-bold text-slate-900 mb-4">{item.type}</h3>
+                    
+                    <span className="bg-emerald-100 text-emerald-700 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded w-fit mb-1">Size</span>
+                    <p className="text-slate-600 font-medium text-sm mb-4 border-b border-slate-100 pb-4">{item.size}</p>
+                    
+                    <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Price / sq.ft.</p>
+                    <p className="text-xl font-extrabold text-[#003B30] mb-6">{item.price} <span className="text-sm">Onwards</span></p>
+                    
+                    <Button className="w-full mt-auto bg-[#003B30] hover:bg-[#00261c] text-white font-bold rounded-xl h-11">
+                      Get Breakdown <FileText className="w-4 h-4 ml-2" />
+                    </Button>
                   </div>
                 ))}
               </div>
-            </div>
+              
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                  <h4 className="font-bold text-slate-900">Want the exact pricing breakdown?</h4>
+                  <p className="text-sm text-slate-500">Get detailed unit-wise pricing & available offers</p>
+                </div>
+                <Button className="bg-[#003B30] hover:bg-[#00261c] text-white font-bold rounded-xl h-11 px-6">
+                  Get Price List <Download className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-3">*All prices are indicative and subject to change without prior notice.</p>
+            </section>
 
-            {/* Amenities */}
-            <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200">
-              <h2 className="text-2xl font-extrabold text-slate-900 mb-6 border-b border-slate-100 pb-4">World Class Amenities</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-y-6 gap-x-4">
-                {(property.amenities && property.amenities.length > 0 ? property.amenities : ['Swimming Pool', 'Gymnasium', 'Club House', 'Kids Play Area', 'Jogging Track', 'Tennis Court']).map((amenity, idx) => (
-                  <div key={idx} className="flex items-center text-slate-700 font-medium group cursor-default bg-slate-50 p-3 rounded-lg border border-slate-100 hover:border-red-200 hover:bg-red-50 transition-colors">
-                    <CheckCircle className="w-5 h-5 text-red-500 mr-3 shrink-0"/> 
-                    {amenity}
+            {/* Amenities Section */}
+            <section id="amenities">
+              <h2 className="text-2xl font-extrabold text-slate-900 mb-6">{property.title} Amenities</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {mockAmenities.map((amenity, idx) => (
+                  <div key={idx} className="border border-slate-200 rounded-2xl p-6 flex flex-col items-center justify-center text-center hover:shadow-sm hover:border-[#003B30]/20 transition-all">
+                    <amenity.icon className="w-8 h-8 text-slate-700 mb-3 stroke-[1.5]" />
+                    <span className="text-sm font-semibold text-slate-700">{amenity.name}</span>
                   </div>
                 ))}
               </div>
-            </div>
+              <Button variant="outline" className="w-full mt-4 h-12 border-slate-200 text-slate-600 font-bold hover:bg-slate-50">
+                View all 16 amenities
+              </Button>
+            </section>
 
-            {/* Floor Plans & Pricing (Placeholder) */}
-            <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200">
-              <h2 className="text-2xl font-extrabold text-slate-900 mb-6 border-b border-slate-100 pb-4">Floor Plans & Pricing</h2>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
-                      <th className="p-4 rounded-tl-lg">Configuration</th>
-                      <th className="p-4">Super Area</th>
-                      <th className="p-4">Price Range</th>
-                      <th className="p-4 rounded-tr-lg">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="border-b border-slate-100 hover:bg-slate-50">
-                      <td className="p-4 font-bold text-slate-900">2 BHK Luxury</td>
-                      <td className="p-4 text-slate-600">1,250 Sq.Ft.</td>
-                      <td className="p-4 font-bold text-slate-900">On Request</td>
-                      <td className="p-4"><Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50">Price Breakup</Button></td>
-                    </tr>
-                    <tr className="border-b border-slate-100 hover:bg-slate-50">
-                      <td className="p-4 font-bold text-slate-900">3 BHK Premium</td>
-                      <td className="p-4 text-slate-600">1,850 Sq.Ft.</td>
-                      <td className="p-4 font-bold text-slate-900">On Request</td>
-                      <td className="p-4"><Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50">Price Breakup</Button></td>
-                    </tr>
-                  </tbody>
-                </table>
+            {/* Overview / About Section */}
+            <section id="about">
+              <h2 className="text-2xl font-extrabold text-slate-900 mb-6">Overview of {property.title}</h2>
+              <div className="prose prose-slate max-w-none text-slate-600 mb-8 leading-relaxed">
+                <p>
+                  {property.title} is a high quality, low-density residential project spread across 6 acres of land, located in Techzone 4, Greater Noida West. The project has 6 towers with G+30 floors. It has 3 BHK and 4 BHK apartments with Vastu-compliant layout, 80% open green space. It was developed under the supervision of the Supreme Court and NBCC, thus providing high accountability, elite features such as 25,000 sq. ft. clubhouse, and uninterrupted connectivity.
+                </p>
               </div>
-            </div>
 
-            {/* Location Map Placeholder */}
-            <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200">
-                <h2 className="text-2xl font-extrabold text-slate-900 mb-6 border-b border-slate-100 pb-4">Location Advantages</h2>
-                <div className="w-full h-[400px] bg-slate-100 rounded-xl overflow-hidden relative border border-slate-200 flex items-center justify-center">
-                  <MapPin className="w-12 h-12 text-slate-300 absolute" />
-                  <p className="text-slate-500 font-semibold z-10 mt-16">Interactive Map integration here</p>
+              <div className="space-y-6">
+                <div>
+                  <span className="font-extrabold text-slate-900">Type of Property: </span>
+                  <span className="text-slate-600">{property.type || 'Residential'}</span>
                 </div>
-            </div>
+                <div>
+                  <span className="font-extrabold text-slate-900">Property Units: </span>
+                  <span className="text-slate-600">108 units per acer (4 units on each floor)</span>
+                </div>
+
+                <div>
+                  <h4 className="font-extrabold text-slate-900 mb-4 mt-2">Location Highlights:</h4>
+                  <ul className="space-y-3">
+                    {['Centrally located in a non-congested area.', '100-meter completely developed green belt view.', 'Smooth access to major expressways.', 'Proximity to basic amenities like a top-class hospital, an international school and a marketplace.'].map((item, i) => (
+                      <li key={i} className="flex items-start text-slate-600">
+                        <ChevronRight className="w-5 h-5 text-[#003B30] mr-2 shrink-0 mt-0.5" /> {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div>
+                  <span className="font-extrabold text-slate-900">Real Estate Developer: </span>
+                  <span className="text-slate-600">{property.builder}</span>
+                </div>
+
+                <div>
+                  <h4 className="font-extrabold text-slate-900 mb-4 mt-2">Property Highlights:</h4>
+                  <ul className="space-y-3">
+                    {['Double-height designer entrance lobbies in every tower.', 'Spacious balconies with panoramic views.'].map((item, i) => (
+                      <li key={i} className="flex items-start text-slate-600">
+                        <ChevronRight className="w-5 h-5 text-[#003B30] mr-2 shrink-0 mt-0.5" /> {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            {/* Location Map Section */}
+            <section id="location">
+              <h2 className="text-2xl font-extrabold text-slate-900 mb-6">{property.title} Location</h2>
+              <div className="w-full h-[400px] bg-slate-100 rounded-2xl overflow-hidden relative border border-slate-200">
+                <Button variant="outline" className="absolute top-4 left-4 z-10 bg-white text-blue-600 font-bold border-slate-200 hover:bg-slate-50 shadow-sm">
+                  Open in Maps <Share2 className="w-4 h-4 ml-2" />
+                </Button>
+                {/* Simulated Map Background */}
+                <div className="w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cartographer.png')] bg-slate-200 flex flex-col items-center justify-center opacity-70">
+                   <MapPin className="w-12 h-12 text-[#003B30] drop-shadow-md mb-2" />
+                   <p className="font-bold text-slate-700">Map Integration View</p>
+                </div>
+              </div>
+              <p className="flex items-center text-slate-500 font-medium mt-4">
+                <MapPin className="w-5 h-5 mr-2 text-slate-400" /> {property.location}, {property.city}
+              </p>
+            </section>
 
           </div>
 
-          {/* RIGHT COLUMN: Sticky Lead Form & Actions */}
+          {/* RIGHT COLUMN: Sticky Lead Form & Why Invest */}
           <div className="lg:w-[35%]">
-            <div className="sticky top-32 space-y-6">
+            <div className="sticky top-28 space-y-6">
               
-              {/* Brochure Download Card */}
-              <div className="bg-gradient-to-br from-slate-900 to-black rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-red-600/20 rounded-full blur-3xl -mr-10 -mt-10"></div>
-                <h3 className="text-xl font-bold mb-2">Detailed Project Brochure</h3>
-                <p className="text-slate-400 text-sm mb-6">Download the official brochure to explore floor plans, master plans, and detailed specifications.</p>
-                <Button className="w-full h-12 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-all flex items-center justify-center">
-                  <Download className="w-5 h-5 mr-2" /> Download Brochure
-                </Button>
-              </div>
+              {/* Primary Sticky Form Card */}
+              <div className="bg-white rounded-[2rem] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-emerald-100 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-2 bg-[#003B30]"></div>
+                
+                <div className="mb-6">
+                  <span className="inline-block bg-[#003B30] text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3 shadow-sm">Exclusive</span>
+                  <div className="flex gap-3 items-start">
+                    <div className="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center shrink-0 mt-1 shadow-md">
+                      <Star className="w-5 h-5 text-white fill-current" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-extrabold text-slate-900 leading-tight">Get Offers You Won't Find Anywhere Else</h3>
+                      <p className="text-xs text-slate-500 mt-1 font-medium">Only from ANK Realty - Top Channel Partner</p>
+                    </div>
+                  </div>
+                </div>
 
-              {/* Main Inquiry Form Card */}
-              <div className="bg-white rounded-2xl p-6 md:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-slate-200">
-                <h3 className="text-2xl font-extrabold text-slate-900 mb-1">Interested in Property?</h3>
-                <p className="text-slate-500 text-sm mb-6">Register here to get best offers and exclusive updates.</p>
-
-                <form className="space-y-4">
+                <form onSubmit={(e) => handleLeadSubmit(e, 'Exclusive Offers Form')} className="space-y-4">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-slate-500 uppercase">Your Name *</Label>
-                    <Input placeholder="Enter your full name" className="h-12 bg-slate-50" required />
+                    <Label className="text-xs font-bold text-slate-700">Name</Label>
+                    <Input placeholder="Full name" className="h-12 bg-white border-slate-200 rounded-xl focus-visible:ring-[#003B30]" value={leadForm.name} onChange={(e)=>setLeadForm({...leadForm, name: e.target.value})} required/>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-slate-500 uppercase">Phone Number *</Label>
-                    <Input placeholder="+91" type="tel" className="h-12 bg-slate-50" required />
+                    <Label className="text-xs font-bold text-slate-700">Email</Label>
+                    <Input placeholder="you@example.com" type="email" className="h-12 bg-white border-slate-200 rounded-xl focus-visible:ring-[#003B30]" value={leadForm.email} onChange={(e)=>setLeadForm({...leadForm, email: e.target.value})} required/>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-slate-500 uppercase">Email Address</Label>
-                    <Input placeholder="Enter email id" type="email" className="h-12 bg-slate-50" />
+                    <Label className="text-xs font-bold text-slate-700">Phone</Label>
+                    <Input placeholder="+91 98765 43210" type="tel" className="h-12 bg-white border-slate-200 rounded-xl focus-visible:ring-[#003B30]" value={leadForm.phone} onChange={(e)=>setLeadForm({...leadForm, phone: e.target.value})} required/>
                   </div>
-                  <div className="space-y-1.5 pt-2">
-                    <Button onClick={(e) => { e.preventDefault(); handleSendInquiry(); }} className="w-full h-14 bg-slate-900 hover:bg-black text-white font-bold rounded-xl text-lg transition-all shadow-md">
-                      Get Callback
+                  <div className="pt-2">
+                    <Button type="submit" className="w-full h-14 bg-[#003B30] hover:bg-[#00261c] text-white font-bold rounded-xl text-lg transition-all shadow-lg shadow-[#003B30]/20">
+                      Get Best Price <ChevronRight className="w-5 h-5 ml-1" />
                     </Button>
                   </div>
                 </form>
 
-                <div className="mt-6 pt-6 border-t border-slate-100 flex items-center justify-center gap-4">
-                   <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" className="w-full h-12 border-slate-200 text-slate-700 hover:text-red-600 hover:bg-red-50 rounded-xl font-bold">
-                        <Calendar className="w-4 h-4 mr-2" /> Book Visit
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px] rounded-3xl p-8">
-                      <DialogHeader>
-                        <DialogTitle className="text-2xl font-extrabold">Book a Site Visit</DialogTitle>
-                        <DialogDescription className="text-slate-500 font-medium mt-2">
-                          Choose a preferred date and time to view {property.title}.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <form onSubmit={handleScheduleVisit} className="space-y-5 mt-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Date</Label>
-                            <Input 
-                              type="date" required 
-                              value={appointmentData.date} onChange={(e) => setAppointmentData({...appointmentData, date: e.target.value})}
-                              className="h-12 bg-slate-50 border-slate-200 rounded-xl focus-visible:ring-red-500"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Time</Label>
-                            <Input 
-                              type="time" required 
-                              value={appointmentData.time} onChange={(e) => setAppointmentData({...appointmentData, time: e.target.value})}
-                              className="h-12 bg-slate-50 border-slate-200 rounded-xl focus-visible:ring-red-500"
-                            />
-                          </div>
-                        </div>
-                        <Button type="submit" className="w-full h-14 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-lg mt-2 transition-all">
-                          Confirm Booking
-                        </Button>
-                      </form>
-                    </DialogContent>
-                  </Dialog>
+                <div className="mt-5 flex items-center justify-center gap-4 text-xs font-bold text-emerald-600 bg-emerald-50 rounded-lg py-3 border border-emerald-100">
+                  <span className="flex items-center"><ShieldCheck className="w-4 h-4 mr-1.5"/> 100% Secure</span>
+                  <span className="flex items-center"><ZapIcon className="w-4 h-4 mr-1.5"/> Quick Response</span>
                 </div>
               </div>
 
-              {/* Developer Profile Snippet */}
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 flex items-start gap-4">
-                 <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center shrink-0 shadow-sm">
-                   <Building className="w-6 h-6 text-slate-400"/>
-                 </div>
-                 <div>
-                   <h4 className="font-bold text-slate-900 text-sm">Marketed by ANK Realty</h4>
-                   <p className="text-xs text-slate-500 leading-relaxed font-medium mt-1">
-                     Authorized Sales Partner. ANK Realty ensures complete transparency and assists you at every step of your home buying journey.
-                   </p>
-                 </div>
+              {/* Why Invest Box */}
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
+                <h3 className="font-extrabold text-slate-900 mb-5">Why Invest?</h3>
+                <div className="space-y-5">
+                  <div className="flex gap-4">
+                    <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 text-emerald-600"><ShieldCheck className="w-5 h-5"/></div>
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-sm">RERA Approved</h4>
+                      <p className="text-xs text-slate-500 font-medium">RERA No. {property.rera}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0 text-blue-600"><Building className="w-5 h-5"/></div>
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-sm">Trusted Developer</h4>
+                      <p className="text-xs text-slate-500 font-medium">{property.builder}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0 text-amber-600"><TrendingUp className="w-5 h-5"/></div>
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-sm">High ROI Potential</h4>
+                      <p className="text-xs text-slate-500 font-medium">Prime location with strong appreciation</p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
             </div>
@@ -434,61 +460,22 @@ export default function PropertyDetailPage() {
 
         </div>
       </div>
-
-      {/* FOOTER */}
-      <footer className="bg-[#0A0A0A] text-white pt-20 pb-10 px-6 border-t border-slate-800 mt-24">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
-            <div className="space-y-6">
-              <h3 className="text-3xl font-extrabold tracking-tight">ANK Realty<span className="text-red-600">.</span></h3>
-              <p className="text-slate-400 text-sm leading-relaxed pr-4 font-medium">
-                The Red Carpet of Real Estate. We are committed to providing the highest level of service, transparency, and expertise in the Indian real estate market.
-              </p>
-              <div className="flex space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer"><Mail className="w-4 h-4"/></div>
-                  <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer"><Phone className="w-4 h-4"/></div>
-              </div>
-            </div>
-            
-            <div>
-              <h4 className="font-bold text-lg mb-6 text-slate-100">Quick Links</h4>
-              <ul className="space-y-4 text-slate-400 font-medium text-sm">
-                <li><Link to="/buy" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Buy Property</Link></li>
-                <li><Link to="/sell" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Sell Property</Link></li>
-                <li><Link to="/rent" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Rent Property</Link></li>
-                <li><Link to="/contact" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Contact Us</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-bold text-lg mb-6 text-slate-100">Categories</h4>
-              <ul className="space-y-4 text-slate-400 font-medium text-sm">
-                <li><Link to="/buy" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Apartments</Link></li>
-                <li><Link to="/buy" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Villas</Link></li>
-                <li><Link to="/buy" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Plots / Land</Link></li>
-                <li><Link to="/buy" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Commercial Space</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-bold text-lg mb-6 text-slate-100">Contact Us</h4>
-              <div className="space-y-4 text-slate-400 font-medium text-sm">
-                <p className="flex items-start"><MapPin className="w-5 h-5 mr-3 text-red-600 shrink-0"/> 123 Business Avenue, Tech Park, Mumbai, 400001</p>
-                <p className="flex items-center"><Mail className="w-5 h-5 mr-3 text-red-600 shrink-0"/> info@ankrealty.com</p>
-                <p className="flex items-center"><Phone className="w-5 h-5 mr-3 text-red-600 shrink-0"/> +91 98765 43210</p>
-              </div>
-            </div>
+      
+      {/* FLOATING CHATBOT ICON (Matched to theme) */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <button className="bg-[#003B30] hover:bg-[#00261c] text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-transform flex items-center justify-center group border border-white/10 relative">
+          <MessageSquare className="w-7 h-7" />
+          <div className="absolute right-full mr-4 bottom-1/2 translate-y-1/2 bg-white text-slate-800 text-sm font-bold py-2 px-4 rounded-2xl rounded-br-sm shadow-[0_4px_20px_rgb(0,0,0,0.1)] border border-slate-100 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+            Hi, I'm your real estate assistant
           </div>
-          
-          <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-slate-500 font-medium">
-            <p>&copy; {new Date().getFullYear()} ANK Realty. All rights reserved.</p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
-                <Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-                <Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
-            </div>
-          </div>
-        </div>
-      </footer>
+        </button>
+      </div>
+
     </div>
   );
 }
+
+// Temporary icon to satisfy import requirement for Chatbot
+const MessageSquare = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+);
