@@ -22,6 +22,8 @@ import BlogPage from "./pages/blog";
 import VideosPage from "./pages/videos";
 import InsightsPage from "./pages/insight";
 import CareersPage from "./pages/career";
+import CorporateLeasingPage from "./pages/CorporateLeasingPage";
+import LegalPage from "./pages/LegalPage";
 
 // ---------- ADMIN & BROKER PORTAL ----------
 import AdminPanel from "./admin/AdminPanel";
@@ -79,8 +81,18 @@ function AppRoutes() {
       <Route path="/videos" element={<VideosPage />} />
       <Route path="/insights" element={<InsightsPage />} />
       <Route path="/careers" element={<CareersPage />} />
+      <Route path="/corporate-leasing" element={<CorporateLeasingPage />} />
 
       <Route path="/properties" element={<PropertyListingPage />} />
+      <Route path="/projects" element={<Navigate to="/properties" replace />} />
+      <Route path="/plots" element={<Navigate to="/properties?property_type=plot" replace />} />
+      <Route path="/residential" element={<Navigate to="/buy" replace />} />
+      <Route path="/commercial" element={<Navigate to="/properties?property_type=commercial" replace />} />
+      <Route path="/resale" element={<Navigate to="/buy" replace />} />
+      <Route path="/advertise" element={<Navigate to="/contact" replace />} />
+      <Route path="/agent-login" element={<Navigate to="/auth" replace />} />
+      <Route path="/privacy" element={<LegalPage />} />
+      <Route path="/terms" element={<LegalPage />} />
       
       {/* Dynamic Route for individual property details */}
       <Route path="/property/:id" element={<PropertyDetailPage />} /> 
