@@ -19,6 +19,7 @@ import RentPage from "./pages/rent";
 
 // 🔥 Premium Pages Imports
 import BlogPage from "./pages/blog";
+import CorporateLeasingPage from "./pages/CorporateLeasingPage";
 import VideosPage from "./pages/videos";
 import InsightsPage from "./pages/insight";
 import CareersPage from "./pages/career";
@@ -79,6 +80,9 @@ function AppRoutes() {
       {/* Premium Public Content Routes */}
       <Route path="/blog" element={<BlogPage />} />
       <Route path="/videos" element={<VideosPage />} />
+      <Route path="/CorporateLeasingPage" element={<CorporateLeasingPage />} />
+
+        CorporateLeasingPage
       <Route path="/insights" element={<InsightsPage />} />
       <Route path="/careers" element={<CareersPage />} />
       <Route path="/corporate-leasing" element={<CorporateLeasingPage />} />
