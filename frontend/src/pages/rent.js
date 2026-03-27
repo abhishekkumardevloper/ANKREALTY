@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
-import resaleListings from '../lib/resaleListings';
+import resaleListings from '../lib/resaleListings'; // Your new 70-item data array
 import Navbar from "../components/Navbar";
 import { Button } from "@/components/ui/button";
 import { 
@@ -16,19 +16,6 @@ import {
 // API Configuration
 const API_URL = 'http://127.0.0.1:8000/api/properties';
 
-// Helper to assign consistent rental-themed images
-const getPlaceholderImage = (id, type) => {
-  const images = {
-    apartment: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80", "https://images.unsplash.com/photo-1502672260266-1c1e5240980c?w=800&q=80"],
-    villa: ["https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80", "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80"],
-    default: ["https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800&q=80", "https://images.unsplash.com/photo-1536376072261-38c75010e6c9?w=800&q=80"]
-  };
-  const safeType = type ? type.toLowerCase() : 'default';
-  const list = images[safeType] || images.default;
-  return list[id % list.length];
-};
-
-// Static Chart Data (Simulated Market Trends)
 const rentTrends = [
   { month: 'Jan', price: 24000 }, 
   { month: 'Feb', price: 24200 },
@@ -41,17 +28,15 @@ const rentTrends = [
 ];
 
 export default function RentPage() {
-  const navigate = useNavigate(); // Hook for routing
+  const navigate = useNavigate(); 
   const [resaleProperties, setResaleProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // Advanced Filter States
   const [searchCity, setSearchCity] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [propertyType, setPropertyType] = useState("");
   const [sortBy, setSortBy] = useState("newest");
 
-  // FETCH DATA
   useEffect(() => {
     const fetchResaleProperties = async () => {
       try {
@@ -66,7 +51,7 @@ export default function RentPage() {
         setResaleProperties([...resaleListings, ...activeResale]);
       } catch (error) {
         console.error("Error fetching resale properties:", error);
-        setResaleProperties(resaleListings);
+        setResaleProperties(resaleListings); // Fallback to your Excel listings
       } finally {
         setLoading(false);
       }
@@ -74,7 +59,6 @@ export default function RentPage() {
     fetchResaleProperties();
   }, []);
 
-  // Filter & Sort Logic
   const filteredAndSortedRentals = useMemo(() => {
     let result = resaleProperties.filter(r => {
       const matchesCity = searchCity ? (r.city?.toLowerCase().includes(searchCity.toLowerCase()) || r.title?.toLowerCase().includes(searchCity.toLowerCase())) : true;
@@ -93,7 +77,7 @@ export default function RentPage() {
     <div className="min-h-screen bg-slate-50 font-sans relative">
       <Navbar />
       
-      {/* HERO & ADVANCED SEARCH SECTION */}
+      {/* HERO SECTION */}
       <section className="bg-slate-900 text-white pt-32 pb-24 px-6 relative overflow-hidden">
          <div className="absolute inset-0 opacity-40 mix-blend-overlay" 
               style={{ 
@@ -115,7 +99,7 @@ export default function RentPage() {
               Discover verified resale apartments, floors, and premium homes. Connect directly with owners and get transparent pricing.
             </p>
 
-            {/* ADVANCED SEARCH WIDGET */}
+            {/* SEARCH WIDGET */}
             <div className="bg-white p-3 rounded-2xl md:rounded-full mx-auto flex flex-col md:flex-row shadow-2xl items-center border border-slate-200">
                <div className="w-full md:flex-1 flex items-center px-4 py-3 border-b md:border-b-0 md:border-r border-slate-100">
                   <MapPin className="text-slate-400 w-5 h-5 mr-3 shrink-0" />
@@ -163,7 +147,7 @@ export default function RentPage() {
          </div>
       </section>
 
-      {/* FULL WIDTH LISTINGS GRID */}
+      {/* LISTINGS GRID */}
       <section className="max-w-7xl mx-auto px-6 py-12">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 pb-6 border-b border-slate-200">
            <div>
@@ -201,18 +185,16 @@ export default function RentPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredAndSortedRentals.map((property) => {
-               // Extract real cover image from backend if it exists, otherwise use placeholder
                const coverImage = property.images && property.images.length > 0 
                  ? property.images[0] 
-                 : property.imageUrl || getPlaceholderImage(property.id, property.category || property.type);
+                 : property.imageUrl || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80";
 
               return (
                 <div 
                   key={property.id} 
                   className="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-2xl hover:border-red-100 transition-all duration-300 group cursor-pointer flex flex-col transform hover:-translate-y-1"
-                  onClick={() => navigate(`/property/${property.id}`)} // 🔥 NAVIGATES TO DETAILS PAGE
+                  onClick={() => navigate(`/property/${property.id}`)}
                 >
-                  {/* Image Area */}
                   <div className="h-60 relative overflow-hidden p-2">
                      <div className="w-full h-full rounded-3xl overflow-hidden relative">
                        <img 
@@ -229,7 +211,6 @@ export default function RentPage() {
                      </div>
                   </div>
                   
-                  {/* Content Area */}
                   <div className="p-6 pt-3 flex-1 flex flex-col">
                      <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">
                        {property.category || property.type || 'Resale'}
@@ -253,8 +234,10 @@ export default function RentPage() {
                      
                      <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
                         <div>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Expected Price</p>
-                            <span className="text-2xl font-black text-slate-900">{property.price ? `₹${Number(property.price).toLocaleString('en-IN')}` : property.priceText || 'On Request'}</span>
+                           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Expected Price</p>
+                           <span className="text-2xl font-black text-slate-900">
+                             {property.price > 0 ? `₹${Number(property.price).toLocaleString('en-IN')}` : property.priceText || 'On Request'}
+                           </span>
                         </div>
                         <div className="w-10 h-10 rounded-full bg-red-50 text-red-600 flex items-center justify-center group-hover:bg-red-600 group-hover:text-white transition-colors">
                           <ArrowRight className="w-5 h-5"/>
@@ -268,7 +251,7 @@ export default function RentPage() {
         )}
       </section>
 
-      {/* MARKET INSIGHTS SECTION */}
+      {/* MARKET INSIGHTS */}
       <section className="py-20 px-6 bg-white border-t border-slate-200">
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-16 items-center">
           <div className="lg:w-1/3">
