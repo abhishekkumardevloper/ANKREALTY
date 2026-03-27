@@ -2,49 +2,70 @@
   min-height: 100vh;
 }
 
+/* ============================= */
+/* 🏡 PROPERTY CARD */
+/* ============================= */
+
 .property-card-image {
-  transition: transform 0.3s ease-out;
+  transition: transform 0.4s ease;
 }
 
 .property-card:hover .property-card-image {
-  transform: scale(1.05);
+  transform: scale(1.08);
 }
 
+.property-card {
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+/* ============================= */
+/* 🔴 PRIMARY BUTTON (RED) */
+/* ============================= */
+
 .btn-primary {
-  background-color: #C8102E;
+  background: linear-gradient(135deg, #8B0000, #C1121F);
   color: white;
   padding: 0.75rem 2rem;
-  border-radius: 0.125rem;
+  border-radius: 6px;
   font-weight: 600;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 14px 0 rgba(200, 16, 46, 0.39);
+  box-shadow: 0 6px 20px rgba(193, 18, 31, 0.35);
 }
 
 .btn-primary:hover {
-  background-color: #A00C24;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(200, 16, 46, 0.4);
+  box-shadow: 0 10px 25px rgba(193, 18, 31, 0.5);
+  opacity: 0.95;
 }
 
+/* ============================= */
+/* 🟡 GOLD BUTTON */
+/* ============================= */
+
 .btn-secondary {
-  border: 2px solid #0D0D0D;
-  color: #0D0D0D;
+  background: linear-gradient(135deg, #D4AF37, #FFD700);
+  color: black;
   padding: 0.75rem 2rem;
-  border-radius: 0.125rem;
+  border-radius: 6px;
   font-weight: 600;
   transition: all 0.3s ease;
-  background: white;
+  border: none;
 }
 
 .btn-secondary:hover {
-  background-color: #0D0D0D;
-  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
 }
+
+/* ============================= */
+/* 🎯 HERO SECTION */
+/* ============================= */
 
 .hero-section {
   position: relative;
-  height: 70vh;
-  min-height: 500px;
+  height: 75vh;
+  min-height: 520px;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -53,32 +74,77 @@
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6));
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.5),
+    rgba(0, 0, 0, 0.85)
+  );
 }
 
+/* ============================= */
+/* 🧊 GLASS NAVBAR (UPDATED DARK) */
+/* ============================= */
+
 .glass-nav {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  border-bottom: 1px solid rgba(255, 215, 0, 0.2);
 }
+
+/* ============================= */
+/* 🔍 SEARCH TOGGLE */
+/* ============================= */
 
 .search-toggle {
   display: inline-flex;
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(8px);
-  border-radius: 0.25rem;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  border-radius: 6px;
   padding: 0.25rem;
 }
 
 .search-toggle button {
   padding: 0.5rem 1.5rem;
-  border-radius: 0.125rem;
+  border-radius: 4px;
   font-weight: 600;
-  transition: all 0.2s;
+  transition: all 0.3s;
+  color: #ccc;
+}
+
+.search-toggle button:hover {
   color: white;
 }
 
+/* Active State (Gold Highlight) */
 .search-toggle button.active {
-  background: #C8102E;
-  box-shadow: 0 2px 8px rgba(200, 16, 46, 0.4);
+  background: linear-gradient(135deg, #D4AF37, #FFD700);
+  color: black;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+}
+
+/* ============================= */
+/* ✨ EXTRA PREMIUM EFFECTS */
+/* ============================= */
+
+/* Card Hover Glow */
+.property-card:hover {
+  box-shadow: 0 15px 40px rgba(255, 215, 0, 0.1);
+  transform: translateY(-4px);
+  transition: 0.3s;
+}
+
+/* Smooth Fade Animation */
+.fade-in {
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
