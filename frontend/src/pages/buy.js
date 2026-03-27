@@ -287,18 +287,18 @@ export default function BuyPage() {
          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent"></div>
          
          <div className="relative z-10 max-w-5xl mx-auto text-center">
-            <span className="bg-white/10 backdrop-blur-md border border-white/20 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-6 inline-block">
+            <span className="bg-[#D4AF37]/10 backdrop-blur-md border border-[#D4AF37]/40 text-[#D4AF37] px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-6 inline-block shadow-[0_0_15px_rgba(212,175,55,0.2)]">
               Properties for Sale
             </span>
             <h1 className="text-4xl md:text-6xl font-black mb-6 tracking-tight drop-shadow-lg">
-              Find Your <span className="text-red-500">Dream Home</span>
+              Find Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-[#AA8000]">Dream Home</span>
             </h1>
             <p className="text-lg text-slate-300 max-w-2xl mx-auto mb-10 font-light">
               Explore India's most premium apartments, villas, and plots. Verified listings, direct seller contact, zero hassle.
             </p>
 
             {/* ADVANCED SEARCH WIDGET */}
-            <div className="bg-white p-3 rounded-2xl md:rounded-full mx-auto flex flex-col md:flex-row shadow-2xl items-center border border-slate-200">
+            <div className="bg-white p-3 rounded-2xl md:rounded-full mx-auto flex flex-col md:flex-row shadow-2xl items-center border border-[#D4AF37]/20">
                <div className="w-full md:flex-1 flex items-center px-4 py-3 border-b md:border-b-0 md:border-r border-slate-100">
                   <MapPin className="text-slate-400 w-5 h-5 mr-3 shrink-0" />
                   <input 
@@ -336,7 +336,7 @@ export default function BuyPage() {
                   <ChevronDown className="absolute right-4 w-4 h-4 text-slate-400 pointer-events-none"/>
                </div>
 
-               <Button className="bg-red-600 hover:bg-red-700 text-white font-bold h-12 px-8 rounded-xl md:rounded-full w-full md:w-auto mt-2 md:mt-0 shadow-lg md:ml-2">
+               <Button className="bg-[#8B0000] hover:bg-[#600000] text-white font-bold h-12 px-8 rounded-xl md:rounded-full w-full md:w-auto mt-2 md:mt-0 shadow-lg shadow-[#8B0000]/30 md:ml-2 transition-all">
                   <Search className="w-5 h-5 md:mr-2" /> <span className="md:inline hidden">Search</span>
                </Button>
             </div>
@@ -351,7 +351,7 @@ export default function BuyPage() {
               <p className="text-slate-500 font-medium mt-1">Found {filteredAndSortedProperties.length} verified listings</p>
            </div>
            <div className="flex items-center gap-4 mt-4 md:mt-0">
-              <div className="flex items-center bg-white border border-slate-200 rounded-lg px-3 py-2 shadow-sm">
+              <div className="flex items-center bg-white border border-slate-200 hover:border-[#D4AF37]/50 transition-colors rounded-lg px-3 py-2 shadow-sm">
                 <SlidersHorizontal className="w-4 h-4 text-slate-400 mr-2"/>
                 <select 
                   value={sortBy} onChange={(e) => setSortBy(e.target.value)}
@@ -366,7 +366,7 @@ export default function BuyPage() {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-20"><Loader2 className="w-10 h-10 text-red-600 animate-spin" /></div>
+          <div className="flex justify-center py-20"><Loader2 className="w-10 h-10 text-[#8B0000] animate-spin" /></div>
         ) : filteredAndSortedProperties.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300">
              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
@@ -374,7 +374,7 @@ export default function BuyPage() {
              </div>
              <h3 className="text-xl font-bold text-slate-700">No properties found</h3>
              <p className="text-slate-500 mt-2">Try removing some filters to see more results.</p>
-             <Button onClick={() => {setSearchCity(""); setMaxPrice(""); setPropertyType("");}} className="mt-4 bg-red-50 text-red-600 hover:bg-red-100 font-bold">
+             <Button onClick={() => {setSearchCity(""); setMaxPrice(""); setPropertyType("");}} className="mt-4 bg-[#D4AF37]/10 text-[#8B0000] hover:bg-[#D4AF37]/20 font-bold">
                Clear All Filters
              </Button>
           </div>
@@ -383,7 +383,7 @@ export default function BuyPage() {
             {filteredAndSortedProperties.map((property) => (
                 <div 
                   key={property.id} 
-                  className="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-2xl hover:border-red-100 transition-all duration-300 group cursor-pointer flex flex-col"
+                  className="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-2xl hover:border-[#D4AF37]/50 transition-all duration-300 group cursor-pointer flex flex-col"
                   onClick={() => navigate(`/property/${property.id}`, { state: { property } })}
                 >
                   {/* Image Area - PULLS THE FIRST IMAGE FROM THE ARRAY OF 4 */}
@@ -395,8 +395,8 @@ export default function BuyPage() {
                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                        />
                        <div className="absolute top-3 left-3 flex flex-col gap-2">
-                         <span className="bg-white/90 backdrop-blur-sm text-slate-900 px-3 py-1 rounded-lg text-xs font-black uppercase shadow-sm flex items-center gap-1">
-                           <ShieldCheck className="w-3 h-3 text-green-600"/> Verified
+                         <span className="bg-white/95 backdrop-blur-sm text-slate-900 px-3 py-1 rounded-lg text-xs font-black uppercase shadow-sm flex items-center gap-1">
+                           <ShieldCheck className="w-3.5 h-3.5 text-[#D4AF37]"/> Verified
                          </span>
                        </div>
                      </div>
@@ -405,11 +405,11 @@ export default function BuyPage() {
                   {/* Content Area */}
                   <div className="p-6 pt-4 flex-1 flex flex-col">
                      <div className="flex justify-between items-start mb-2">
-                        <p className="text-slate-500 text-xs font-bold uppercase tracking-wider bg-slate-100 px-2 py-1 rounded-md">
+                        <p className="text-[#8B0000] text-xs font-bold uppercase tracking-wider bg-slate-50 border border-slate-100 px-2 py-1 rounded-md">
                           {property.category || property.type || 'Property'}
                         </p>
                      </div>
-                     <h3 className="text-xl font-black text-slate-900 mb-2 line-clamp-1 group-hover:text-red-600 transition-colors">
+                     <h3 className="text-xl font-black text-slate-900 mb-2 line-clamp-1 group-hover:text-[#8B0000] transition-colors">
                        {property.title}
                      </h3>
                      <p className="text-slate-500 text-sm flex items-center mb-4">
@@ -419,13 +419,13 @@ export default function BuyPage() {
                      {/* Features */}
                      <div className="grid grid-cols-3 gap-2 mb-6 text-slate-600 text-sm font-bold">
                         <div className="flex flex-col items-center justify-center bg-slate-50 py-2 rounded-xl border border-slate-100">
-                          <Bed className="w-4 h-4 text-slate-400 mb-1"/> {property.bedrooms || '-'}
+                          <Bed className="w-4 h-4 text-[#D4AF37] mb-1"/> {property.bedrooms || '-'}
                         </div>
                         <div className="flex flex-col items-center justify-center bg-slate-50 py-2 rounded-xl border border-slate-100">
-                          <Bath className="w-4 h-4 text-slate-400 mb-1"/> {property.bathrooms || '-'}
+                          <Bath className="w-4 h-4 text-[#D4AF37] mb-1"/> {property.bathrooms || '-'}
                         </div>
                         <div className="flex flex-col items-center justify-center bg-slate-50 py-2 rounded-xl border border-slate-100">
-                          <Maximize className="w-4 h-4 text-slate-400 mb-1"/> {property.area || property.size || '-'} <span className="text-[10px] font-normal">sqft</span>
+                          <Maximize className="w-4 h-4 text-[#D4AF37] mb-1"/> {property.area || property.size || '-'} <span className="text-[10px] font-normal">sqft</span>
                         </div>
                      </div>
 
@@ -436,7 +436,7 @@ export default function BuyPage() {
                              ₹{property.price >= 10000000 ? (property.price / 10000000).toFixed(2) + ' Cr' : (property.price / 100000).toFixed(2) + ' Lac'}
                           </span>
                         </div>
-                        <div className="w-10 h-10 rounded-full bg-red-50 text-red-600 flex items-center justify-center group-hover:bg-red-600 group-hover:text-white transition-colors">
+                        <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-[#8B0000] group-hover:text-[#D4AF37] transition-colors">
                           <ArrowRight className="w-5 h-5"/>
                         </div>
                      </div>
@@ -449,12 +449,12 @@ export default function BuyPage() {
 
       {/* COMPACT INTERACTIVE EMI CALCULATOR */}
       <section className="py-16 px-6 bg-white border-t border-slate-200">
-         <div className="max-w-7xl mx-auto bg-slate-900 rounded-[2.5rem] p-8 md:p-12 shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center gap-12">
+         <div className="max-w-7xl mx-auto bg-slate-900 rounded-[2.5rem] p-8 md:p-12 shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center gap-12 group hover:border-[#D4AF37]/50 border border-transparent transition-colors">
             <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] pointer-events-none"></div>
             
             <div className="md:w-1/2 relative z-10 text-white">
-               <div className="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center mb-6 shadow-lg shadow-red-600/30">
-                 <Calculator className="w-6 h-6 text-white"/>
+               <div className="w-12 h-12 bg-[#D4AF37]/20 rounded-xl flex items-center justify-center mb-6 shadow-inner border border-[#D4AF37]/30">
+                 <Calculator className="w-6 h-6 text-[#D4AF37]"/>
                </div>
                <h2 className="text-3xl font-black mb-4">Plan Your Purchase</h2>
                <p className="text-slate-400 mb-8 leading-relaxed">
@@ -463,7 +463,7 @@ export default function BuyPage() {
                
                <div className="bg-slate-800/80 p-6 rounded-2xl border border-slate-700">
                  <p className="text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2">Estimated EMI</p>
-                 <p className="text-5xl font-black text-red-500 font-mono">₹{calculateEMI().toLocaleString('en-IN')}<span className="text-lg text-slate-400 font-sans"> /mo</span></p>
+                 <p className="text-5xl font-black text-[#8B0000] font-mono">₹{calculateEMI().toLocaleString('en-IN')}<span className="text-lg text-slate-400 font-sans"> /mo</span></p>
                </div>
             </div>
 
@@ -471,80 +471,89 @@ export default function BuyPage() {
                <div>
                  <div className="flex justify-between text-sm mb-2 font-bold">
                    <span className="text-slate-500">Loan Amount</span>
-                   <span className="text-slate-900 text-lg">₹{loanAmt.toLocaleString('en-IN')}</span>
+                   <span className="text-[#8B0000] text-lg font-black">₹{loanAmt.toLocaleString('en-IN')}</span>
                  </div>
-                 <input type="range" min="1000000" max="100000000" step="500000" value={loanAmt} onChange={(e)=>setLoanAmt(Number(e.target.value))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-red-600" />
+                 <input type="range" min="1000000" max="100000000" step="500000" value={loanAmt} onChange={(e)=>setLoanAmt(Number(e.target.value))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#8B0000]" />
                </div>
                
                <div>
                  <div className="flex justify-between text-sm mb-2 font-bold">
                    <span className="text-slate-500">Interest Rate</span>
-                   <span className="text-slate-900 text-lg">{intRate}% p.a.</span>
+                   <span className="text-[#8B0000] text-lg font-black">{intRate}% p.a.</span>
                  </div>
-                 <input type="range" min="6" max="12" step="0.1" value={intRate} onChange={(e)=>setIntRate(Number(e.target.value))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-red-600" />
+                 <input type="range" min="6" max="12" step="0.1" value={intRate} onChange={(e)=>setIntRate(Number(e.target.value))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#8B0000]" />
                </div>
 
                <div>
                  <div className="flex justify-between text-sm mb-2 font-bold">
                    <span className="text-slate-500">Loan Tenure</span>
-                   <span className="text-slate-900 text-lg">{tenure} Years</span>
+                   <span className="text-[#8B0000] text-lg font-black">{tenure} Years</span>
                  </div>
-                 <input type="range" min="5" max="30" step="1" value={tenure} onChange={(e)=>setTenure(Number(e.target.value))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-red-600" />
+                 <input type="range" min="5" max="30" step="1" value={tenure} onChange={(e)=>setTenure(Number(e.target.value))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#8B0000]" />
                </div>
             </div>
          </div>
       </section>
       
       {/* FOOTER */}
-      <footer className="bg-[#0A0A0A] text-white pt-20 pb-10 px-6 border-t border-slate-800">
+      <footer className="bg-[#050505] text-white pt-20 pb-10 px-6 border-t-[6px] border-[#8B0000]">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
-            <div className="space-y-6">
-              <h3 className="text-3xl font-extrabold tracking-tight">ANK Realty<span className="text-red-600">.</span></h3>
-              <p className="text-slate-400 text-sm leading-relaxed pr-4 font-medium">
+            <div className="space-y-6 pr-4">
+              <h3 className="text-3xl font-extrabold tracking-tight text-[#D4AF37]">ANK <span className="text-white">REALTY</span></h3>
+              <p className="text-slate-400 text-sm leading-relaxed font-medium">
                 The Red Carpet of Real Estate. We are committed to providing the highest level of service, transparency, and expertise in the Indian real estate market.
               </p>
-              <div className="flex space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer"><Mail className="w-4 h-4"/></div>
-                  <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer"><Phone className="w-4 h-4"/></div>
+              <div className="flex space-x-3 pt-2">
+                  <div className="w-10 h-10 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all cursor-pointer group"><Mail className="w-4 h-4 group-hover:scale-110 transition-transform"/></div>
+                  <div className="w-10 h-10 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all cursor-pointer group"><Phone className="w-4 h-4 group-hover:scale-110 transition-transform"/></div>
               </div>
             </div>
             
             <div>
-              <h4 className="font-bold text-lg mb-6 text-slate-100">Quick Links</h4>
+              <h4 className="font-bold text-base mb-6 text-white uppercase tracking-widest text-[11px]">Quick Links</h4>
               <ul className="space-y-4 text-slate-400 font-medium text-sm">
-                <li><Link to="/buy" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Buy Property</Link></li>
-                <li><Link to="/sell" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Sell Property</Link></li>
-                <li><Link to="/rent" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Rent Property</Link></li>
-                <li><Link to="/contact" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Contact Us</Link></li>
+                <li><Link to="/buy" className="hover:text-[#D4AF37] flex items-center transition-colors"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Buy Property</Link></li>
+                <li><Link to="/sell" className="hover:text-[#D4AF37] flex items-center transition-colors"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Sell Property</Link></li>
+                <li><Link to="/rent" className="hover:text-[#D4AF37] flex items-center transition-colors"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Rent Property</Link></li>
+                <li><Link to="/contact" className="hover:text-[#D4AF37] flex items-center transition-colors"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Contact Us</Link></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-bold text-lg mb-6 text-slate-100">Categories</h4>
+              <h4 className="font-bold text-base mb-6 text-white uppercase tracking-widest text-[11px]">Categories</h4>
               <ul className="space-y-4 text-slate-400 font-medium text-sm">
-                <li><Link to="/buy" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Apartments</Link></li>
-                <li><Link to="/buy" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Villas</Link></li>
-                <li><Link to="/buy" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Plots / Land</Link></li>
-                <li><Link to="/buy" className="hover:text-white hover:translate-x-1 inline-block transition-transform">Commercial Space</Link></li>
+                <li><Link to="/buy" className="hover:text-[#D4AF37] flex items-center transition-colors"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Apartments</Link></li>
+                <li><Link to="/buy" className="hover:text-[#D4AF37] flex items-center transition-colors"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Villas</Link></li>
+                <li><Link to="/buy" className="hover:text-[#D4AF37] flex items-center transition-colors"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Plots / Land</Link></li>
+                <li><Link to="/buy" className="hover:text-[#D4AF37] flex items-center transition-colors"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Commercial Space</Link></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-bold text-lg mb-6 text-slate-100">Contact Us</h4>
+              <h4 className="font-bold text-base mb-6 text-white uppercase tracking-widest text-[11px]">Contact Us</h4>
               <div className="space-y-4 text-slate-400 font-medium text-sm">
-                <p className="flex items-start"><MapPin className="w-5 h-5 mr-3 text-red-600 shrink-0"/> 123 Business Avenue, Tech Park, Mumbai, 400001</p>
-                <p className="flex items-center"><Mail className="w-5 h-5 mr-3 text-red-600 shrink-0"/> info@ankrealty.com</p>
-                <p className="flex items-center"><Phone className="w-5 h-5 mr-3 text-red-600 shrink-0"/> +91 98765 43210</p>
+                <div className="flex items-start bg-slate-900/50 p-3 rounded-xl border border-slate-800 hover:border-[#D4AF37]/50 transition-colors">
+                  <MapPin className="w-5 h-5 mr-3 text-[#D4AF37] shrink-0" /> 
+                  <p className="text-xs">123 Business Avenue, Tech Park, Mumbai, 400001</p>
+                </div>
+                <div className="flex items-center bg-slate-900/50 p-3 rounded-xl border border-slate-800 hover:border-[#D4AF37]/50 transition-colors">
+                  <Mail className="w-5 h-5 mr-3 text-[#D4AF37] shrink-0" /> 
+                  <p className="text-xs">info@ankrealty.com</p>
+                </div>
+                <div className="flex items-center bg-slate-900/50 p-3 rounded-xl border border-slate-800 hover:border-[#D4AF37]/50 transition-colors">
+                  <Phone className="w-5 h-5 mr-3 text-[#D4AF37] shrink-0" /> 
+                  <p className="text-xs">+91 98765 43210</p>
+                </div>
               </div>
             </div>
           </div>
           
-          <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-slate-500 font-medium">
+          <div className="border-t border-slate-800/80 pt-6 flex flex-col md:flex-row justify-between items-center text-xs text-slate-500 font-medium">
             <p>&copy; {new Date().getFullYear()} ANK Realty. All rights reserved.</p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-                <Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-                <Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+                <Link to="/privacy" className="hover:text-[#D4AF37] transition-colors">Privacy Policy</Link>
+                <Link to="/terms" className="hover:text-[#D4AF37] transition-colors">Terms of Service</Link>
             </div>
           </div>
         </div>
@@ -553,19 +562,19 @@ export default function BuyPage() {
       {/* --- FLOATING CHATBOT --- */}
       <div className="fixed bottom-6 right-6 z-50">
         {isChatOpen ? (
-          <div className="bg-white rounded-2xl shadow-2xl w-80 sm:w-96 border border-slate-200 overflow-hidden flex flex-col animate-in slide-in-from-bottom-5">
-            <div className="bg-slate-900 text-white p-4 font-bold flex justify-between items-center shadow-md relative z-10">
+          <div className="bg-white rounded-2xl shadow-2xl w-80 sm:w-96 border border-[#D4AF37]/30 overflow-hidden flex flex-col animate-in slide-in-from-bottom-5">
+            <div className="bg-[#050505] text-[#D4AF37] border-b border-[#D4AF37]/30 p-4 font-bold flex justify-between items-center shadow-md relative z-10">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.8)]"></div>
                 ANK AI Assistant
               </div>
-              <button onClick={() => setIsChatOpen(false)} className="hover:bg-slate-700 p-1 rounded-md transition-colors"><X className="w-4 h-4"/></button>
+              <button onClick={() => setIsChatOpen(false)} className="hover:bg-slate-800 text-slate-300 hover:text-white p-1 rounded-md transition-colors"><X className="w-4 h-4"/></button>
             </div>
             
             <div className="p-4 flex-1 bg-slate-50 flex flex-col gap-3 h-[380px] overflow-y-auto">
               <div className="flex gap-2">
-                <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center shrink-0">
-                   <Home className="w-4 h-4 text-red-600"/>
+                <div className="w-8 h-8 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/50 flex items-center justify-center shrink-0 shadow-sm">
+                   <Home className="w-4 h-4 text-[#8B0000]"/>
                 </div>
                 <div className="bg-white p-3 rounded-2xl rounded-tl-sm shadow-sm text-sm border border-slate-100 text-slate-700">
                   Welcome to ANK Realty! I am your virtual assistant. Please choose a subject below so I can assist you better:
@@ -574,7 +583,7 @@ export default function BuyPage() {
               
               <div className="flex flex-col gap-2 mt-2 pl-10">
                 {chatSubjects.map((subject, i) => (
-                  <button key={i} className="text-left bg-white hover:bg-red-50 text-slate-700 hover:text-red-700 p-2.5 rounded-xl text-sm font-medium transition-all border border-slate-200 hover:border-red-200 shadow-sm">
+                  <button key={i} className="text-left bg-white hover:bg-[#8B0000]/5 text-slate-700 hover:text-[#8B0000] p-2.5 rounded-xl text-sm font-medium transition-all border border-slate-200 hover:border-[#D4AF37]/50 shadow-sm">
                     {subject}
                   </button>
                 ))}
@@ -582,8 +591,8 @@ export default function BuyPage() {
             </div>
 
             <div className="p-3 bg-white border-t border-slate-100 flex items-center gap-2">
-              <input type="text" placeholder="Type your message..." className="flex-1 bg-slate-50 border border-slate-200 rounded-full px-4 py-2 text-sm outline-none focus:border-red-400" />
-              <button className="bg-red-600 text-white p-2 rounded-full hover:bg-red-700 transition-colors">
+              <input type="text" placeholder="Type your message..." className="flex-1 bg-slate-50 border border-slate-200 rounded-full px-4 py-2 text-sm outline-none focus:border-[#D4AF37]" />
+              <button className="bg-[#8B0000] text-white p-2 rounded-full hover:bg-[#600000] shadow-md shadow-[#8B0000]/30 transition-colors">
                 <Send className="w-4 h-4 ml-0.5" />
               </button>
             </div>
@@ -591,10 +600,10 @@ export default function BuyPage() {
         ) : (
           <button 
             onClick={() => setIsChatOpen(true)} 
-            className="bg-red-600 hover:bg-red-700 text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-transform flex items-center justify-center group"
+            className="bg-[#8B0000] hover:bg-[#600000] border-2 border-white/10 text-white p-4 rounded-full shadow-[0_10px_25px_rgba(139,0,0,0.4)] hover:scale-110 transition-transform flex items-center justify-center group"
           >
             <MessageSquare className="w-7 h-7" />
-            <span className="absolute right-full mr-4 bg-slate-900 text-white text-xs font-bold py-1.5 px-3 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+            <span className="absolute right-full mr-4 bg-[#050505] border border-[#D4AF37]/30 text-[#D4AF37] text-xs font-bold py-1.5 px-3 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-lg">
               Chat with us!
             </span>
           </button>
