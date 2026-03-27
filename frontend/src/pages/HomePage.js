@@ -56,13 +56,13 @@ const processSteps = [
   { title: "Close & Transact", desc: "Benefit from human guidance through documentation and final handover.", icon: FileSignature }
 ];
 
-// --- LOGO ARRAYS ---
-const topRowLogos = [
-  "/images (3).png", "/images__9_-removebg-preview.png", "/images (1).png", "/images (2).png", "/183f468e401f4220bce9e4f7b1e3ffd820251112162925170.png",
-];
-
-const bottomRowLogos = [
-  "/images.png", "/4f3bb698972531.Y3JvcCw5NTAsNzQzLDIyMywyMQ-removebg-preview.png", "/Max_Estates_logo.svg.png", "/M3M-Jacob-and-Co-logo.png",
+// --- DUMMY MAP PINS ---
+const dummyMapPins = [
+  { id: 1, name: "Premium Plot - Sector 150", top: "35%", left: "45%", price: "₹1.2 Cr" },
+  { id: 2, name: "Villa Plot - Yamuna Exp.", top: "65%", left: "60%", price: "₹85 L" },
+  { id: 3, name: "Commercial Land - Ext.", top: "25%", left: "30%", price: "₹3.5 Cr" },
+  { id: 4, name: "Corner Plot - Sec 137", top: "50%", left: "55%", price: "₹2.1 Cr" },
+  { id: 5, name: "Golf View Plot - Sec 128", top: "40%", left: "20%", price: "₹5 Cr" },
 ];
 
 const categoryOptions = [
@@ -95,7 +95,7 @@ export default function HomePage() {
   const [loanLead, setLoanLead] = useState({ name: '', phone: '' });
 
   // EMI Calculator State
-  const [loanAmount, setLoanAmount] = useState(7500000); // Set defaults higher for better scale feel
+  const [loanAmount, setLoanAmount] = useState(7500000); 
   const [interestRate, setInterestRate] = useState(8.5);
   const [loanTenure, setLoanTenure] = useState(20);
 
@@ -268,7 +268,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- NEW ELEMENT 1: HOW IT WORKS --- */}
+      {/* --- HOW IT WORKS --- */}
       <section className="py-24 px-6 bg-slate-900 text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#8B0000]/10 to-transparent z-0 pointer-events-none"/>
         <div className="max-w-7xl mx-auto relative z-10">
@@ -293,7 +293,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- REPOSITIONED MAP SECTION: NOIDA PLOT FINDER --- */}
+      {/* --- NOIDA PLOT FINDER MAP WITH PINS --- */}
       <section className="py-24 px-6 bg-slate-50 border-b border-slate-200">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col lg:flex-row justify-between lg:items-end mb-12 gap-8 lg:gap-16 relative">
@@ -301,7 +301,7 @@ export default function HomePage() {
               <p className="text-[#8B0000] font-bold uppercase tracking-[0.25em] text-xs mb-3 flex items-center gap-2"><Map className="w-4 h-4"/> Discover opportunities in prime hubs</p>
               <h2 className="text-3xl md:text-5xl font-black text-slate-900 leading-tight">Explore Plots & Localities in Noida</h2>
               <p className="text-slate-600 text-lg md:text-xl mt-5 leading-relaxed">
-                Use our dynamic map view to locate premium plots, upcoming projects, and established sectors specifically in Noida Extension and Sector 150. Your next investment starts here.
+                Use our dynamic map view to locate premium plots, upcoming projects, and established sectors. Hover over the pins below to see available plot opportunities!
               </p>
             </div>
             <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 md:block hidden pointer-events-none text-[#D4AF37] opacity-20">
@@ -309,26 +309,45 @@ export default function HomePage() {
             </div>
           </div>
           
-          <div className="w-full h-[550px] md:h-[600px] rounded-[2rem] overflow-hidden shadow-2xl border-4 border-white relative bg-white group">
+          <div className="w-full h-[550px] md:h-[600px] rounded-[2rem] overflow-hidden shadow-2xl border-4 border-white relative bg-slate-200 group">
+            {/* WORKING NOIDA GOOGLE MAP IFRAME */}
             <iframe 
-              src="http://googleusercontent.com/maps.google.com/4" // Updated to a satellite view variant showing more development
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d224346.61368048703!2d77.32498705!3d28.5355161!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390ce5a43173357b%3A0x37ffce30c87cc03f!2sNoida%2C%20Uttar%20Pradesh!5e0!3m2!1sen!2sin!4v1711545600000!5m2!1sen!2sin" 
               width="100%" 
               height="100%" 
               style={{ border: 0 }} 
               allowFullScreen="" 
               loading="lazy" 
               referrerPolicy="no-referrer-when-downgrade"
-              title="Noida Plot Locations Map"
-              className="grayscale-[20%] contrast-[1.05] group-hover:grayscale-0 transition-all duration-1000"
+              title="Noida Real Estate Map"
+              className="grayscale-[30%] opacity-90 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-1000"
             ></iframe>
             
-            {/* SLEEK MAP OVERLAY */}
-            <div className="absolute top-6 left-6 bg-white/95 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-slate-200 max-w-[320px] transition-all duration-300 group-hover:shadow-[#D4AF37]/20 group-hover:-translate-y-1">
+            {/* DUMMY PINS OVERLAY */}
+            {dummyMapPins.map(pin => (
+               <div key={pin.id} className="absolute z-10 flex flex-col items-center group/pin cursor-pointer" style={{ top: pin.top, left: pin.left }}>
+                  {/* Tooltip Popup */}
+                  <div className="bg-white px-4 py-2 rounded-xl shadow-2xl mb-2 opacity-0 group-hover/pin:opacity-100 transition-all duration-300 whitespace-nowrap border border-slate-200 transform translate-y-4 group-hover/pin:translate-y-0 pointer-events-none">
+                     <p className="font-bold text-slate-900 text-sm mb-0.5">{pin.name}</p>
+                     <p className="text-[#8B0000] font-black text-sm">{pin.price}</p>
+                  </div>
+                  {/* Visual Pin Indicator */}
+                  <div className="relative">
+                     <div className="w-6 h-6 bg-[#8B0000] rounded-full absolute -inset-1.5 animate-ping opacity-60"></div>
+                     <div className="w-8 h-8 bg-[#D4AF37] border-2 border-white rounded-full flex items-center justify-center shadow-lg relative z-10 hover:bg-[#8B0000] transition-colors">
+                        <div className="w-2.5 h-2.5 bg-white rounded-full"></div>
+                     </div>
+                  </div>
+               </div>
+            ))}
+
+            {/* SLEEK MAP INFO CARD */}
+            <div className="absolute bottom-6 left-6 bg-white/95 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-slate-200 max-w-[320px] transition-all duration-300 group-hover:shadow-[#D4AF37]/20 group-hover:-translate-y-1">
               <div className="flex items-center gap-2.5 mb-3 border-b border-slate-100 pb-3">
-                 <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse shadow-lg" />
-                 <h3 className="font-black text-slate-900 text-base">Explore Noida Plot Hotspots</h3>
+                 <div className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse shadow-lg" />
+                 <h3 className="font-black text-slate-900 text-base">Live Property Markers</h3>
               </div>
-              <p className="text-sm text-slate-600 mb-5 leading-relaxed">Markers conceptually show plot layouts and available residential lands in **Sector 150** and **Yamuna Expressway**. Contact us for exact site maps.</p>
+              <p className="text-sm text-slate-600 mb-5 leading-relaxed">Map currently displaying 5 exclusive plot listings. Hover over the golden pins to view property details and prices.</p>
               <Button className="w-full h-11 text-sm bg-[#8B0000] hover:bg-[#600000] text-white rounded-xl font-bold shadow-md shadow-[#8B0000]/30 transition-all hover:-translate-y-0.5">Contact Our Plot Experts</Button>
             </div>
           </div>
@@ -458,7 +477,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- NEW ELEMENT 2: NOIDA LOCALITY HIGHLIGHTS --- */}
+      {/* --- NOIDA LOCALITY HIGHLIGHTS --- */}
       <section className="py-24 px-6 bg-slate-900 text-white relative">
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center max-w-3xl mx-auto mb-16">
