@@ -4,57 +4,79 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Base Reset */
 body {
     margin: 0;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background-color: #0a0a0a;
 }
 
 code {
     font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
 
+/* ============================= */
+/* 🔥 THEME COLORS (LOGO BASED) */
+/* ============================= */
+
 @layer base {
     :root {
-        --background: 0 0% 100%;
-        --foreground: 0 0% 5%;
-        --card: 0 0% 100%;
-        --card-foreground: 0 0% 5%;
-        --popover: 0 0% 100%;
-        --popover-foreground: 0 0% 5%;
-        
-        /* Updated Primary: Deep Red from Logo */
-        --primary: 0 89% 35%; 
+        /* Background */
+        --background: 0 0% 5%; /* Dark black */
+        --foreground: 0 0% 98%;
+
+        /* Cards */
+        --card: 0 0% 8%;
+        --card-foreground: 0 0% 98%;
+
+        --popover: 0 0% 8%;
+        --popover-foreground: 0 0% 98%;
+
+        /* 🔴 Primary (Deep Red from logo) */
+        --primary: 358 75% 38%; /* #C1121F */
         --primary-foreground: 0 0% 100%;
-        
-        /* Updated Secondary: Gold/Yellow from Logo */
-        --secondary: 41 60% 51%; 
-        /* Dark text for better contrast on the gold background */
-        --secondary-foreground: 0 0% 10%; 
-        
-        --muted: 0 0% 96%;
-        --muted-foreground: 215 16% 47%;
-        --accent: 0 0% 96%;
-        --accent-foreground: 0 0% 5%;
+
+        /* 🟡 Secondary (Gold from logo) */
+        --secondary: 45 85% 52%; /* #FFD700 */
+        --secondary-foreground: 0 0% 10%;
+
+        /* ✨ Accent Gold */
+        --accent: 42 60% 45%;
+        --accent-foreground: 0 0% 100%;
+
+        /* UI Neutral */
+        --muted: 0 0% 12%;
+        --muted-foreground: 215 16% 65%;
+
+        --border: 0 0% 20%;
+        --input: 0 0% 20%;
+
+        /* Focus ring */
+        --ring: 45 85% 52%;
+
+        /* Danger */
         --destructive: 0 84% 60%;
         --destructive-foreground: 0 0% 100%;
-        --border: 214 32% 91%;
-        --input: 214 32% 91%;
-        
-        /* Updated Ring to match new Primary */
-        --ring: 0 89% 35%; 
-        --radius: 0.5rem;
+
+        --radius: 0.6rem;
     }
 }
+
+/* ============================= */
+/* 🧱 BASE STYLING */
+/* ============================= */
 
 @layer base {
     * {
         @apply border-border;
     }
+
     body {
         @apply bg-background text-foreground;
     }
+
     h1, h2, h3, h4, h5, h6 {
         font-family: 'Montserrat', sans-serif;
         font-weight: 700;
@@ -62,8 +84,97 @@ code {
     }
 }
 
+/* ============================= */
+/* ✨ UTILITIES */
+/* ============================= */
+
 @layer utilities {
+
     .text-balance {
         text-wrap: balance;
+    }
+
+    /* 🟡 Gold Text Gradient */
+    .gold-gradient {
+        background: linear-gradient(135deg, #D4AF37, #FFD700, #C9A227);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* 🔴 Red Gradient */
+    .red-gradient {
+        background: linear-gradient(135deg, #8B0000, #C1121F);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* 🟡 Gold Background */
+    .gold-bg {
+        background: linear-gradient(135deg, #D4AF37, #FFD700);
+    }
+
+    /* 🔥 Glass Header Effect */
+    .glass-header {
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+    }
+
+    /* 💎 Premium Card */
+    .luxury-card {
+        background: #111;
+        border: 1px solid rgba(255, 215, 0, 0.15);
+        transition: all 0.3s ease;
+        border-radius: 0.6rem;
+    }
+
+    .luxury-card:hover {
+        border: 1px solid #FFD700;
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(255, 215, 0, 0.1);
+    }
+
+    /* 🔴 Primary Button */
+    .btn-primary {
+        background: linear-gradient(135deg, #8B0000, #C1121F);
+        color: white;
+        padding: 10px 18px;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: 0.3s;
+    }
+
+    .btn-primary:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+
+    /* 🟡 Gold Button */
+    .btn-gold {
+        background: linear-gradient(135deg, #D4AF37, #FFD700);
+        color: black;
+        padding: 10px 18px;
+        border-radius: 6px;
+        font-weight: 600;
+        transition: 0.3s;
+    }
+
+    .btn-gold:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
+    }
+
+    /* 🔘 Input Styling */
+    .input-field {
+        background: #111;
+        border: 1px solid rgba(255,255,255,0.1);
+        padding: 10px 12px;
+        border-radius: 6px;
+        color: white;
+    }
+
+    .input-field:focus {
+        outline: none;
+        border: 1px solid #FFD700;
     }
 }
