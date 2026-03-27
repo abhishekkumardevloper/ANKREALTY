@@ -239,6 +239,31 @@ export default function HomePage() {
         </div>
       </section>
 
+   <section className="py-12 sm:py-16 relative w-full overflow-hidden bg-white -mt-10 z-20 rounded-t-[3rem] shadow-[0_-10px_40px_rgba(0,0,0,0.05)] border-b border-slate-100">
+        <div className="w-full">
+          <h2 className="text-xs sm:text-sm font-bold uppercase tracking-widest text-slate-400 mb-8 sm:mb-12 text-center">
+            Trusted by leading brands across India
+          </h2>
+          <div className="relative flex flex-col gap-8 sm:gap-12 overflow-hidden w-full">
+            <motion.div animate={{ x: ["0%", "-50%"] }} transition={{ duration: 30, repeat: Number.POSITIVE_INFINITY, ease: "linear" }} className="flex gap-8 sm:gap-16 w-max">
+              {[...topRowLogos, ...topRowLogos, ...topRowLogos].map((src, i) => (
+                <div key={`top-${i}`} className="flex-shrink-0 w-32 sm:w-48 h-16 sm:h-20 flex items-center justify-center">
+                  <img src={src} alt="Brand logo" className="max-w-full max-h-full object-contain filter brightness-0 opacity-80 hover:opacity-100 transition-opacity duration-300" />
+                </div>
+              ))}
+            </motion.div>
+            <motion.div animate={{ x: ["-50%", "0%"] }} transition={{ duration: 30, repeat: Number.POSITIVE_INFINITY, ease: "linear" }} className="flex gap-8 sm:gap-16 w-max">
+              {[...bottomRowLogos, ...bottomRowLogos, ...bottomRowLogos].map((src, i) => (
+                <div key={`bottom-${i}`} className="flex-shrink-0 w-32 sm:w-48 h-16 sm:h-20 flex items-center justify-center">
+                  <img src={src} alt="Brand logo" className="max-w-full max-h-full object-contain filter brightness-0 opacity-80 hover:opacity-100 transition-opacity duration-300" />
+                </div>
+              ))}
+            </motion.div>
+            <div className="absolute inset-y-0 left-0 w-16 sm:w-32 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
+            <div className="absolute inset-y-0 right-0 w-16 sm:w-32 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+          </div>
+        </div>
+      </section>
       {/* --- PREMIUM SERVICES SECTION --- */}
       <section className="py-24 px-6 bg-white">
         <div className="max-w-7xl mx-auto">
