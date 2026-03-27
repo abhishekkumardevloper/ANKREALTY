@@ -62,7 +62,7 @@ export default function Navbar() {
             
             {/* Image Tag added here */}
             <img 
-              src= /Untitled.png
+              src= "/Untitled.png"
               alt="ANK Realty Logo" 
               className="h-10 w-auto object-contain group-hover:scale-105 transition-transform duration-300"
             />
