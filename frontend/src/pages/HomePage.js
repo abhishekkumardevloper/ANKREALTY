@@ -9,38 +9,21 @@ import Navbar from '../components/Navbar';
 import RegisterPopup from './RegisterPopup';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { bankOffers, exploreLocalities, newsArticles, socialLinks } from '@/lib/siteData';
+import { bankOffers, newsArticles, socialLinks } from '@/lib/siteData';
 import { WHATSAPP_URL, createPropertySearch } from '@/lib/api';
 
-// --- RICH CONTENT (Injected to make property details realistic) ---
-const featuredProperties = [
-  { 
-    id: 'f1', title: 'Experion Saatori', city: 'Noida', location: 'Sector 151', propertyType: 'Apartment', 
-    category: 'buy', price: '₹ 1.85 Cr onwards', 
-    image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80',
-    tag: 'New Launch'
-  },
-  { 
-    id: 'f3', title: 'M3M Jacob & Co', city: 'Noida', location: 'Sector 97', propertyType: 'Villa', 
-    category: 'buy', price: '₹ 3.50 Cr onwards', 
-    image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80',
-    tag: 'Ultra Luxury'
-  },
-  { 
-    id: 'c1', title: 'M3M Line', city: 'Noida', location: 'Sector 72', propertyType: 'Commercial', 
-    category: 'buy', price: '₹ 80 L onwards', 
-    image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80',
-    tag: 'High ROI'
-  },
-  { 
-    id: 'p1', title: 'Bajrang Vatika', city: 'Noida Extension', location: 'Sector 10', propertyType: 'Plot', 
-    category: 'buy', price: '₹ 45 L onwards', 
-    image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80',
-    tag: 'Premium Plots'
-  },
+// Pulling in our real data so featured properties match the rest of the app
+import resaleListings from '../lib/resaleListings';
+
+// --- ENRICHED LOCALITIES WITH IMAGES ---
+const exploreLocalities = [
+  { name: 'Sector 150', city: 'Noida', propertyType: 'apartment', badge: 'Sports City', image: 'https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=800&q=80' },
+  { name: 'Sector 45', city: 'Noida', propertyType: 'apartment', badge: 'Premium', image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&q=80' },
+  { name: 'Tech Zone 4', city: 'Greater Noida', propertyType: 'villa', badge: 'IT Hub', image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80' },
+  { name: 'Sector 129', city: 'Noida', propertyType: 'commercial', badge: 'Commercial', image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80' },
+  { name: 'Sector 10', city: 'Noida Ext', propertyType: 'plot', badge: 'Investment', image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&q=80' },
 ];
 
-// --- LOGO ARRAYS FOR ANIMATION (From 3rd Code) ---
 const topRowLogos = [
   "/images (3).png",
   "/images__9_-removebg-preview.png",
@@ -70,10 +53,10 @@ const propertyTypeOptions = [
 ];
 
 const socialIconMap = {
-  instagram: Instagram,
-  youtube: Youtube,
-  linkedin: Linkedin,
-  whatsapp: MessageCircle,
+  instagram: <Instagram className="w-4 h-4" />,
+  youtube: <Youtube className="w-4 h-4" />,
+  linkedin: <Linkedin className="w-4 h-4" />,
+  whatsapp: <MessageCircle className="w-4 h-4" />,
 };
 
 export default function HomePage() {
@@ -88,6 +71,9 @@ export default function HomePage() {
     if (!query) return exploreLocalities;
     return exploreLocalities.filter((item) => item.name.toLowerCase().includes(query) || item.city.toLowerCase().includes(query));
   }, [search.city]);
+
+  // Grab the first 8 listings from our real data to display as featured
+  const featuredProperties = resaleListings.slice(0, 8);
 
   const handleSearch = () => navigate(createPropertySearch(search));
   
@@ -106,10 +92,11 @@ export default function HomePage() {
       <Navbar />
       <RegisterPopup />
 
-      {/* --- HERO SECTION (Base Code 1) --- */}
+      {/* --- HERO SECTION --- */}
       <section className="relative pt-32 pb-28 px-4 md:px-6 overflow-hidden min-h-[85vh]">
         <div className="absolute inset-0 z-0" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1582407947304-fd86f028f716?q=80&w=2000&auto=format&fit=crop')`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
         <div className="absolute inset-0 bg-slate-900/85 z-10" />
+        
         <div className="relative z-20 max-w-6xl mx-auto text-center mt-10">
           <div className="inline-block mb-6 px-4 py-1.5 rounded-full border border-red-500/30 bg-red-500/10 text-red-400 text-sm font-bold tracking-widest uppercase">Trusted by thousands of buyers across India</div>
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-6 leading-[1.1] tracking-tight uppercase">Discover premium property opportunities across <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-red-600">Delhi NCR</span></h1>
@@ -159,14 +146,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- ADDED: TRUSTED BRANDS ANIMATION (From Code 3) --- */}
+      {/* --- TRUSTED BRANDS ANIMATION --- */}
       <section className="py-12 sm:py-16 relative w-full overflow-hidden bg-white -mt-10 z-20 rounded-t-[3rem] shadow-[0_-10px_40px_rgba(0,0,0,0.05)] border-b border-slate-100">
         <div className="w-full">
           <h2 className="text-xs sm:text-sm font-bold uppercase tracking-widest text-slate-400 mb-8 sm:mb-12 text-center">
             Trusted by leading brands across India
           </h2>
           <div className="relative flex flex-col gap-8 sm:gap-12 overflow-hidden w-full">
-            {/* First Row: Moving Left */}
             <motion.div
               animate={{ x: ["0%", "-50%"] }}
               transition={{ duration: 30, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
@@ -179,7 +165,6 @@ export default function HomePage() {
               ))}
             </motion.div>
 
-            {/* Second Row: Moving Right */}
             <motion.div
               animate={{ x: ["-50%", "0%"] }}
               transition={{ duration: 30, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
@@ -192,15 +177,14 @@ export default function HomePage() {
               ))}
             </motion.div>
 
-            {/* Fade Gradients (Left & Right Edges) */}
             <div className="absolute inset-y-0 left-0 w-16 sm:w-32 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
             <div className="absolute inset-y-0 right-0 w-16 sm:w-32 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
           </div>
         </div>
       </section>
 
-      {/* --- EXPLORE LOCALITIES (Base Code 1) --- */}
-      <section className="py-16 bg-white relative z-20 border-b border-slate-100">
+      {/* --- EXPLORE LOCALITIES (WITH IMAGES) --- */}
+      <section className="py-20 bg-white relative z-20 border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
             <div>
@@ -208,21 +192,30 @@ export default function HomePage() {
               <h2 className="text-3xl md:text-5xl font-black text-slate-900">Explore high-intent localities</h2>
               <p className="text-slate-500 mt-3 max-w-2xl">Jump straight into the corridors buyers and investors ask about most often.</p>
             </div>
-            <Link to="/properties"><Button variant="outline" className="border-slate-300 font-bold">Browse all inventory <ChevronRight className="w-4 h-4 ml-2" /></Button></Link>
+            <Link to="/buy"><Button variant="outline" className="border-slate-300 font-bold">Browse all inventory <ChevronRight className="w-4 h-4 ml-2" /></Button></Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             {exploreLocalities.map((item) => (
-              <button key={item.name} onClick={() => navigate(createPropertySearch({ city: item.city, property_type: item.propertyType, category: 'buy' }))} className="text-left p-6 rounded-[1.75rem] bg-slate-50 hover:bg-red-50 border border-slate-200 hover:border-red-200 transition-all group">
-                <p className="text-xs uppercase tracking-[0.25em] text-red-500 font-bold mb-3">{item.badge}</p>
-                <h3 className="text-xl font-black text-slate-900 mb-2 group-hover:text-red-600">{item.name}</h3>
-                <p className="text-slate-500 text-sm">View curated property options in {item.city}.</p>
+              <button 
+                key={item.name} 
+                onClick={() => navigate(createPropertySearch({ city: item.city, property_type: item.propertyType, category: 'buy' }))} 
+                className="text-left rounded-[1.75rem] overflow-hidden relative h-64 hover:-translate-y-2 transition-transform duration-300 group"
+              >
+                <div className="absolute inset-0">
+                  <img src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent p-6 flex flex-col justify-end">
+                  <p className="text-[10px] uppercase tracking-[0.25em] bg-red-600 text-white px-2 py-1 rounded w-fit font-bold mb-2 shadow-sm">{item.badge}</p>
+                  <h3 className="text-xl font-black text-white mb-1 group-hover:text-red-400 transition-colors">{item.name}</h3>
+                  <p className="text-slate-300 text-xs font-medium">{item.city}</p>
+                </div>
               </button>
             ))}
           </div>
         </div>
       </section>
 
-      {/* --- FEATURED INVENTORY (Base Code 1 Layout + Rich Content) --- */}
+      {/* --- FEATURED INVENTORY (Mapped to Real Data) --- */}
       <section className="py-20 px-6 bg-slate-50 border-b border-slate-200">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-end mb-10 gap-4">
@@ -230,28 +223,37 @@ export default function HomePage() {
               <p className="text-red-600 font-bold uppercase tracking-[0.25em] text-xs mb-3">Featured inventory</p>
               <h2 className="text-3xl md:text-4xl font-black">Buy, sell, and rent with confidence</h2>
             </div>
-            <Link to="/properties"><Button variant="outline">View all properties</Button></Link>
+            <Link to="/buy"><Button variant="outline">View all properties</Button></Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
             {featuredProperties.map((property) => (
-              <div key={property.id} onClick={() => navigate(`/property/${property.id}`, { state: { property } })} className="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition cursor-pointer relative group">
-                {/* Dynamic Tag */}
-                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-black text-slate-900 shadow-sm z-10">
-                  {property.tag}
+              <div 
+                key={property.id} 
+                onClick={() => navigate(`/property/${property.id}`, { state: { property } })} 
+                className="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition cursor-pointer relative group flex flex-col"
+              >
+                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-black text-slate-900 shadow-sm z-10 flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3 text-green-600" /> Verified
                 </div>
                 
                 <div className="relative h-48 overflow-hidden">
-                   <img src={property.image} alt={property.title} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                   <img src={property.images[0]} alt={property.title} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" />
                 </div>
                 
-                <div className="p-5">
-                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-red-600 mb-2">{property.category} • {property.propertyType}</p>
+                <div className="p-5 flex flex-col flex-1">
+                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400 mb-2 bg-slate-100 px-2 py-0.5 rounded w-fit">
+                    {property.category} • {property.property_type}
+                  </p>
                   <h3 className="text-xl font-black text-slate-900 mb-1 group-hover:text-red-600 transition-colors line-clamp-1">{property.title}</h3>
                   <p className="text-slate-500 text-sm mb-4"><MapPin className="inline w-3 h-3 mr-1"/> {property.location}, {property.city}</p>
                   
-                  <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                    <span className="font-black text-slate-900 text-lg">{property.price}</span>
-                    <span className="text-red-600 font-bold flex items-center text-sm">Details <ArrowRight className="w-4 h-4 ml-1" /></span>
+                  <div className="flex items-center justify-between pt-4 border-t border-slate-100 mt-auto">
+                    <span className="font-black text-slate-900 text-lg">
+                      {property.price > 0 ? `₹${(property.price / 10000000).toFixed(2)} Cr` : 'On Request'}
+                    </span>
+                    <span className="text-red-600 font-bold flex items-center text-sm bg-red-50 px-2 py-1 rounded-lg group-hover:bg-red-600 group-hover:text-white transition-colors">
+                      View <ArrowRight className="w-4 h-4 ml-1" />
+                    </span>
                   </div>
                 </div>
               </div>
@@ -260,7 +262,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- WHY INDIA & LOAN FORM (Base Code 1) --- */}
+      {/* --- WHY INDIA & LOAN FORM --- */}
       <section className="py-20 px-6 bg-white border-b border-slate-100">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-start">
           <div>
@@ -303,13 +305,13 @@ export default function HomePage() {
             </div>
             <div className="flex flex-wrap gap-3">
               <Button onClick={handleLoanLead} className="bg-red-600 hover:bg-red-700 h-12 rounded-xl text-base px-6">Request callback</Button>
-              <a href={WHATSAPP_URL} target="_blank" rel="noreferrer"><Button variant="outline" className="h-12 border-white/20 text-white hover:bg-white/10 rounded-xl px-6">Contact on WhatsApp</Button></a>
+              <a href={WHATSAPP_URL} target="_blank" rel="noreferrer"><Button variant="outline" className="h-12 border-white/20 text-slate-900 hover:bg-white/10 hover:text-white rounded-xl px-6">Contact on WhatsApp</Button></a>
             </div>
           </div>
         </div>
       </section>
 
-      {/* --- NEWS & INSIGHTS (Base Code 1) --- */}
+      {/* --- NEWS & INSIGHTS --- */}
       <section className="py-20 px-6 bg-slate-50 border-b border-slate-200">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
@@ -335,13 +337,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- CATEGORIES & QUICK LINKS (Base Code 1) --- */}
+      {/* --- CATEGORIES & QUICK LINKS --- */}
       <section className="py-20 px-6 bg-white border-b border-slate-100">
         <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-6">
           {[
             { title: 'Builders', body: 'Explore developer-backed launches and compare price bands.', to: '/buy', icon: Building2 },
             { title: 'Agents', body: 'Connect with ANK experts for guided tours and negotiation support.', to: '/contact', icon: Users },
-            { title: 'Corporate Leasing', body: 'Find office, retail, and relocation solutions for your team.', to: '/corporate-leasing', icon: Briefcase },
+            { title: 'Corporate Leasing', body: 'Find office, retail, and relocation solutions for your team.', to: '/buy', icon: Briefcase },
           ].map((item) => (
             <Link key={item.title} to={item.to} className="p-8 rounded-[2rem] bg-slate-50 border border-slate-200 hover:border-red-200 hover:bg-red-50 transition-all">
               <item.icon className="w-8 h-8 text-red-600 mb-5" />
@@ -353,7 +355,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- NEWSLETTER CTA (Base Code 1) --- */}
+      {/* --- NEWSLETTER CTA --- */}
       <section className="py-20 px-6 bg-slate-900 text-white">
         <div className="max-w-4xl mx-auto text-center">
           <Bell className="w-14 h-14 text-red-500 mx-auto mb-6" />
@@ -362,12 +364,12 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto">
             <input type="email" value={newsletterEmail} onChange={(e) => setNewsletterEmail(e.target.value)} placeholder="Enter your email address" className="flex-1 h-14 rounded-xl px-5 bg-white/10 border border-white/20 text-white placeholder-slate-400 focus:outline-none focus:border-red-500" />
             <Button onClick={handleNewsletter} className="h-14 px-8 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-lg">Subscribe</Button>
-            <a href={WHATSAPP_URL} target="_blank" rel="noreferrer"><Button variant="outline" className="h-14 border-white/20 text-white hover:bg-white/10 rounded-xl"><MessageCircle className="w-4 h-4 mr-2" /> WhatsApp</Button></a>
+            <a href={WHATSAPP_URL} target="_blank" rel="noreferrer"><Button variant="outline" className="h-14 border-white/20 text-slate-900 hover:bg-white/10 hover:text-white rounded-xl"><MessageCircle className="w-4 h-4 mr-2" /> WhatsApp</Button></a>
           </div>
         </div>
       </section>
 
-      {/* --- FOOTER (Base Code 1) --- */}
+      {/* --- FOOTER --- */}
       <footer className="bg-[#0A0A0A] text-white pt-20 pb-10 px-6 border-t-[8px] border-red-600">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
@@ -376,35 +378,34 @@ export default function HomePage() {
               <p className="text-slate-400 text-sm leading-relaxed font-medium">Premium property discovery, verified advisory, corporate leasing help, and owner-first listing support.</p>
               <div className="flex space-x-4 pt-2">
                 {socialLinks.map((link) => {
-                  const Icon = socialIconMap[link.icon] || Handshake;
-                  return <a key={link.label} href={link.href} target="_blank" rel="noreferrer" aria-label={link.label} className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-red-600 transition-all cursor-pointer"><Icon className="w-4 h-4" /></a>;
+                  return <a key={link.label} href={link.href} target="_blank" rel="noreferrer" aria-label={link.label} className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-red-600 transition-all cursor-pointer">{socialIconMap[link.icon]}</a>;
                 })}
               </div>
             </div>
             <div>
               <h4 className="font-bold text-lg mb-6 text-slate-100 uppercase tracking-wider">Quick Links</h4>
               <ul className="space-y-4 text-slate-400 font-medium text-sm">
-                <li><Link to="/properties" className="hover:text-red-500">All Properties</Link></li>
-                <li><Link to="/about" className="hover:text-red-500">About Us</Link></li>
-                <li><Link to="/careers" className="hover:text-red-500">Careers</Link></li>
+                <li><Link to="/buy" className="hover:text-red-500">Buy Property</Link></li>
+                <li><Link to="/rent" className="hover:text-red-500">Rent Property</Link></li>
+                <li><Link to="/sell" className="hover:text-red-500">Sell Property</Link></li>
                 <li><Link to="/contact" className="hover:text-red-500">Contact Support</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="font-bold text-lg mb-6 text-slate-100 uppercase tracking-wider">Categories</h4>
               <ul className="space-y-4 text-slate-400 font-medium text-sm">
-                <li><Link to="/properties?property_type=plot" className="hover:text-red-500">Premium Plots</Link></li>
+                <li><Link to="/buy" className="hover:text-red-500">Premium Plots</Link></li>
                 <li><Link to="/buy" className="hover:text-red-500">Residential Properties</Link></li>
-                <li><Link to="/properties?property_type=commercial" className="hover:text-red-500">Commercial Spaces</Link></li>
+                <li><Link to="/buy" className="hover:text-red-500">Commercial Spaces</Link></li>
                 <li><Link to="/rent" className="hover:text-red-500">Rental Homes</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="font-bold text-lg mb-6 text-slate-100 uppercase tracking-wider">Contact Us</h4>
               <div className="space-y-5 text-slate-400 font-medium text-sm">
-                <p className="flex items-start"><MapPin className="w-5 h-5 mr-3 text-red-500 shrink-0" /> Tapasya Corp Heights, Noida, UP 201301</p>
-                <p className="flex items-center"><Mail className="w-5 h-5 mr-3 text-red-500 shrink-0" /> info@ankrealty.com</p>
-                <p className="flex items-center"><MessageCircle className="w-5 h-5 mr-3 text-red-500 shrink-0" /> WhatsApp support available</p>
+                <p className="flex items-start"><MapPin className="w-5 h-5 mr-3 text-red-500 shrink-0" /> Sector 25, Noida, UP 201301</p>
+                <p className="flex items-center"><Mail className="w-5 h-5 mr-3 text-red-500 shrink-0" /> support@ankrealty.com</p>
+                <p className="flex items-center"><Phone className="w-5 h-5 mr-3 text-red-500 shrink-0" /> Toll Free: 1800-123-4567</p>
               </div>
             </div>
           </div>
