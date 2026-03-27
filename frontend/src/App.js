@@ -23,7 +23,6 @@ import CorporateLeasingPage from "./pages/CorporateLeasingPage";
 import VideosPage from "./pages/videos";
 import InsightsPage from "./pages/insight";
 import CareersPage from "./pages/career";
-import CorporateLeasingPage from "./pages/CorporateLeasingPage";
 import LegalPage from "./pages/LegalPage";
 
 // ---------- ADMIN & BROKER PORTAL ----------
@@ -81,8 +80,6 @@ function AppRoutes() {
       <Route path="/blog" element={<BlogPage />} />
       <Route path="/videos" element={<VideosPage />} />
       <Route path="/CorporateLeasingPage" element={<CorporateLeasingPage />} />
-
-        CorporateLeasingPage
       <Route path="/insights" element={<InsightsPage />} />
       <Route path="/careers" element={<CareersPage />} />
       <Route path="/corporate-leasing" element={<CorporateLeasingPage />} />
