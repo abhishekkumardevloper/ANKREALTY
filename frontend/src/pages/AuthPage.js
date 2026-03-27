@@ -167,7 +167,7 @@ export default function AuthPage() {
                   }} 
                   placeholder="name@example.com" 
                   required 
-                  className="h-12 bg-slate-50 border-slate-200 focus:border-[#D4AF37] rounded-xl font-medium"
+                  className="h-12 bg-white shadow-sm border-slate-200 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] rounded-xl font-medium"
                 />
                 <FieldError message={errors.loginEmail} />
               </div>
@@ -179,7 +179,7 @@ export default function AuthPage() {
                   onChange={(e) => setLoginData({ ...loginData, password: e.target.value })} 
                   placeholder="Minimum 8 characters" 
                   required 
-                  className="h-12 bg-slate-50 border-slate-200 focus:border-[#D4AF37] rounded-xl font-medium"
+                  className="h-12 bg-white shadow-sm border-slate-200 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] rounded-xl font-medium"
                 />
                 <FieldError message={errors.loginPassword} />
               </div>
@@ -194,12 +194,12 @@ export default function AuthPage() {
                     placeholder="Registered email" 
                     value={forgotEmail} 
                     onChange={(e) => setForgotEmail(e.target.value)} 
-                    className="h-10 bg-white border-slate-200 focus:border-[#D4AF37] rounded-lg text-sm"
+                    className="h-10 bg-white shadow-sm border-slate-200 focus:border-[#D4AF37] rounded-lg text-sm"
                   />
                   <Button 
                     type="button" 
                     variant="outline" 
-                    className="h-10 shrink-0 border-slate-200 text-slate-600 hover:text-[#8B0000] hover:border-[#8B0000] rounded-lg text-xs font-bold transition-colors" 
+                    className="h-10 shrink-0 border-slate-200 text-slate-600 hover:text-[#8B0000] hover:border-[#8B0000] rounded-lg text-xs font-bold transition-colors bg-white" 
                     onClick={handleForgotPassword} 
                     disabled={forgotLoading}
                   >
@@ -225,7 +225,7 @@ export default function AuthPage() {
                   onChange={(e) => setRegisterData({ ...registerData, name: e.target.value })} 
                   placeholder="e.g. John Doe"
                   required 
-                  className="h-11 bg-slate-50 border-slate-200 focus:border-[#D4AF37] rounded-xl font-medium text-sm"
+                  className="h-11 bg-white shadow-sm border-slate-200 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] rounded-xl font-medium text-sm"
                 />
                 <FieldError message={errors.registerName} />
               </div>
@@ -237,7 +237,7 @@ export default function AuthPage() {
                   onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })} 
                   placeholder="name@example.com" 
                   required 
-                  className="h-11 bg-slate-50 border-slate-200 focus:border-[#D4AF37] rounded-xl font-medium text-sm"
+                  className="h-11 bg-white shadow-sm border-slate-200 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] rounded-xl font-medium text-sm"
                 />
                 <FieldError message={errors.registerEmail} />
               </div>
@@ -249,7 +249,7 @@ export default function AuthPage() {
                   onChange={(e) => setRegisterData({ ...registerData, phone: e.target.value })} 
                   placeholder="+91 98765 43210" 
                   required 
-                  className="h-11 bg-slate-50 border-slate-200 focus:border-[#D4AF37] rounded-xl font-medium text-sm"
+                  className="h-11 bg-white shadow-sm border-slate-200 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] rounded-xl font-medium text-sm"
                 />
                 <FieldError message={errors.registerPhone} />
               </div>
@@ -261,7 +261,7 @@ export default function AuthPage() {
                   onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })} 
                   placeholder="Minimum 8 chars (letters & numbers)" 
                   required 
-                  className="h-11 bg-slate-50 border-slate-200 focus:border-[#D4AF37] rounded-xl font-medium text-sm"
+                  className="h-11 bg-white shadow-sm border-slate-200 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] rounded-xl font-medium text-sm"
                 />
                 <p className="mt-1 ml-1 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
                   Strength: <span className={passwordStrength === 'Strong' ? 'text-green-500' : passwordStrength === 'Good' ? 'text-[#D4AF37]' : 'text-red-500'}>{passwordStrength}</span>
@@ -273,7 +273,7 @@ export default function AuthPage() {
                 <select 
                   value={registerData.role} 
                   onChange={(e) => setRegisterData({ ...registerData, role: e.target.value })} 
-                  className="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] appearance-none font-medium text-sm text-slate-900"
+                  className="w-full h-11 px-4 bg-white shadow-sm border border-slate-200 rounded-xl outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] appearance-none font-medium text-sm text-slate-900"
                 >
                   <option value="client">Property Buyer / Client</option>
                   <option value="agent">Real Estate Agent</option>
