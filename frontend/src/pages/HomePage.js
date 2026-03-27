@@ -33,7 +33,7 @@ const featuredProperties = [
   { 
     id: 'f1', title: 'Experion Saatori', city: 'Noida', location: 'Sector 151', propertyType: 'Apartment', 
     category: 'buy', price: '₹ 1.85 Cr onwards', 
-    image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://www.gharhoaisa.com/experion-saatori-sector-151-noida-apartments/',
     tag: 'New Launch'
   },
   { 
