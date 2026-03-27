@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
-  User, LogOut, Building2, Menu, X, ChevronDown, 
+  User, LogOut, Menu, X, ChevronDown, 
   Youtube, FileText, Briefcase, PlayCircle, TrendingUp 
-} from 'lucide-react';
+} from 'lucide-react'; // Removed Building2 since we are using a PNG now
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+
+// 1. IMPORT YOUR PNG IMAGE HERE (Update the path to match your project structure)
+import logoPng from '../assets/logo.png'; 
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -14,9 +17,8 @@ export default function Navbar() {
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isResourceOpen, setIsResourceOpen] = useState(false); // For mobile dropdown toggle
+  const [isResourceOpen, setIsResourceOpen] = useState(false);
 
-  // Scroll Effect for Glassmorphism
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
@@ -30,7 +32,6 @@ export default function Navbar() {
 
   const isActive = (path) => location.pathname === path;
 
-  // Main Transaction Links
   const mainLinks = [
     { name: 'Buy', path: '/buy' },
     { name: 'Resale', path: '/resale' },
@@ -39,7 +40,6 @@ export default function Navbar() {
     { name: 'Contact', path: '/contact' },
   ];
 
-  // Resource / Media Links (Blog, YouTube, Data)
   const resourceLinks = [
     { name: 'Our Blog', path: '/blog', icon: FileText, desc: 'Latest property news & tips' },
     { name: 'Video Tours', path: '/videos', icon: Youtube, desc: 'Watch property walkthroughs' },
@@ -57,19 +57,16 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between">
 
-          {/* LOGO AREA */}
+          {/* 2. UPDATED LOGO AREA */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="bg-red-600 p-2 rounded-xl group-hover:shadow-lg group-hover:shadow-red-600/30 transition-all duration-300">
-              <Building2 className="h-6 w-6 text-white" />
-            </div>
-            <div className="flex flex-col">
-              <span className={`text-xl font-black leading-none ${isScrolled || isMobileMenuOpen ? 'text-slate-900' : 'text-slate-900 md:text-white'}`}>
-                ANK Realty
-              </span>
-              <span className={`text-[10px] font-bold tracking-widest uppercase ${isScrolled || isMobileMenuOpen ? 'text-red-600' : 'text-slate-600 md:text-slate-300'}`}>
-                Premium Living
-              </span>
-            </div>
+            
+            {/* Image Tag added here */}
+            <img 
+              src= /Untitled.png
+              alt="ANK Realty Logo" 
+              className="h-10 w-auto object-contain group-hover:scale-105 transition-transform duration-300"
+            />
+            
           </Link>
 
           {/* DESKTOP NAVIGATION */}
