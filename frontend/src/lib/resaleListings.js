@@ -1,3 +1,25 @@
+// A curated pool of high-quality real estate images (Interiors & Exteriors)
+const realImages = [
+  "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1000&q=80",
+  "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1000&q=80",
+  "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1000&q=80",
+  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1000&q=80",
+  "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1000&q=80",
+  "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=1000&q=80",
+  "https://images.unsplash.com/photo-1600573472591-ee6b68d14c68?w=1000&q=80",
+  "https://images.unsplash.com/photo-1512915922686-57c11dde9b6b?w=1000&q=80",
+  "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=1000&q=80",
+  "https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=1000&q=80",
+  "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=1000&q=80",
+  "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=1000&q=80",
+  "https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=1000&q=80",
+  "https://images.unsplash.com/photo-1502672260266-1c1e5240980c?w=1000&q=80",
+  "https://images.unsplash.com/photo-1536376072261-38c75010e6c9?w=1000&q=80",
+  "https://images.unsplash.com/photo-1593696140826-c58b021acf8b?w=1000&q=80",
+  "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=1000&q=80",
+  "https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6?w=1000&q=80"
+];
+
 const rawResaleListings = [
   { sec: '25', project: 'Jalvayu Vihar', size: '1050', unitType: '2BHK Study', tower: 'G', remarks: '1.40cr', status: 'sale', confBy: 'aakshi', location: 'Noida' },
   { sec: '45', project: 'Amrapali Sapphire', size: '1640', unitType: '3BHK+3 Toilet', tower: 'L', remarks: '2.5cr', status: 'sale', confBy: 'meenakshi', location: 'Noida' },
@@ -93,6 +115,14 @@ export const resaleListings = rawResaleListings.map((item, index) => {
   const area = parseSize(item.size);
   const bedrooms = inferBedrooms(item.unitType);
   const price = parsePrice(item.remarks, item.size);
+  
+  // Assign 3 distinct, rotating images to every single property based on its index
+  const assignedImages = [
+    realImages[index % realImages.length],
+    realImages[(index + 1) % realImages.length],
+    realImages[(index + 2) % realImages.length]
+  ];
+
   return {
     id: `resale-${index + 1}`,
     title: `${item.project}${item.tower ? ` • Tower ${item.tower}` : ''}`,
@@ -110,7 +140,7 @@ export const resaleListings = rawResaleListings.map((item, index) => {
     projectStatus: 'Resale',
     configurations: item.unitType || 'Residential Unit',
     rera: 'Please verify with official project documentation.',
-    images: [],
+    images: assignedImages, // Arrays of 3 high-quality images per listing
     source: `Confirmed by ${item.confBy || 'team'}`
   };
 });
