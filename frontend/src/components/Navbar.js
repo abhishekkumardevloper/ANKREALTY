@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   User, LogOut, Menu, X, ChevronDown, 
   Youtube, FileText, Briefcase, PlayCircle, TrendingUp 
-} from 'lucide-react'; // Removed Building2 since we are using a PNG now
+} from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 
@@ -47,32 +47,30 @@ export default function Navbar() {
     <nav
       className={`fixed top-0 w-full z-50 transition-all duration-300 ${
         isScrolled || isMobileMenuOpen
-          ? 'bg-white/95 backdrop-blur-md shadow-md py-3'
-          : 'bg-transparent py-5'
+          ? 'bg-white/95 backdrop-blur-md shadow-md py-2 md:py-3'
+          : 'bg-transparent py-4 md:py-6'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
         <div className="flex items-center justify-between">
 
-          {/* 2. UPDATED LOGO AREA */}
+          {/* LOGO AREA */}
           <Link to="/" className="flex items-center gap-2 group">
-            
-            {/* Image Tag added here */}
             <img 
-              src= "/Untitled.png"
+              src="/Untitled.png" 
               alt="ANK Realty Logo" 
-              className="h-10 w-auto object-contain group-hover:scale-105 transition-transform duration-300"
+              /* Increased sizes: h-12 on mobile, h-16 on tablet, h-20 on desktop */
+              className="h-12 md:h-16 lg:h-20 w-auto object-contain group-hover:scale-105 transition-transform duration-300 drop-shadow-sm"
             />
-            
           </Link>
 
           {/* DESKTOP NAVIGATION */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-6 lg:gap-8">
             {mainLinks.map((link) => (
               <Link
                 key={link.name}
                 to={link.path}
-                className={`text-sm font-bold transition-all hover:-translate-y-0.5 ${
+                className={`text-sm lg:text-base font-bold transition-all hover:-translate-y-0.5 ${
                   isActive(link.path)
                     ? 'text-red-600'
                     : isScrolled
@@ -87,7 +85,7 @@ export default function Navbar() {
             {/* Resources Dropdown (Hover) */}
             <div className="relative group">
               <button 
-                className={`flex items-center gap-1 text-sm font-bold transition-colors ${
+                className={`flex items-center gap-1 text-sm lg:text-base font-bold transition-colors ${
                   isScrolled ? 'text-slate-600 hover:text-red-600' : 'text-slate-200 hover:text-white'
                 }`}
               >
@@ -119,7 +117,7 @@ export default function Navbar() {
             {/* Hiring / Careers Link */}
             <Link 
               to="/careers" 
-              className={`flex items-center gap-2 text-sm font-bold ${
+              className={`flex items-center gap-2 text-sm lg:text-base font-bold ${
                 isScrolled ? 'text-slate-600 hover:text-red-600' : 'text-slate-200 hover:text-white'
               }`}
             >
@@ -129,7 +127,7 @@ export default function Navbar() {
           </div>
 
           {/* RIGHT ACTIONS */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-3 lg:gap-4">
             <Link to="/post-property">
               <Button 
                 variant="outline" 
@@ -192,7 +190,7 @@ export default function Navbar() {
                   key={link.name}
                   to={link.path}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="block text-2xl font-black text-slate-900 hover:text-red-600"
+                  className="block text-xl font-black text-slate-900 hover:text-red-600"
                 >
                   {link.name}
                 </Link>
@@ -215,7 +213,7 @@ export default function Navbar() {
                       key={item.name} 
                       to={item.path}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center gap-3 text-slate-600"
+                      className="flex items-center gap-3 text-slate-600 font-medium"
                     >
                       <item.icon className="w-4 h-4 text-red-600" />
                       {item.name}
@@ -227,7 +225,7 @@ export default function Navbar() {
               <Link 
                 to="/careers" 
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center justify-between w-full text-lg font-bold text-slate-700"
+                className="flex items-center justify-between w-full text-lg font-bold text-slate-700 mt-2"
               >
                 Careers <span className="bg-red-100 text-red-600 text-xs px-2 py-1 rounded-full uppercase">Hiring</span>
               </Link>
