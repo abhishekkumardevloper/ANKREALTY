@@ -1,227 +1,215 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { 
-  User, LogOut, Menu, X, ChevronDown, 
-  Youtube, FileText, TrendingUp 
-} from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { Button } from '@/components/ui/button';
+/* ============================= */
+/* 🌟 GLOBAL SETTINGS */
+/* ============================= */
 
-export default function Navbar() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
+.App {
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  // Optional: You can use this state if you want click-to-open on mobile
-  const [isResourceOpen, setIsResourceOpen] = useState(false);
+/* ============================= */
+/* 🛠️ FIX FOR INPUTS (WHITE BACKGROUND ON AUTOFILL) */
+/* ============================= */
 
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+/* This prevents browsers from turning inputs white when autofilling */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 30px transparent inset !important;
+  -webkit-text-fill-color: inherit !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
+/* Smooth gold focus ring for all inputs */
+input:focus, 
+textarea:focus, 
+select:focus {
+  outline: none !important;
+  border-color: #D4AF37 !important;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2) !important;
+  transition: all 0.3s ease;
+}
 
-  const isActive = (path) => location.pathname === path;
+/* ============================= */
+/* 🏡 PROPERTY CARD */
+/* ============================= */
 
-  const mainLinks = [
-    { name: 'Buy', path: '/buy' },
-    { name: 'Resale', path: '/resale' },
-    { name: 'Sell', path: '/sell' },
-    { name: 'Corporate Leasing', path: '/corporate-leasing' },
-    { name: 'Contact', path: '/contact' },
-  ];
+.property-card {
+  overflow: hidden;
+  border-radius: 16px; /* Slightly softer corners for premium feel */
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background: white;
+}
 
-  const resourceLinks = [
-    { name: 'Our Blog', path: '/blog', icon: FileText },
-    { name: 'Video Tours', path: '/videos', icon: Youtube },
-    { name: 'Market Data', path: '/insights', icon: TrendingUp },
-  ];
+.property-card-image {
+  transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
 
-  return (
-    <nav
-      className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        isScrolled || isMobileMenuOpen
-          ? 'bg-white/95 backdrop-blur-md shadow-md py-2 border-b border-[#D4AF37]/20'
-          : 'bg-transparent py-4'
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 md:px-6">
-        <div className="flex items-center justify-between">
+.property-card:hover {
+  box-shadow: 0 20px 40px rgba(139, 0, 0, 0.08); /* Soft maroon shadow */
+  transform: translateY(-6px);
+}
 
-          {/* LOGO */}
-          <Link to="/" className="flex items-center">
-            <img 
-              src="/Untitled.png"
-              alt="ANK Realty Logo"
-              className="h-10 md:h-12 lg:h-14 w-auto object-contain transition-transform duration-300 hover:scale-105"
-            />
-          </Link>
+.property-card:hover .property-card-image {
+  transform: scale(1.1); /* Smooth image zoom */
+}
 
-          {/* DESKTOP NAV */}
-          <div className="hidden md:flex items-center gap-6 lg:gap-8">
-            {mainLinks.map((link) => (
-              <Link
-                key={link.name}
-                to={link.path}
-                className={`text-sm font-bold uppercase tracking-wider transition-colors duration-300 ${
-                  isActive(link.path)
-                    ? 'text-[#8B0000]'
-                    : isScrolled
-                    ? 'text-slate-800 hover:text-[#8B0000]'
-                    : 'text-white hover:text-[#D4AF37]'
-                }`}
-              >
-                {link.name}
-              </Link>
-            ))}
+/* ============================= */
+/* 🔴 PRIMARY BUTTON (DEEP MAROON) */
+/* ============================= */
 
-            {/* Dropdown - Resources */}
-            <div className="relative group">
-              <button 
-                className={`flex items-center gap-1 text-sm font-bold uppercase tracking-wider transition-colors duration-300 ${
-                  isScrolled ? 'text-slate-800 hover:text-[#8B0000]' : 'text-white hover:text-[#D4AF37]'
-                }`}
-              >
-                Resources <ChevronDown className="w-4 h-4 ml-1 opacity-70"/>
-              </button>
+.btn-primary {
+  /* Adjusted to a deeper, richer maroon gradient */
+  background: linear-gradient(135deg, #8B0000, #600000);
+  color: white;
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  border: 1px solid #600000;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(139, 0, 0, 0.2);
+}
 
-              <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2">
-                <div className="bg-white shadow-2xl rounded-2xl p-3 w-56 border border-slate-100 flex flex-col gap-1">
-                  {resourceLinks.map((item) => (
-                    <Link 
-                      key={item.name} 
-                      to={item.path}
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 group/item transition-colors"
-                    >
-                      <div className="w-8 h-8 rounded-full bg-[#D4AF37]/10 flex items-center justify-center group-hover/item:bg-[#8B0000] transition-colors">
-                         <item.icon className="w-4 h-4 text-[#D4AF37] group-hover/item:text-white transition-colors"/>
-                      </div>
-                      <span className="text-sm font-bold text-slate-700 group-hover/item:text-[#8B0000] transition-colors">{item.name}</span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+.btn-primary:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #600000, #400000);
+  box-shadow: 0 8px 25px rgba(139, 0, 0, 0.4);
+}
 
-          {/* RIGHT SIDE (Buttons & Auth) */}
-          <div className="hidden md:flex items-center gap-4">
-            <Link to="/post-property">
-              <Button variant="outline" className={`border-2 transition-colors font-bold ${
-                isScrolled 
-                  ? 'border-[#8B0000] text-[#8B0000] hover:bg-[#8B0000] hover:text-white' 
-                  : 'border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#050505] bg-transparent'
-              }`}>
-                Post Property
-              </Button>
-            </Link>
+.btn-primary:active {
+  transform: translateY(0);
+}
 
-            {user ? (
-              <div className="flex items-center gap-3 pl-2 border-l border-slate-200/30">
-                <Link to="/dashboard" className="flex items-center gap-2 group">
-                  <div className="w-9 h-9 rounded-full bg-[#8B0000] text-[#D4AF37] flex items-center justify-center text-sm font-black border border-[#D4AF37]/30 group-hover:scale-105 transition-transform">
-                    {user.name.charAt(0)}
-                  </div>
-                  <span className={`text-sm font-bold transition-colors ${isScrolled ? 'text-slate-800' : 'text-white'}`}>
-                    {user.name.split(' ')[0]}
-                  </span>
-                </Link>
-                <button onClick={handleLogout} className="p-2 rounded-full hover:bg-red-50 transition-colors group">
-                  <LogOut className={`w-5 h-5 ${isScrolled ? 'text-slate-400 group-hover:text-[#8B0000]' : 'text-white/70 group-hover:text-[#D4AF37]'}`}/>
-                </button>
-              </div>
-            ) : (
-              <Link to="/auth">
-                <Button className="bg-[#8B0000] text-white hover:bg-[#600000] font-bold px-6 shadow-lg shadow-[#8B0000]/20 transition-all hover:-translate-y-0.5">
-                  Login
-                </Button>
-              </Link>
-            )}
-          </div>
+/* ============================= */
+/* 🟡 SECONDARY BUTTON (LUXURY GOLD) */
+/* ============================= */
 
-          {/* MOBILE MENU BUTTON */}
-          <div className="md:hidden flex items-center gap-4">
-            <button 
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className={`p-2 rounded-lg transition-colors ${isScrolled ? 'text-slate-900 hover:bg-slate-100' : 'text-white hover:bg-white/20'}`}
-            >
-              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
+.btn-secondary {
+  /* Adjusted to true luxury gold, removing bright yellow */
+  background: linear-gradient(135deg, #D4AF37, #AA8000);
+  color: #050505; /* Pure black text for perfect contrast */
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
+}
 
-        </div>
-      </div>
+.btn-secondary:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #E6C27A, #C5A028); /* Lighter gold on hover */
+  box-shadow: 0 8px 25px rgba(212, 175, 55, 0.4);
+}
 
-      {/* MOBILE MENU (Drop-down) */}
-      <div 
-        className={`md:hidden absolute top-full left-0 w-full bg-white shadow-2xl border-t border-slate-100 transition-all duration-300 origin-top overflow-hidden ${
-          isMobileMenuOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
-        }`}
-      >
-        <div className="p-6 flex flex-col gap-4">
-          {mainLinks.map((link) => (
-            <Link 
-              key={link.name} 
-              to={link.path} 
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={`text-lg font-black uppercase tracking-wider py-2 border-b border-slate-50 ${isActive(link.path) ? 'text-[#8B0000]' : 'text-slate-800 hover:text-[#8B0000]'}`}
-            >
-              {link.name}
-            </Link>
-          ))}
+.btn-secondary:active {
+  transform: translateY(0);
+}
 
-          {/* Mobile Resource Links */}
-          <div className="py-2 border-b border-slate-50">
-             <button 
-                onClick={() => setIsResourceOpen(!isResourceOpen)}
-                className="w-full flex items-center justify-between text-lg font-black uppercase tracking-wider text-slate-800"
-             >
-                Resources <ChevronDown className={`w-5 h-5 transition-transform ${isResourceOpen ? 'rotate-180' : ''}`}/>
-             </button>
-             {isResourceOpen && (
-               <div className="flex flex-col gap-3 mt-4 pl-4 border-l-2 border-[#D4AF37]">
-                 {resourceLinks.map((item) => (
-                   <Link 
-                      key={item.name} 
-                      to={item.path}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center gap-3 text-slate-600 font-bold"
-                   >
-                     <item.icon className="w-4 h-4 text-[#8B0000]"/> {item.name}
-                   </Link>
-                 ))}
-               </div>
-             )}
-          </div>
+/* ============================= */
+/* 🎯 HERO SECTION */
+/* ============================= */
 
-          <div className="flex flex-col gap-3 mt-4">
-            <Link to="/post-property" onClick={() => setIsMobileMenuOpen(false)}>
-              <Button variant="outline" className="w-full h-12 border-[#8B0000] text-[#8B0000] font-black uppercase tracking-widest text-sm">
-                Post Property
-              </Button>
-            </Link>
-            
-            {!user ? (
-              <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
-                <Button className="w-full h-12 bg-[#8B0000] text-white font-black uppercase tracking-widest text-sm shadow-md">
-                  Login / Register
-                </Button>
-              </Link>
-            ) : (
-              <Button onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }} variant="ghost" className="w-full h-12 text-slate-500 hover:text-[#8B0000] hover:bg-slate-50 font-bold">
-                <LogOut className="w-4 h-4 mr-2"/> Logout
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
-    </nav>
+.hero-section {
+  position: relative;
+  height: 80vh; /* Slightly taller for better visual impact */
+  min-height: 600px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(5, 5, 5, 0.6), /* Darker top to make navbar readable */
+    rgba(5, 5, 5, 0.95)
   );
+}
+
+/* ============================= */
+/* 🧊 GLASS NAVBAR (PREMIUM DARK) */
+/* ============================= */
+
+.glass-nav {
+  background: rgba(5, 5, 5, 0.85); /* Deep black */
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.15); /* Soft gold border */
+}
+
+/* ============================= */
+/* 🔍 SEARCH TOGGLE */
+/* ============================= */
+
+.search-toggle {
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  padding: 0.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.search-toggle button {
+  padding: 0.6rem 1.75rem;
+  border-radius: 6px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.8rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #94a3b8; /* Slate 400 */
+}
+
+.search-toggle button:hover {
+  color: white;
+}
+
+/* Active State (Gold Highlight) */
+.search-toggle button.active {
+  background: linear-gradient(135deg, #D4AF37, #AA8000);
+  color: #050505;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+}
+
+/* ============================= */
+/* ✨ ANIMATIONS */
+/* ============================= */
+
+.fade-in {
+  animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Add a subtle pulse for verified/important badges */
+.gold-pulse {
+  animation: goldPulse 2s infinite;
+}
+
+@keyframes goldPulse {
+  0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(212, 175, 55, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
 }
