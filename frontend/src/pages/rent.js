@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
+import resaleListings from '../lib/resaleListings';
 import Navbar from "../components/Navbar";
 import { Button } from "@/components/ui/button";
 import { 
@@ -41,7 +42,7 @@ const rentTrends = [
 
 export default function RentPage() {
   const navigate = useNavigate(); // Hook for routing
-  const [rentals, setRentals] = useState([]);
+  const [resaleProperties, setResaleProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   
   // Advanced Filter States
@@ -52,28 +53,33 @@ export default function RentPage() {
 
   // FETCH DATA
   useEffect(() => {
-    const fetchRentals = async () => {
+    const fetchResaleProperties = async () => {
       try {
         const response = await axios.get(API_URL);
-        const activeRentals = Array.isArray(response.data) 
-          ? response.data.filter(p => (p.status?.toLowerCase() === 'active' || p.status?.toLowerCase() === 'approved') && (p.type?.toLowerCase() === 'rent' || p.category?.toLowerCase() === 'rent')) 
+        const activeResale = Array.isArray(response.data)
+          ? response.data.filter((p) => {
+              const status = (p.status || "").toLowerCase();
+              const category = (p.category || p.type || "").toLowerCase();
+              return (status === "active" || status === "approved") && (category === "sell" || category === "resale");
+            })
           : [];
-        setRentals(activeRentals);
+        setResaleProperties([...resaleListings, ...activeResale]);
       } catch (error) {
-        console.error("Error fetching rentals:", error);
+        console.error("Error fetching resale properties:", error);
+        setResaleProperties(resaleListings);
       } finally {
         setLoading(false);
       }
     };
-    fetchRentals();
+    fetchResaleProperties();
   }, []);
 
   // Filter & Sort Logic
   const filteredAndSortedRentals = useMemo(() => {
-    let result = rentals.filter(r => {
+    let result = resaleProperties.filter(r => {
       const matchesCity = searchCity ? (r.city?.toLowerCase().includes(searchCity.toLowerCase()) || r.title?.toLowerCase().includes(searchCity.toLowerCase())) : true;
       const matchesPrice = maxPrice ? Number(r.price) <= Number(maxPrice) : true;
-      const matchesType = propertyType ? (r.category || r.type)?.toLowerCase() === propertyType.toLowerCase() : true;
+      const matchesType = propertyType ? (r.property_type || r.category || r.type || "").toLowerCase() === propertyType.toLowerCase() : true;
       return matchesCity && matchesPrice && matchesType;
     });
 
@@ -81,7 +87,7 @@ export default function RentPage() {
     else if (sortBy === "price_high") result.sort((a, b) => Number(b.price) - Number(a.price));
     
     return result;
-  }, [rentals, searchCity, maxPrice, propertyType, sortBy]);
+  }, [resaleProperties, searchCity, maxPrice, propertyType, sortBy]);
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans relative">
@@ -103,10 +109,10 @@ export default function RentPage() {
                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Zero Brokerage Options Available
             </div>
             <h1 className="text-4xl md:text-6xl font-black mb-6 tracking-tight drop-shadow-lg">
-              Find Your Perfect <span className="text-red-500">Rental Home</span>
+              Find Your Perfect <span className="text-red-500">Resale Home</span>
             </h1>
             <p className="text-lg text-slate-300 max-w-2xl mx-auto mb-10 font-light">
-              Discover verified apartments, cozy floors, and luxury villas for rent. Connect directly with owners and skip the hassle.
+              Discover verified resale apartments, floors, and premium homes. Connect directly with owners and get transparent pricing.
             </p>
 
             {/* ADVANCED SEARCH WIDGET */}
@@ -140,11 +146,12 @@ export default function RentPage() {
                     value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)}
                     className="w-full bg-transparent text-slate-900 outline-none appearance-none cursor-pointer font-medium"
                   >
-                    <option value="">Max Rent</option>
-                    <option value="15000">₹ 15,000/mo</option>
-                    <option value="30000">₹ 30,000/mo</option>
-                    <option value="50000">₹ 50,000/mo</option>
-                    <option value="100000">₹ 1,00,000/mo</option>
+                    <option value="">Max Budget</option>
+                    <option value="10000000">Up to ₹ 1 Cr</option>
+                    <option value="20000000">Up to ₹ 2 Cr</option>
+                    <option value="30000000">Up to ₹ 3 Cr</option>
+                    <option value="50000000">Up to ₹ 5 Cr</option>
+                    <option value="100000000">Up to ₹ 10 Cr</option>
                   </select>
                   <ChevronDown className="absolute right-4 w-4 h-4 text-slate-400 pointer-events-none"/>
                </div>
@@ -160,8 +167,8 @@ export default function RentPage() {
       <section className="max-w-7xl mx-auto px-6 py-12">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 pb-6 border-b border-slate-200">
            <div>
-              <h2 className="text-2xl font-black text-slate-900">Premium Rental Properties</h2>
-              <p className="text-slate-500 font-medium mt-1">Found {filteredAndSortedRentals.length} properties ready to move</p>
+              <h2 className="text-2xl font-black text-slate-900">Premium Resale Properties</h2>
+              <p className="text-slate-500 font-medium mt-1">Found {filteredAndSortedRentals.length} verified resale units available</p>
            </div>
            <div className="flex items-center gap-4 mt-4 md:mt-0">
               <div className="flex items-center bg-white border border-slate-200 rounded-lg px-3 py-2 shadow-sm">
@@ -171,8 +178,8 @@ export default function RentPage() {
                   className="bg-transparent outline-none text-sm font-bold text-slate-700 cursor-pointer appearance-none pr-4"
                 >
                   <option value="newest">Sort By: Newest</option>
-                  <option value="price_low">Rent: Low to High</option>
-                  <option value="price_high">Rent: High to Low</option>
+                  <option value="price_low">Price: Low to High</option>
+                  <option value="price_high">Price: High to Low</option>
                 </select>
               </div>
            </div>
@@ -185,7 +192,7 @@ export default function RentPage() {
              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
                <Search className="w-8 h-8 text-slate-300"/>
              </div>
-             <h3 className="text-xl font-bold text-slate-700">No rentals match your criteria</h3>
+             <h3 className="text-xl font-bold text-slate-700">No resale listings match your criteria</h3>
              <p className="text-slate-500 mt-2 max-w-md mx-auto">We couldn't find any properties matching your exact filters. Try broadening your search.</p>
              <Button onClick={() => {setSearchCity(""); setMaxPrice(""); setPropertyType("");}} className="mt-6 bg-red-50 text-red-600 hover:bg-red-100 font-bold px-8">
                Clear All Filters
@@ -214,7 +221,7 @@ export default function RentPage() {
                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                        />
                        <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm text-slate-900 px-3 py-1 rounded-lg text-xs font-black uppercase shadow-sm flex items-center gap-1.5">
-                         <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> For Rent
+                         <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Resale
                        </div>
                        <button className="absolute top-3 right-3 p-2 bg-black/20 hover:bg-white backdrop-blur-md rounded-full text-white hover:text-red-500 transition-all">
                          <ShieldCheck className="w-4 h-4" />
@@ -225,7 +232,7 @@ export default function RentPage() {
                   {/* Content Area */}
                   <div className="p-6 pt-3 flex-1 flex flex-col">
                      <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">
-                       {property.category || property.type || 'Apartment'}
+                       {property.category || property.type || 'Resale'}
                      </p>
                      <h3 className="font-black text-xl text-slate-900 line-clamp-1 mb-2 group-hover:text-red-600 transition-colors">
                        {property.title}
@@ -246,8 +253,8 @@ export default function RentPage() {
                      
                      <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
                         <div>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Monthly Rent</p>
-                            <span className="text-2xl font-black text-slate-900">₹{Number(property.price).toLocaleString('en-IN')}</span>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Expected Price</p>
+                            <span className="text-2xl font-black text-slate-900">{property.price ? `₹${Number(property.price).toLocaleString('en-IN')}` : property.priceText || 'On Request'}</span>
                         </div>
                         <div className="w-10 h-10 rounded-full bg-red-50 text-red-600 flex items-center justify-center group-hover:bg-red-600 group-hover:text-white transition-colors">
                           <ArrowRight className="w-5 h-5"/>
@@ -268,18 +275,18 @@ export default function RentPage() {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-bold uppercase mb-4 border border-blue-100">
               <TrendingUp className="w-3 h-3"/> Market Insights
             </div>
-            <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-4 leading-tight">Understand Local Rental Trends</h2>
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-4 leading-tight">Understand Local Resale Trends</h2>
             <p className="text-lg text-slate-600 mb-6 leading-relaxed">
-              Make informed decisions. Rental prices have seen a steady increase due to high demand in premium localities. Lock in your lease before the peak season hits.
+              Make informed decisions. Resale values are moving based on inventory and location demand. Compare market pricing before finalizing your deal.
             </p>
             <div className="space-y-4">
                <div className="flex items-start gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                   <CheckCircle className="w-5 h-5 text-green-500 shrink-0 mt-0.5"/>
-                  <p className="text-sm text-slate-700 font-medium">Average 2BHK rent is currently <span className="font-bold text-slate-900">₹26,500/mo</span>.</p>
+                  <p className="text-sm text-slate-700 font-medium">Average 2BHK resale demand remains strongest in central Noida sectors.</p>
                </div>
                <div className="flex items-start gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                   <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5"/>
-                  <p className="text-sm text-slate-700 font-medium">12% year-over-year increase in premium gated communities.</p>
+                  <p className="text-sm text-slate-700 font-medium">Large-size units and premium towers are seeing faster price movement.</p>
                </div>
             </div>
           </div>
@@ -287,7 +294,7 @@ export default function RentPage() {
           <div className="lg:w-2/3 w-full bg-slate-900 p-6 md:p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-red-600 rounded-full blur-[100px] opacity-20 pointer-events-none"></div>
             <h3 className="font-bold text-white text-xl mb-6 relative z-10 flex items-center gap-2">
-              Average Rent Price (Last 8 Months)
+              Average Resale Benchmark (Indicative)
             </h3>
             <div className="h-64 relative z-10">
               <ResponsiveContainer width="100%" height="100%">
@@ -304,7 +311,7 @@ export default function RentPage() {
                   <Tooltip 
                     contentStyle={{ backgroundColor: '#1e293b', borderRadius: '12px', border: 'none', color: '#fff' }}
                     itemStyle={{ color: '#ef4444', fontWeight: 'bold' }}
-                    formatter={(value) => [`₹${value}`, 'Avg Rent']}
+                    formatter={(value) => [`₹${value}`, 'Trend index']}
                   />
                   <Area type="monotone" dataKey="price" stroke="#ef4444" strokeWidth={4} fillOpacity={1} fill="url(#colorRent)" />
                 </AreaChart>
@@ -333,7 +340,7 @@ export default function RentPage() {
               <h4 className="font-bold text-lg mb-6 text-slate-100">Properties</h4>
               <ul className="space-y-4 text-slate-400 text-sm">
                 <li><Link to="/buy" className="hover:text-white transition-colors">Property for Sale</Link></li>
-                <li><Link to="/rent" className="hover:text-white transition-colors">Property for Rent</Link></li>
+                <li><Link to="/rent" className="hover:text-white transition-colors">Property Resale</Link></li>
                 <li><Link to="/buy" className="hover:text-white transition-colors">Commercial Projects</Link></li>
                 <li><Link to="/buy" className="hover:text-white transition-colors">New Projects</Link></li>
               </ul>
