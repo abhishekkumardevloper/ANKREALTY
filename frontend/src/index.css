@@ -23,10 +23,16 @@ code {
         --card-foreground: 0 0% 5%;
         --popover: 0 0% 100%;
         --popover-foreground: 0 0% 5%;
-        --primary: 349 81% 42%;
+        
+        /* Updated Primary: Deep Red from Logo */
+        --primary: 0 89% 35%; 
         --primary-foreground: 0 0% 100%;
-        --secondary: 0 0% 5%;
-        --secondary-foreground: 0 0% 100%;
+        
+        /* Updated Secondary: Gold/Yellow from Logo */
+        --secondary: 41 60% 51%; 
+        /* Dark text for better contrast on the gold background */
+        --secondary-foreground: 0 0% 10%; 
+        
         --muted: 0 0% 96%;
         --muted-foreground: 215 16% 47%;
         --accent: 0 0% 96%;
@@ -35,7 +41,9 @@ code {
         --destructive-foreground: 0 0% 100%;
         --border: 214 32% 91%;
         --input: 214 32% 91%;
-        --ring: 349 81% 42%;
+        
+        /* Updated Ring to match new Primary */
+        --ring: 0 89% 35%; 
         --radius: 0.5rem;
     }
 }
