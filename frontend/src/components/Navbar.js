@@ -7,9 +7,6 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 
-// 1. IMPORT YOUR PNG IMAGE HERE (Update the path to match your project structure)
-import logoPng from '../assets/logo.png'; 
-
 export default function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
