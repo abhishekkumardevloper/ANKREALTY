@@ -9,10 +9,13 @@
 }
 
 /* ============================= */
-/* 🛠️ FIX FOR INPUTS (WHITE BACKGROUND ON AUTOFILL) */
+/* 🛠️ BULLETPROOF FIX FOR AUTOFILL (WHITE BACKGROUND ISSUE) */
 /* ============================= */
 
-/* This prevents browsers from turning inputs white when autofilling */
+/* Browsers force a white/yellow background on autofill.
+  This forces the background to match your Slate-50 (#f8fafc) or Slate-900 (#0f172a)
+  depending on where the input is placed. 
+*/
 input:-webkit-autofill,
 input:-webkit-autofill:hover, 
 input:-webkit-autofill:focus, 
@@ -21,9 +24,12 @@ textarea:-webkit-autofill,
 textarea:-webkit-autofill:hover,
 textarea:-webkit-autofill:focus,
 select:-webkit-autofill {
-  -webkit-box-shadow: 0 0 0 30px transparent inset !important;
-  -webkit-text-fill-color: inherit !important;
+  /* Using a massive inset shadow is the ONLY reliable way to override Chrome's autofill color */
+  -webkit-box-shadow: 0 0 0 1000px #f8fafc inset !important; /* Adjust to #0f172a for dark mode inputs */
+  -webkit-text-fill-color: #0f172a !important; /* Forces text to be dark slate */
+  caret-color: #8B0000; /* Make the typing cursor maroon */
   transition: background-color 5000s ease-in-out 0s;
+  border: 1px solid #D4AF37 !important; /* Force a gold border when autofilled */
 }
 
 /* Smooth gold focus ring for all inputs */
@@ -33,7 +39,7 @@ select:focus {
   outline: none !important;
   border-color: #D4AF37 !important;
   box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2) !important;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ============================= */
@@ -45,6 +51,7 @@ select:focus {
   border-radius: 16px; /* Slightly softer corners for premium feel */
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   background: white;
+  border: 1px solid #e2e8f0; /* Default subtle border */
 }
 
 .property-card-image {
@@ -54,6 +61,7 @@ select:focus {
 
 .property-card:hover {
   box-shadow: 0 20px 40px rgba(139, 0, 0, 0.08); /* Soft maroon shadow */
+  border-color: rgba(212, 175, 55, 0.5); /* Subtle gold border on hover */
   transform: translateY(-6px);
 }
 
@@ -212,4 +220,31 @@ select:focus {
   0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
   70% { box-shadow: 0 0 0 10px rgba(212, 175, 55, 0); }
   100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+}
+
+/* ============================= */
+/* 📱 MOBILE RESPONSIVENESS    */
+/* ============================= */
+
+@media (max-width: 768px) {
+  .hero-section {
+    height: 70vh;
+    min-height: 450px;
+  }
+  
+  .search-toggle {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .search-toggle button {
+    width: 100%;
+    margin-bottom: 0.25rem;
+  }
+  
+  .btn-primary, .btn-secondary {
+    width: 100%;
+    text-align: center;
+  }
 }
