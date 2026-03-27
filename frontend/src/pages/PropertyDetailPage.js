@@ -107,6 +107,11 @@ export default function PropertyDetailPage() {
 
   if (!property) return null;
 
+
+  const mapQuery = encodeURIComponent(`${property.title}, ${property.location || property.area || ''}, ${property.city || ''}`);
+  const mapEmbedUrl = `https://www.google.com/maps?q=${mapQuery}&output=embed`;
+  const mapOpenUrl = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
+
   const images = property.images && property.images.length > 0 
     ? property.images 
     : [
@@ -365,14 +370,18 @@ export default function PropertyDetailPage() {
             <section id="location">
               <h2 className="text-2xl font-extrabold text-slate-900 mb-6">{property.title} Location</h2>
               <div className="w-full h-[400px] bg-slate-100 rounded-2xl overflow-hidden relative border border-slate-200">
-                <Button variant="outline" className="absolute top-4 left-4 z-10 bg-white text-blue-600 font-bold border-slate-200 hover:bg-slate-50 shadow-sm">
-                  Open in Maps <Share2 className="w-4 h-4 ml-2" />
-                </Button>
-                {/* Simulated Map Background */}
-                <div className="w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cartographer.png')] bg-slate-200 flex flex-col items-center justify-center opacity-70">
-                   <MapPin className="w-12 h-12 text-[#003B30] drop-shadow-md mb-2" />
-                   <p className="font-bold text-slate-700">Map Integration View</p>
-                </div>
+                <a href={mapOpenUrl} target="_blank" rel="noopener noreferrer">
+                  <Button variant="outline" className="absolute top-4 left-4 z-10 bg-white text-blue-600 font-bold border-slate-200 hover:bg-slate-50 shadow-sm">
+                    Open in Maps <Share2 className="w-4 h-4 ml-2" />
+                  </Button>
+                </a>
+                <iframe
+                  title={`Map for ${property.title}`}
+                  src={mapEmbedUrl}
+                  className="w-full h-full border-0"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
               </div>
               <p className="flex items-center text-slate-500 font-medium mt-4">
                 <MapPin className="w-5 h-5 mr-2 text-slate-400" /> {property.location}, {property.city}

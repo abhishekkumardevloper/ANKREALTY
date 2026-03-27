@@ -33,7 +33,7 @@ export default function Navbar() {
   // Main Transaction Links
   const mainLinks = [
     { name: 'Buy', path: '/buy' },
-    { name: 'Rent', path: '/rent' },
+    { name: 'Resale', path: '/resale' },
     { name: 'Sell', path: '/sell' },
     { name: 'Corporate Leasing', path: '/corporate-leasing' },
     { name: 'Contact', path: '/contact' },
