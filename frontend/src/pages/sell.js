@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { 
   Building, MapPin, IndianRupee, Layers, Bed, Bath, 
-  ImagePlus, CheckCircle, ArrowRight, ArrowLeft, Loader2, X, Phone, Mail, Home
+  ImagePlus, CheckCircle, ArrowRight, ArrowLeft, Loader2, X, Phone, Mail, Home, ChevronRight
 } from 'lucide-react';
 
 const API_BASE = "http://127.0.0.1:8000/api";
@@ -131,7 +131,7 @@ export default function PostPropertyPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans">
+    <div className="min-h-screen bg-slate-50 font-sans selection:bg-[#D4AF37]/30">
       <Navbar />
 
       {/* 1. PREMIUM HERO SECTION */}
@@ -140,10 +140,12 @@ export default function PostPropertyPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-slate-900/40 via-slate-900/80 to-slate-900 z-0" />
         
         <div className="relative z-10 max-w-4xl mx-auto mt-8">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-green-400 text-sm font-bold tracking-wide mb-6 uppercase shadow-xl">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#D4AF37]/10 backdrop-blur-md border border-[#D4AF37]/40 text-[#D4AF37] text-sm font-bold tracking-wide mb-6 uppercase shadow-[0_0_15px_rgba(212,175,55,0.2)]">
             <CheckCircle className="w-4 h-4" /> Zero Brokerage Fees
           </div>
-          <h1 className="text-5xl md:text-7xl font-black mb-6 tracking-tight drop-shadow-lg">List Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-red-600">Property.</span></h1>
+          <h1 className="text-5xl md:text-7xl font-black mb-6 tracking-tight drop-shadow-lg">
+            List Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-[#AA8000]">Property.</span>
+          </h1>
           <p className="text-xl text-slate-300 font-light leading-relaxed max-w-2xl mx-auto">
             Connect with millions of genuine buyers and tenants instantly. Post your property on ANK Realty for free in under 3 minutes.
           </p>
@@ -156,17 +158,17 @@ export default function PostPropertyPage() {
         {/* Progress Steps */}
         <div className="bg-white rounded-t-[2rem] p-8 pb-4 border-b border-slate-100 shadow-xl flex items-center justify-between px-10">
            <div className="flex flex-col items-center">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-colors ${step >= 1 ? 'bg-red-600 text-white shadow-lg shadow-red-600/30' : 'bg-slate-100 text-slate-400'}`}>1</div>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-colors ${step >= 1 ? 'bg-[#8B0000] text-white shadow-lg shadow-[#8B0000]/30' : 'bg-slate-100 text-slate-400'}`}>1</div>
               <span className={`text-xs font-bold mt-2 uppercase tracking-wider ${step >= 1 ? 'text-slate-900' : 'text-slate-400'}`}>Basic</span>
            </div>
-           <div className={`flex-1 h-1 mx-4 rounded-full transition-colors ${step >= 2 ? 'bg-red-600' : 'bg-slate-100'}`}></div>
+           <div className={`flex-1 h-1 mx-4 rounded-full transition-colors ${step >= 2 ? 'bg-[#8B0000]' : 'bg-slate-100'}`}></div>
            <div className="flex flex-col items-center">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-colors ${step >= 2 ? 'bg-red-600 text-white shadow-lg shadow-red-600/30' : 'bg-slate-100 text-slate-400'}`}>2</div>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-colors ${step >= 2 ? 'bg-[#8B0000] text-white shadow-lg shadow-[#8B0000]/30' : 'bg-slate-100 text-slate-400'}`}>2</div>
               <span className={`text-xs font-bold mt-2 uppercase tracking-wider ${step >= 2 ? 'text-slate-900' : 'text-slate-400'}`}>Location</span>
            </div>
-           <div className={`flex-1 h-1 mx-4 rounded-full transition-colors ${step >= 3 ? 'bg-red-600' : 'bg-slate-100'}`}></div>
+           <div className={`flex-1 h-1 mx-4 rounded-full transition-colors ${step >= 3 ? 'bg-[#8B0000]' : 'bg-slate-100'}`}></div>
            <div className="flex flex-col items-center">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-colors ${step >= 3 ? 'bg-red-600 text-white shadow-lg shadow-red-600/30' : 'bg-slate-100 text-slate-400'}`}>3</div>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-colors ${step >= 3 ? 'bg-[#8B0000] text-white shadow-lg shadow-[#8B0000]/30' : 'bg-slate-100 text-slate-400'}`}>3</div>
               <span className={`text-xs font-bold mt-2 uppercase tracking-wider ${step >= 3 ? 'text-slate-900' : 'text-slate-400'}`}>Images</span>
            </div>
         </div>
@@ -183,11 +185,11 @@ export default function PostPropertyPage() {
               
               <div className="space-y-6">
                 <div>
-                  <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Property Title <span className="text-red-500">*</span></Label>
+                  <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Property Title <span className="text-[#8B0000]">*</span></Label>
                   <Input
                     placeholder="e.g., Luxury 3BHK Apartment in Downtown"
                     value={formData.title} onChange={(e) => handleChange('title', e.target.value)} required
-                    className="w-full h-14 bg-slate-50 border-slate-200 focus:border-red-500 focus:ring-red-500/20 text-lg font-medium rounded-xl"
+                    className="w-full h-14 bg-slate-50 border-slate-200 focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 text-lg font-medium rounded-xl"
                   />
                 </div>
 
@@ -196,7 +198,7 @@ export default function PostPropertyPage() {
                     <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">I want to...</Label>
                     <select 
                       value={formData.category} onChange={(e) => handleChange('category', e.target.value)}
-                      className="w-full h-14 px-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 appearance-none font-medium text-slate-900"
+                      className="w-full h-14 px-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 appearance-none font-medium text-slate-900"
                     >
                       <option value="sell">Sell this property</option>
                       <option value="rent">Rent this property out</option>
@@ -206,7 +208,7 @@ export default function PostPropertyPage() {
                     <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Property Type</Label>
                     <select 
                       value={formData.property_type} onChange={(e) => handleChange('property_type', e.target.value)}
-                      className="w-full h-14 px-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 appearance-none font-medium text-slate-900"
+                      className="w-full h-14 px-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 appearance-none font-medium text-slate-900"
                     >
                       <option value="apartment">Apartment / Flat</option>
                       <option value="villa">Villa / House</option>
@@ -218,22 +220,22 @@ export default function PostPropertyPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
-                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Price (₹) <span className="text-red-500">*</span></Label>
+                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Price (₹) <span className="text-[#8B0000]">*</span></Label>
                     <div className="relative">
-                      <IndianRupee className="absolute left-4 top-4 w-5 h-5 text-slate-400" />
+                      <IndianRupee className="absolute left-4 top-4 w-5 h-5 text-[#D4AF37]" />
                       <Input
                         type="number" placeholder="5000000" value={formData.price} onChange={(e) => handleChange('price', e.target.value)} required
-                        className="w-full h-14 pl-12 bg-slate-50 border-slate-200 focus:border-red-500 focus:ring-red-500/20 font-bold text-lg rounded-xl"
+                        className="w-full h-14 pl-12 bg-slate-50 border-slate-200 focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 font-bold text-lg rounded-xl"
                       />
                     </div>
                   </div>
                   <div>
-                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Area (Sq.Ft) <span className="text-red-500">*</span></Label>
+                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Area (Sq.Ft) <span className="text-[#8B0000]">*</span></Label>
                     <div className="relative">
-                      <Layers className="absolute left-4 top-4 w-5 h-5 text-slate-400" />
+                      <Layers className="absolute left-4 top-4 w-5 h-5 text-[#D4AF37]" />
                       <Input
                         type="number" placeholder="1500" value={formData.area} onChange={(e) => handleChange('area', e.target.value)} required
-                        className="w-full h-14 pl-12 bg-slate-50 border-slate-200 focus:border-red-500 focus:ring-red-500/20 font-bold text-lg rounded-xl"
+                        className="w-full h-14 pl-12 bg-slate-50 border-slate-200 focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 font-bold text-lg rounded-xl"
                       />
                     </div>
                   </div>
@@ -241,7 +243,7 @@ export default function PostPropertyPage() {
                     <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Furnishing</Label>
                     <select 
                       value={formData.furnishing} onChange={(e) => handleChange('furnishing', e.target.value)}
-                      className="w-full h-14 px-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 appearance-none font-medium text-slate-900"
+                      className="w-full h-14 px-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 appearance-none font-medium text-slate-900"
                     >
                       <option value="unfurnished">Unfurnished</option>
                       <option value="semi-furnished">Semi-Furnished</option>
@@ -253,11 +255,11 @@ export default function PostPropertyPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                    <div>
                      <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Bedrooms</Label>
-                     <Input type="number" placeholder="0" value={formData.bhk} onChange={(e) => handleChange('bhk', e.target.value)} className="h-14 bg-slate-50 rounded-xl font-bold text-center text-lg" />
+                     <Input type="number" placeholder="0" value={formData.bhk} onChange={(e) => handleChange('bhk', e.target.value)} className="h-14 bg-slate-50 border-slate-200 focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 rounded-xl font-bold text-center text-lg" />
                    </div>
                    <div>
                      <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Bathrooms</Label>
-                     <Input type="number" placeholder="0" value={formData.bathrooms} onChange={(e) => handleChange('bathrooms', e.target.value)} className="h-14 bg-slate-50 rounded-xl font-bold text-center text-lg" />
+                     <Input type="number" placeholder="0" value={formData.bathrooms} onChange={(e) => handleChange('bathrooms', e.target.value)} className="h-14 bg-slate-50 border-slate-200 focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 rounded-xl font-bold text-center text-lg" />
                    </div>
                 </div>
 
@@ -266,13 +268,13 @@ export default function PostPropertyPage() {
                   <Textarea
                     placeholder="Describe the key features, neighborhood perks, and why someone should buy/rent this property..."
                     value={formData.description} onChange={(e) => handleChange('description', e.target.value)} required rows={5}
-                    className="w-full p-4 bg-slate-50 border-slate-200 focus:border-red-500 focus:ring-red-500/20 rounded-xl resize-none font-medium"
+                    className="w-full p-4 bg-slate-50 border-slate-200 focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 rounded-xl resize-none font-medium"
                   />
                 </div>
               </div>
 
               <div className="flex justify-end pt-6 border-t border-slate-100">
-                <Button type="button" onClick={nextStep} className="h-14 px-8 bg-slate-900 hover:bg-black text-white font-bold rounded-xl text-lg shadow-xl group">
+                <Button type="button" onClick={nextStep} className="h-14 px-8 bg-[#8B0000] hover:bg-[#600000] text-white font-bold rounded-xl text-lg shadow-xl shadow-[#8B0000]/30 group transition-all">
                   Next Step <ArrowRight className="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform" />
                 </Button>
               </div>
@@ -290,30 +292,30 @@ export default function PostPropertyPage() {
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">City <span className="text-red-500">*</span></Label>
+                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">City <span className="text-[#8B0000]">*</span></Label>
                     <div className="relative">
-                      <MapPin className="absolute left-4 top-4 w-5 h-5 text-slate-400" />
+                      <MapPin className="absolute left-4 top-4 w-5 h-5 text-[#D4AF37]" />
                       <Input
                         placeholder="e.g. Mumbai" value={formData.city} onChange={(e) => handleChange('city', e.target.value)} required
-                        className="w-full h-14 pl-12 bg-slate-50 border-slate-200 focus:border-red-500 focus:ring-red-500/20 font-bold rounded-xl"
+                        className="w-full h-14 pl-12 bg-slate-50 border-slate-200 focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 font-bold rounded-xl"
                       />
                     </div>
                   </div>
                   <div>
-                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Locality / Area <span className="text-red-500">*</span></Label>
+                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Locality / Area <span className="text-[#8B0000]">*</span></Label>
                     <Input
                       placeholder="e.g. Andheri West" value={formData.location} onChange={(e) => handleChange('location', e.target.value)} required
-                      className="w-full h-14 bg-slate-50 border-slate-200 focus:border-red-500 focus:ring-red-500/20 font-bold rounded-xl"
+                      className="w-full h-14 bg-slate-50 border-slate-200 focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 font-bold rounded-xl"
                     />
                   </div>
                 </div>
               </div>
 
               <div className="flex justify-between pt-6 border-t border-slate-100">
-                <Button type="button" onClick={prevStep} variant="outline" className="h-14 px-8 border-slate-200 text-slate-600 font-bold rounded-xl text-lg hover:bg-slate-50">
+                <Button type="button" onClick={prevStep} variant="outline" className="h-14 px-8 border-slate-200 text-slate-600 font-bold rounded-xl text-lg hover:bg-slate-50 hover:text-[#8B0000] transition-colors">
                   <ArrowLeft className="w-5 h-5 mr-2" /> Back
                 </Button>
-                <Button type="button" onClick={nextStep} className="h-14 px-8 bg-slate-900 hover:bg-black text-white font-bold rounded-xl text-lg shadow-xl group">
+                <Button type="button" onClick={nextStep} className="h-14 px-8 bg-[#8B0000] hover:bg-[#600000] text-white font-bold rounded-xl text-lg shadow-xl shadow-[#8B0000]/30 group transition-all">
                   Next Step <ArrowRight className="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform" />
                 </Button>
               </div>
@@ -332,14 +334,14 @@ export default function PostPropertyPage() {
                 
                 {/* Image Upload Area */}
                 {imageFiles.length < 5 && (
-                  <div className="border-2 border-dashed border-slate-300 rounded-3xl p-10 text-center hover:border-red-500 hover:bg-red-50 transition-colors cursor-pointer relative group">
+                  <div className="border-2 border-dashed border-slate-300 rounded-3xl p-10 text-center hover:border-[#D4AF37] hover:bg-[#D4AF37]/5 transition-colors cursor-pointer relative group">
                     <input 
                       type="file" multiple accept="image/*" onChange={handleImageChange} 
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
                     />
                     <div className="flex flex-col items-center justify-center pointer-events-none">
-                      <div className="w-16 h-16 bg-slate-100 group-hover:bg-red-100 rounded-full flex items-center justify-center mb-4 transition-colors">
-                        <ImagePlus className="w-8 h-8 text-slate-400 group-hover:text-red-500" />
+                      <div className="w-16 h-16 bg-slate-100 group-hover:bg-[#D4AF37]/10 rounded-full flex items-center justify-center mb-4 transition-colors">
+                        <ImagePlus className="w-8 h-8 text-slate-400 group-hover:text-[#D4AF37]" />
                       </div>
                       <h4 className="text-lg font-bold text-slate-900 mb-1">Click or drag images here</h4>
                       <p className="text-slate-500 text-sm">Upload up to 5 clear photos (JPEG, PNG). First image will be the cover.</p>
@@ -357,12 +359,12 @@ export default function PostPropertyPage() {
                           <img src={src} alt="Preview" className="w-full h-full object-cover" />
                           <button 
                             type="button" onClick={() => removeImage(index)}
-                            className="absolute top-2 right-2 bg-white/90 text-red-600 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-50"
+                            className="absolute top-2 right-2 bg-white/90 text-[#8B0000] p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-50"
                           >
                             <X className="w-4 h-4" />
                           </button>
                           {index === 0 && (
-                            <span className="absolute bottom-2 left-2 bg-slate-900/80 text-white text-[10px] uppercase font-bold px-2 py-1 rounded-md backdrop-blur-sm">Cover</span>
+                            <span className="absolute bottom-2 left-2 bg-[#D4AF37] text-slate-900 text-[10px] uppercase font-bold px-2 py-1 rounded-md backdrop-blur-sm">Cover</span>
                           )}
                         </div>
                       ))}
@@ -371,11 +373,11 @@ export default function PostPropertyPage() {
                 )}
                 
                 {/* Final Review Card */}
-                <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 mt-8">
+                <div className="bg-slate-50 p-6 rounded-2xl border border-[#D4AF37]/20 mt-8 shadow-sm">
                   <h4 className="font-black text-slate-900 mb-4">Quick Review</h4>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div><span className="block text-slate-500 mb-1 uppercase text-[10px] font-bold tracking-widest">Title</span><span className="font-bold text-slate-900 truncate block">{formData.title || '-'}</span></div>
-                    <div><span className="block text-slate-500 mb-1 uppercase text-[10px] font-bold tracking-widest">Price</span><span className="font-bold text-slate-900">₹{Number(formData.price || 0).toLocaleString('en-IN')}</span></div>
+                    <div><span className="block text-slate-500 mb-1 uppercase text-[10px] font-bold tracking-widest">Price</span><span className="font-bold text-[#8B0000]">₹{Number(formData.price || 0).toLocaleString('en-IN')}</span></div>
                     <div><span className="block text-slate-500 mb-1 uppercase text-[10px] font-bold tracking-widest">Location</span><span className="font-bold text-slate-900">{formData.city || '-'}</span></div>
                     <div><span className="block text-slate-500 mb-1 uppercase text-[10px] font-bold tracking-widest">Type</span><span className="font-bold text-slate-900 capitalize">{formData.category} / {formData.property_type}</span></div>
                   </div>
@@ -384,10 +386,10 @@ export default function PostPropertyPage() {
               </div>
 
               <div className="flex justify-between pt-6 border-t border-slate-100">
-                <Button type="button" onClick={prevStep} variant="outline" className="h-14 px-8 border-slate-200 text-slate-600 font-bold rounded-xl text-lg hover:bg-slate-50">
+                <Button type="button" onClick={prevStep} variant="outline" className="h-14 px-8 border-slate-200 text-slate-600 font-bold rounded-xl text-lg hover:bg-slate-50 hover:text-[#8B0000] transition-colors">
                   <ArrowLeft className="w-5 h-5 mr-2" /> Back
                 </Button>
-                <Button type="submit" disabled={loading} className="h-14 px-8 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-lg shadow-xl shadow-red-600/20 group">
+                <Button type="submit" disabled={loading} className="h-14 px-8 bg-[#8B0000] hover:bg-[#600000] text-white font-bold rounded-xl text-lg shadow-xl shadow-[#8B0000]/30 group transition-all">
                   {loading ? (
                     <><Loader2 className="animate-spin mr-2 w-5 h-5" /> Submitting...</>
                   ) : (
@@ -401,55 +403,64 @@ export default function PostPropertyPage() {
       </div>
 
       {/* FOOTER */}
-      <footer className="bg-[#0A0A0A] text-white pt-20 pb-10 px-6 border-t border-slate-800 mt-20">
+      <footer className="bg-[#050505] text-white pt-20 pb-10 px-6 border-t-[6px] border-[#8B0000] mt-20">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
-            <div className="space-y-6">
-              <h3 className="text-3xl font-black tracking-tight">ANK Realty<span className="text-red-600">.</span></h3>
-              <p className="text-slate-400 text-sm leading-relaxed pr-4">
+            <div className="space-y-6 pr-4">
+              <h3 className="text-3xl font-extrabold tracking-tight text-[#D4AF37]">ANK <span className="text-white">REALTY</span></h3>
+              <p className="text-slate-400 text-sm leading-relaxed font-medium">
                 The Red Carpet of Real Estate. We are committed to providing the highest level of service, transparency, and expertise in the Indian real estate market.
               </p>
-              <div className="flex space-x-4">
-                  <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer"><Mail className="w-4 h-4"/></div>
-                  <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer"><Phone className="w-4 h-4"/></div>
+              <div className="flex space-x-3 pt-2">
+                  <div className="w-10 h-10 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all cursor-pointer group"><Mail className="w-4 h-4 group-hover:scale-110 transition-transform"/></div>
+                  <div className="w-10 h-10 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all cursor-pointer group"><Phone className="w-4 h-4 group-hover:scale-110 transition-transform"/></div>
               </div>
             </div>
             
             <div>
-              <h4 className="font-bold text-lg mb-6 text-slate-100">Quick Links</h4>
+              <h4 className="font-bold text-base mb-6 text-white uppercase tracking-widest text-[11px]">Quick Links</h4>
               <ul className="space-y-4 text-slate-400 font-medium text-sm">
-                <li><Link to="/buy" className="hover:text-red-500 transition-colors">Buy Property</Link></li>
-                <li><Link to="/videos" className="hover:text-red-500 transition-colors">Video Tours</Link></li>
-                <li><Link to="/about" className="hover:text-red-500 transition-colors">About Us</Link></li>
-                <li><Link to="/contact" className="hover:text-red-500 transition-colors">Contact Us</Link></li>
+                <li><Link to="/buy" className="hover:text-[#D4AF37] flex items-center transition-colors"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Buy Property</Link></li>
+                <li><Link to="/sell" className="hover:text-[#D4AF37] flex items-center transition-colors"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Sell Property</Link></li>
+                <li><Link to="/rent" className="hover:text-[#D4AF37] flex items-center transition-colors"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Rent Property</Link></li>
+                <li><Link to="/contact" className="hover:text-[#D4AF37] flex items-center transition-colors"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Contact Us</Link></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-bold text-lg mb-6 text-slate-100">Categories</h4>
+              <h4 className="font-bold text-base mb-6 text-white uppercase tracking-widest text-[11px]">Categories</h4>
               <ul className="space-y-4 text-slate-400 font-medium text-sm">
-                <li><Link to="/buy" className="hover:text-red-500 transition-colors">Apartments</Link></li>
-                <li><Link to="/buy" className="hover:text-red-500 transition-colors">Villas</Link></li>
-                <li><Link to="/buy" className="hover:text-red-500 transition-colors">Plots / Land</Link></li>
-                <li><Link to="/buy" className="hover:text-red-500 transition-colors">Commercial</Link></li>
+                <li><Link to="/buy" className="hover:text-[#D4AF37] flex items-center transition-colors"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Apartments</Link></li>
+                <li><Link to="/buy" className="hover:text-[#D4AF37] flex items-center transition-colors"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Villas</Link></li>
+                <li><Link to="/buy" className="hover:text-[#D4AF37] flex items-center transition-colors"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Plots / Land</Link></li>
+                <li><Link to="/buy" className="hover:text-[#D4AF37] flex items-center transition-colors"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Commercial Space</Link></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-bold text-lg mb-6 text-slate-100">Contact Us</h4>
+              <h4 className="font-bold text-base mb-6 text-white uppercase tracking-widest text-[11px]">Contact Us</h4>
               <div className="space-y-4 text-slate-400 font-medium text-sm">
-                <p className="flex items-start"><MapPin className="w-5 h-5 mr-3 text-red-600 shrink-0"/> 123 Business Avenue, Tech Park, Mumbai, 400001</p>
-                <p className="flex items-center"><Mail className="w-5 h-5 mr-3 text-red-600 shrink-0"/> info@ankrealty.com</p>
-                <p className="flex items-center"><Phone className="w-5 h-5 mr-3 text-red-600 shrink-0"/> +91 98765 43210</p>
+                <div className="flex items-start bg-slate-900/50 p-3 rounded-xl border border-slate-800 hover:border-[#D4AF37]/50 transition-colors">
+                  <MapPin className="w-5 h-5 mr-3 text-[#D4AF37] shrink-0" /> 
+                  <p className="text-xs">123 Business Avenue, Tech Park, Mumbai, 400001</p>
+                </div>
+                <div className="flex items-center bg-slate-900/50 p-3 rounded-xl border border-slate-800 hover:border-[#D4AF37]/50 transition-colors">
+                  <Mail className="w-5 h-5 mr-3 text-[#D4AF37] shrink-0" /> 
+                  <p className="text-xs">info@ankrealty.com</p>
+                </div>
+                <div className="flex items-center bg-slate-900/50 p-3 rounded-xl border border-slate-800 hover:border-[#D4AF37]/50 transition-colors">
+                  <Phone className="w-5 h-5 mr-3 text-[#D4AF37] shrink-0" /> 
+                  <p className="text-xs">+91 98765 43210</p>
+                </div>
               </div>
             </div>
           </div>
           
-          <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-slate-500 font-medium">
+          <div className="border-t border-slate-800/80 pt-6 flex flex-col md:flex-row justify-between items-center text-xs text-slate-500 font-medium">
             <p>&copy; {new Date().getFullYear()} ANK Realty. All rights reserved.</p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-                <Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-                <Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+                <Link to="/privacy" className="hover:text-[#D4AF37] transition-colors">Privacy Policy</Link>
+                <Link to="/terms" className="hover:text-[#D4AF37] transition-colors">Terms of Service</Link>
             </div>
           </div>
         </div>
