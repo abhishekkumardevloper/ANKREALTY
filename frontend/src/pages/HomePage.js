@@ -1442,41 +1442,75 @@ export default function HomePage() {
 
       {/* --- FEATURED INVENTORY (Base Code 1 Layout + Rich Content) --- */}
       <section className="py-20 px-6 bg-slate-50 border-b border-slate-200">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-10 gap-4">
-            <div>
-              <p className="text-red-600 font-bold uppercase tracking-[0.25em] text-xs mb-3">Featured inventory</p>
-              <h2 className="text-3xl md:text-4xl font-black">Buy, sell, and rent with confidence</h2>
+  <div className="max-w-7xl mx-auto">
+    <div className="flex flex-col md:flex-row justify-between items-end mb-10 gap-4">
+      <div>
+        <p className="text-red-600 font-bold uppercase tracking-[0.25em] text-xs mb-3">
+          Featured inventory
+        </p>
+        <h2 className="text-3xl md:text-4xl font-black">
+          Buy, sell, and rent with confidence
+        </h2>
+      </div>
+      <Link to="/properties">
+        <Button variant="outline">View all properties</Button>
+      </Link>
+    </div>
+
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+      {featuredProperties.map((property) => (
+        <div
+          key={property.id}
+          onClick={() =>
+            navigate(`/property/${property.id}`, {
+              state: { property },
+            })
+          }
+          className="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition cursor-pointer relative group"
+        >
+          {/* Tag */}
+          <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-black text-slate-900 shadow-sm z-10">
+            {property.tag}
+          </div>
+
+          {/* Image */}
+          <div className="relative h-48 overflow-hidden">
+            <img
+              src={property.image}
+              alt={property.title}
+              className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700"
+            />
+          </div>
+
+          {/* Content */}
+          <div className="p-5">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-red-600 mb-2">
+              {property.category} • {property.propertyType}
+            </p>
+
+            <h3 className="text-xl font-black text-slate-900 mb-1 group-hover:text-red-600 transition-colors line-clamp-1">
+              {property.title}
+            </h3>
+
+            <p className="text-slate-500 text-sm mb-4">
+              <MapPin className="inline w-3 h-3 mr-1" />
+              {property.location}, {property.city}
+            </p>
+
+            <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+              <span className="font-black text-slate-900 text-lg">
+                {property.price}
+              </span>
+              <span className="text-red-600 font-bold flex items-center text-sm">
+                Details <ArrowRight className="w-4 h-4 ml-1" />
+              </span>
             </div>
-            <Link to="/properties"><Button variant="outline">View all properties</Button></Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-            {featuredProperties.map((property) => (
-              <div key={property.id} onClick={() => navigate(`/property/${property.id}`, { state: { property } })} className="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition cursor-pointer relative group">
-                {/* Dynamic Tag */}
-                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-black text-slate-900 shadow-sm z-10">
-                  {property.tag}
-                </div>
-                
-                <div className="relative h-48 overflow-hidden">
-                   <img src={property.image} alt={property.title} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                </div>
-                
-                <div className="p-5">
-                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-red-600 mb-2">{property.category} • {property.propertyType}</p>
-                  <h3 className="text-xl font-black text-slate-900 mb-1 group-hover:text-red-600 transition-colors line-clamp-1">{property.title}</h3>
-                  <p className="text-slate-500 text-sm mb-4"><MapPin className="inline w-3 h-3 mr-1"/> {property.location}, {property.city}</p>
-                  
-                  <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                    <span className="font-black text-slate-900 text-lg">{property.price}</span>
-                    <span className="text-red-600 font-bold flex items-center text-sm">Details <ArrowRight className="w-4 h-4 ml-1" /></span>
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
+        </div> 
+      ))}
+    </div>
+  </div>
+</section>
 
 
       {/* --- RESALE FLATS / PLOTS SECTION --- */}
