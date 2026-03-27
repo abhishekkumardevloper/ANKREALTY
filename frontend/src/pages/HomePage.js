@@ -33,25 +33,25 @@ const featuredProperties = [
   { 
     id: 'f1', title: 'Experion Saatori', city: 'Noida', location: 'Sector 151', propertyType: 'Apartment', 
     category: 'buy', price: '₹ 1.85 Cr onwards', 
-    image: 'https://www.gharhoaisa.com/experion-saatori-sector-151-noida-apartments/',
+    image: '/experion-saatori-banner.jpg',
     tag: 'New Launch'
   },
   { 
     id: 'f3', title: 'M3M Jacob & Co', city: 'Noida', location: 'Sector 97', propertyType: 'Villa', 
     category: 'buy', price: '₹ 3.50 Cr onwards', 
-    image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80',
+    image: '/m3m-jacob-and-co-residences.webp',
     tag: 'Ultra Luxury'
   },
   { 
     id: 'p1', title: 'Paras Evanue', city: 'Noida Extension', location: 'Sector 10', propertyType: 'Plot', 
     category: 'buy', price: '₹ 45 L onwards', 
-    image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80',
+    image: '/smartworldlecourtyard1-gallery.webp',
     tag: 'Premium Plots'
   },
   { 
     id: 'u1', title: 'Himalayan View Estate', city: 'Dehradun', location: 'Rajpur Road', propertyType: 'Villa', 
     category: 'buy', price: '₹ 2.10 Cr onwards', 
-    image: 'https://images.unsplash.com/photo-1510798831971-661eb04b3739?auto=format&fit=crop&w=1200&q=80',
+    image: '/himalaya_pride-amrapali_dream_valley-noida-himalaya_residency.avif',
     tag: 'Mountain View'
   },
 ];
