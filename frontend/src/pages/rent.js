@@ -74,7 +74,7 @@ export default function RentPage() {
   }, [resaleProperties, searchCity, maxPrice, propertyType, sortBy]);
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans relative">
+    <div className="min-h-screen bg-slate-50 font-sans relative selection:bg-[#D4AF37]/30">
       <Navbar />
       
       {/* HERO SECTION */}
@@ -89,18 +89,18 @@ export default function RentPage() {
          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent"></div>
          
          <div className="relative z-10 max-w-5xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-bold tracking-widest uppercase mb-6 shadow-xl">
-               <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Zero Brokerage Options Available
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#D4AF37]/10 backdrop-blur-md border border-[#D4AF37]/40 text-[#D4AF37] text-xs font-bold tracking-widest uppercase mb-6 shadow-[0_0_15px_rgba(212,175,55,0.2)]">
+               <span className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse"></span> Zero Brokerage Options Available
             </div>
             <h1 className="text-4xl md:text-6xl font-black mb-6 tracking-tight drop-shadow-lg">
-              Find Your Perfect <span className="text-red-500">Resale Home</span>
+              Find Your Perfect <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-[#AA8000]">Resale Home</span>
             </h1>
             <p className="text-lg text-slate-300 max-w-2xl mx-auto mb-10 font-light">
               Discover verified resale apartments, floors, and premium homes. Connect directly with owners and get transparent pricing.
             </p>
 
             {/* SEARCH WIDGET */}
-            <div className="bg-white p-3 rounded-2xl md:rounded-full mx-auto flex flex-col md:flex-row shadow-2xl items-center border border-slate-200">
+            <div className="bg-white p-3 rounded-2xl md:rounded-full mx-auto flex flex-col md:flex-row shadow-2xl items-center border border-[#D4AF37]/20">
                <div className="w-full md:flex-1 flex items-center px-4 py-3 border-b md:border-b-0 md:border-r border-slate-100">
                   <MapPin className="text-slate-400 w-5 h-5 mr-3 shrink-0" />
                   <input 
@@ -140,7 +140,7 @@ export default function RentPage() {
                   <ChevronDown className="absolute right-4 w-4 h-4 text-slate-400 pointer-events-none"/>
                </div>
 
-               <Button className="bg-red-600 hover:bg-red-700 text-white font-bold h-12 px-8 rounded-xl md:rounded-full w-full md:w-auto mt-2 md:mt-0 shadow-lg md:ml-2">
+               <Button className="bg-[#8B0000] hover:bg-[#600000] text-white font-bold h-12 px-8 rounded-xl md:rounded-full w-full md:w-auto mt-2 md:mt-0 shadow-lg shadow-[#8B0000]/30 md:ml-2 transition-all">
                   <Search className="w-5 h-5 md:mr-2" /> <span className="md:inline hidden">Search</span>
                </Button>
             </div>
@@ -155,7 +155,7 @@ export default function RentPage() {
               <p className="text-slate-500 font-medium mt-1">Found {filteredAndSortedRentals.length} verified resale units available</p>
            </div>
            <div className="flex items-center gap-4 mt-4 md:mt-0">
-              <div className="flex items-center bg-white border border-slate-200 rounded-lg px-3 py-2 shadow-sm">
+              <div className="flex items-center bg-white border border-slate-200 hover:border-[#D4AF37]/50 transition-colors rounded-lg px-3 py-2 shadow-sm">
                 <Filter className="w-4 h-4 text-slate-400 mr-2"/>
                 <select 
                   value={sortBy} onChange={(e) => setSortBy(e.target.value)}
@@ -170,7 +170,7 @@ export default function RentPage() {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-20"><Loader2 className="animate-spin text-red-600 w-12 h-12"/></div>
+          <div className="flex justify-center py-20"><Loader2 className="animate-spin text-[#8B0000] w-12 h-12"/></div>
         ) : filteredAndSortedRentals.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300 shadow-sm">
              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
@@ -178,7 +178,7 @@ export default function RentPage() {
              </div>
              <h3 className="text-xl font-bold text-slate-700">No resale listings match your criteria</h3>
              <p className="text-slate-500 mt-2 max-w-md mx-auto">We couldn't find any properties matching your exact filters. Try broadening your search.</p>
-             <Button onClick={() => {setSearchCity(""); setMaxPrice(""); setPropertyType("");}} className="mt-6 bg-red-50 text-red-600 hover:bg-red-100 font-bold px-8">
+             <Button onClick={() => {setSearchCity(""); setMaxPrice(""); setPropertyType("");}} className="mt-6 bg-[#D4AF37]/10 text-[#8B0000] hover:bg-[#D4AF37]/20 font-bold px-8">
                Clear All Filters
              </Button>
           </div>
@@ -192,7 +192,7 @@ export default function RentPage() {
               return (
                 <div 
                   key={property.id} 
-                  className="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-2xl hover:border-red-100 transition-all duration-300 group cursor-pointer flex flex-col transform hover:-translate-y-1"
+                  className="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-2xl hover:border-[#D4AF37]/50 transition-all duration-300 group cursor-pointer flex flex-col transform hover:-translate-y-1"
                   onClick={() => navigate(`/property/${property.id}`)}
                 >
                   <div className="h-60 relative overflow-hidden p-2">
@@ -203,32 +203,34 @@ export default function RentPage() {
                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                        />
                        <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm text-slate-900 px-3 py-1 rounded-lg text-xs font-black uppercase shadow-sm flex items-center gap-1.5">
-                         <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Resale
+                         <span className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse"></span> Resale
                        </div>
-                       <button className="absolute top-3 right-3 p-2 bg-black/20 hover:bg-white backdrop-blur-md rounded-full text-white hover:text-red-500 transition-all">
+                       <button className="absolute top-3 right-3 p-2 bg-black/20 hover:bg-[#8B0000] backdrop-blur-md rounded-full text-white transition-all border border-white/20">
                          <ShieldCheck className="w-4 h-4" />
                        </button>
                      </div>
                   </div>
                   
                   <div className="p-6 pt-3 flex-1 flex flex-col">
-                     <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">
-                       {property.category || property.type || 'Resale'}
-                     </p>
-                     <h3 className="font-black text-xl text-slate-900 line-clamp-1 mb-2 group-hover:text-red-600 transition-colors">
+                     <div className="flex justify-between items-start mb-2">
+                         <p className="text-[#8B0000] text-xs font-bold uppercase tracking-wider bg-slate-50 border border-slate-100 px-2 py-1 rounded-md">
+                           {property.category || property.type || 'Resale'}
+                         </p>
+                     </div>
+                     <h3 className="font-black text-xl text-slate-900 line-clamp-1 mb-2 group-hover:text-[#8B0000] transition-colors">
                        {property.title}
                      </h3>
                      <p className="text-slate-500 text-sm flex items-center mb-5"><MapPin className="w-4 h-4 mr-1 text-slate-400"/> {property.city}</p>
                      
                      <div className="grid grid-cols-3 gap-2 mb-6 text-slate-600 text-sm font-bold">
                         <div className="flex flex-col items-center justify-center bg-slate-50 py-2.5 rounded-xl border border-slate-100">
-                          <Bed className="w-4 h-4 text-slate-400 mb-1"/> {property.bedrooms || '-'}
+                          <Bed className="w-4 h-4 text-[#D4AF37] mb-1"/> {property.bedrooms || '-'}
                         </div>
                         <div className="flex flex-col items-center justify-center bg-slate-50 py-2.5 rounded-xl border border-slate-100">
-                          <Bath className="w-4 h-4 text-slate-400 mb-1"/> {property.bathrooms || '-'}
+                          <Bath className="w-4 h-4 text-[#D4AF37] mb-1"/> {property.bathrooms || '-'}
                         </div>
                         <div className="flex flex-col items-center justify-center bg-slate-50 py-2.5 rounded-xl border border-slate-100">
-                          <Maximize className="w-4 h-4 text-slate-400 mb-1"/> {property.area || property.size || '-'} <span className="text-[10px] font-normal">sqft</span>
+                          <Maximize className="w-4 h-4 text-[#D4AF37] mb-1"/> {property.area || property.size || '-'} <span className="text-[10px] font-normal">sqft</span>
                         </div>
                      </div>
                      
@@ -239,7 +241,7 @@ export default function RentPage() {
                              {property.price > 0 ? `₹${Number(property.price).toLocaleString('en-IN')}` : property.priceText || 'On Request'}
                            </span>
                         </div>
-                        <div className="w-10 h-10 rounded-full bg-red-50 text-red-600 flex items-center justify-center group-hover:bg-red-600 group-hover:text-white transition-colors">
+                        <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-[#8B0000] group-hover:text-[#D4AF37] transition-colors">
                           <ArrowRight className="w-5 h-5"/>
                         </div>
                      </div>
@@ -255,8 +257,8 @@ export default function RentPage() {
       <section className="py-20 px-6 bg-white border-t border-slate-200">
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-16 items-center">
           <div className="lg:w-1/3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-bold uppercase mb-4 border border-blue-100">
-              <TrendingUp className="w-3 h-3"/> Market Insights
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D4AF37]/10 text-[#8B0000] text-xs font-bold uppercase mb-4 border border-[#D4AF37]/30">
+              <TrendingUp className="w-3 h-3 text-[#D4AF37]"/> Market Insights
             </div>
             <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-4 leading-tight">Understand Local Resale Trends</h2>
             <p className="text-lg text-slate-600 mb-6 leading-relaxed">
@@ -264,18 +266,18 @@ export default function RentPage() {
             </p>
             <div className="space-y-4">
                <div className="flex items-start gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                  <CheckCircle className="w-5 h-5 text-green-500 shrink-0 mt-0.5"/>
+                  <CheckCircle className="w-5 h-5 text-[#D4AF37] shrink-0 mt-0.5"/>
                   <p className="text-sm text-slate-700 font-medium">Average 2BHK resale demand remains strongest in central Noida sectors.</p>
                </div>
                <div className="flex items-start gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                  <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5"/>
+                  <Info className="w-5 h-5 text-[#D4AF37] shrink-0 mt-0.5"/>
                   <p className="text-sm text-slate-700 font-medium">Large-size units and premium towers are seeing faster price movement.</p>
                </div>
             </div>
           </div>
           
           <div className="lg:w-2/3 w-full bg-slate-900 p-6 md:p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-red-600 rounded-full blur-[100px] opacity-20 pointer-events-none"></div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37] rounded-full blur-[100px] opacity-10 pointer-events-none"></div>
             <h3 className="font-bold text-white text-xl mb-6 relative z-10 flex items-center gap-2">
               Average Resale Benchmark (Indicative)
             </h3>
@@ -284,19 +286,19 @@ export default function RentPage() {
                 <AreaChart data={rentTrends} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorRent" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.4}/>
+                      <stop offset="95%" stopColor="#D4AF37" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" />
                   <XAxis dataKey="month" tick={{fontSize: 12, fill: '#94a3b8'}} axisLine={false} tickLine={false} />
                   <YAxis tick={{fontSize: 12, fill: '#94a3b8'}} axisLine={false} tickLine={false} tickFormatter={(value) => `₹${value/1000}k`} />
                   <Tooltip 
-                    contentStyle={{ backgroundColor: '#1e293b', borderRadius: '12px', border: 'none', color: '#fff' }}
-                    itemStyle={{ color: '#ef4444', fontWeight: 'bold' }}
+                    contentStyle={{ backgroundColor: '#1e293b', borderRadius: '12px', border: '1px solid #334155', color: '#fff' }}
+                    itemStyle={{ color: '#D4AF37', fontWeight: 'bold' }}
                     formatter={(value) => [`₹${value}`, 'Trend index']}
                   />
-                  <Area type="monotone" dataKey="price" stroke="#ef4444" strokeWidth={4} fillOpacity={1} fill="url(#colorRent)" />
+                  <Area type="monotone" dataKey="price" stroke="#D4AF37" strokeWidth={4} fillOpacity={1} fill="url(#colorRent)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -305,57 +307,57 @@ export default function RentPage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-[#0A0A0A] text-white pt-20 pb-10 px-6 border-t border-slate-800">
+      <footer className="bg-[#050505] text-white pt-20 pb-10 px-6 border-t-[6px] border-[#8B0000]">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-10 mb-16">
             <div className="md:col-span-2 space-y-6 pr-4">
-              <h3 className="text-3xl font-black tracking-tight">ANK Realty<span className="text-red-600">.</span></h3>
+              <h3 className="text-3xl font-black tracking-tight text-[#D4AF37]">ANK <span className="text-white">REALTY</span></h3>
               <p className="text-slate-400 text-sm leading-relaxed">
                 The Red Carpet of Real Estate. We are India's most trusted property portal, committed to providing transparency, verified listings, and end-to-end property solutions.
               </p>
               <div className="space-y-3 pt-2">
-                <p className="flex items-center text-slate-300"><Phone className="w-5 h-5 mr-3 text-red-500"/> Toll Free: 1800-123-4567</p>
-                <p className="flex items-center text-slate-300"><Mail className="w-5 h-5 mr-3 text-red-500"/> support@ankrealty.com</p>
+                <p className="flex items-center text-slate-300"><Phone className="w-5 h-5 mr-3 text-[#D4AF37]"/> Toll Free: 1800-123-4567</p>
+                <p className="flex items-center text-slate-300"><Mail className="w-5 h-5 mr-3 text-[#D4AF37]"/> support@ankrealty.com</p>
               </div>
             </div>
             
             <div>
-              <h4 className="font-bold text-lg mb-6 text-slate-100">Properties</h4>
-              <ul className="space-y-4 text-slate-400 text-sm">
-                <li><Link to="/buy" className="hover:text-white transition-colors">Property for Sale</Link></li>
-                <li><Link to="/rent" className="hover:text-white transition-colors">Property Resale</Link></li>
-                <li><Link to="/buy" className="hover:text-white transition-colors">Commercial Projects</Link></li>
-                <li><Link to="/buy" className="hover:text-white transition-colors">New Projects</Link></li>
+              <h4 className="font-bold text-base mb-6 text-white uppercase tracking-widest text-[11px]">Properties</h4>
+              <ul className="space-y-4 text-slate-400 text-sm font-medium">
+                <li><Link to="/buy" className="hover:text-[#D4AF37] transition-colors">Property for Sale</Link></li>
+                <li><Link to="/rent" className="hover:text-[#D4AF37] transition-colors">Property Resale</Link></li>
+                <li><Link to="/buy" className="hover:text-[#D4AF37] transition-colors">Commercial Projects</Link></li>
+                <li><Link to="/buy" className="hover:text-[#D4AF37] transition-colors">New Projects</Link></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-bold text-lg mb-6 text-slate-100">Company</h4>
-              <ul className="space-y-4 text-slate-400 text-sm">
-                <li><Link to="/about" className="hover:text-white transition-colors">About Us</Link></li>
-                <li><Link to="/careers" className="hover:text-white transition-colors">Careers</Link></li>
-                <li><Link to="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
-                <li><Link to="/terms" className="hover:text-white transition-colors">Terms & Conditions</Link></li>
+              <h4 className="font-bold text-base mb-6 text-white uppercase tracking-widest text-[11px]">Company</h4>
+              <ul className="space-y-4 text-slate-400 text-sm font-medium">
+                <li><Link to="/about" className="hover:text-[#D4AF37] transition-colors">About Us</Link></li>
+                <li><Link to="/careers" className="hover:text-[#D4AF37] transition-colors">Careers</Link></li>
+                <li><Link to="/contact" className="hover:text-[#D4AF37] transition-colors">Contact Us</Link></li>
+                <li><Link to="/terms" className="hover:text-[#D4AF37] transition-colors">Terms & Conditions</Link></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-bold text-lg mb-6 text-slate-100">For Builders & Agents</h4>
-              <ul className="space-y-4 text-slate-400 text-sm">
-                <li><Link to="/sell" className="hover:text-white transition-colors">List your Property</Link></li>
-                <li><Link to="/advertise" className="hover:text-white transition-colors">Advertise with Us</Link></li>
-                <li><Link to="/agent-login" className="hover:text-white transition-colors">Agent Portal</Link></li>
+              <h4 className="font-bold text-base mb-6 text-white uppercase tracking-widest text-[11px]">For Builders & Agents</h4>
+              <ul className="space-y-4 text-slate-400 text-sm font-medium">
+                <li><Link to="/sell" className="hover:text-[#D4AF37] transition-colors">List your Property</Link></li>
+                <li><Link to="/advertise" className="hover:text-[#D4AF37] transition-colors">Advertise with Us</Link></li>
+                <li><Link to="/agent-login" className="hover:text-[#D4AF37] transition-colors">Agent Portal</Link></li>
               </ul>
             </div>
           </div>
           
-          <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-slate-500">
+          <div className="border-t border-slate-800/80 pt-6 flex flex-col md:flex-row justify-between items-center text-xs text-slate-500 font-medium">
             <p>&copy; {new Date().getFullYear()} ANK Realty. All rights reserved.</p>
-            <div className="flex space-x-4 mt-4 md:mt-0">
-               <span className="hover:text-white cursor-pointer">Facebook</span>
-               <span className="hover:text-white cursor-pointer">Twitter</span>
-               <span className="hover:text-white cursor-pointer">Instagram</span>
-               <span className="hover:text-white cursor-pointer">LinkedIn</span>
+            <div className="flex space-x-6 mt-4 md:mt-0">
+               <span className="hover:text-[#D4AF37] cursor-pointer transition-colors">Facebook</span>
+               <span className="hover:text-[#D4AF37] cursor-pointer transition-colors">Twitter</span>
+               <span className="hover:text-[#D4AF37] cursor-pointer transition-colors">Instagram</span>
+               <span className="hover:text-[#D4AF37] cursor-pointer transition-colors">LinkedIn</span>
             </div>
           </div>
         </div>
