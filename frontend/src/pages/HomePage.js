@@ -1,26 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import {
-  ArrowRight,
-  Banknote,
-  Bell,
-  Briefcase,
-  Building2,
-  Calculator,
-  ChevronRight,
-  Filter,
-  Handshake,
-  Home,
-  Instagram,
-  Linkedin,
-  Mail,
-  MapPin,
-  MessageCircle,
-  Search,
-  Sparkles,
-  Users,
-  Youtube,
+import { 
+  ArrowRight, Banknote, Bell, Briefcase, Building2, Calculator, ChevronRight, 
+  Handshake, Instagram, Linkedin, Mail, MapPin, MessageCircle, Search, Users, Youtube 
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import RegisterPopup from './RegisterPopup';
@@ -29,1395 +12,1241 @@ import { Input } from '@/components/ui/input';
 import { bankOffers, exploreLocalities, newsArticles, socialLinks } from '@/lib/siteData';
 import { WHATSAPP_URL, createPropertySearch } from '@/lib/api';
 
-const resaleUnits = [
-  {
-    "id": "r1",
-    "city": "noida",
-    "sector": "25.0",
-    "project": "jalvayu vihar",
-    "flatSize": 1050,
-    "unitType": "2bhk study",
-    "tower": "G",
-    "remarks": "1.40cr",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "01 May 2025",
-    "confBy": "aakshi",
-    "ref": "prop sol",
-    "propertyType": "apartment",
-    "priceValue": 14000000,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r2",
-    "city": "noida",
-    "sector": "45.0",
-    "project": "Amrapali Sapphire",
-    "flatSize": 1640,
-    "unitType": "3BHK+3 Toilet",
-    "tower": "L",
-    "remarks": "2.5cr",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "25/2/2026",
-    "confBy": "meenakshi",
-    "ref": "calling",
-    "propertyType": "apartment",
-    "priceValue": 25000000,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r3",
-    "city": "noida",
-    "sector": "45.0",
-    "project": "Amarpali Sapphire",
-    "flatSize": 1640,
-    "unitType": "",
-    "tower": "O",
-    "remarks": "2.2cr",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "25/2/2026",
-    "confBy": "meenakshi",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 22000000,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r4",
-    "city": "noida",
-    "sector": "45.0",
-    "project": "Amrapali Sapphire",
-    "flatSize": 3075,
-    "unitType": "4BHK + Family Lounge + Svt. Room(3075 SQ FT)",
-    "tower": "N",
-    "remarks": "3.4cr",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "20.09.2025",
-    "confBy": "aakshi",
-    "ref": "P",
-    "propertyType": "apartment",
-    "priceValue": 34000000,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r5",
-    "city": "noida",
-    "sector": "45.0",
-    "project": "Amrapali Sapphire",
-    "flatSize": 1640,
-    "unitType": "3BHK+3 Toilet",
-    "tower": "H",
-    "remarks": "2cr",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "17/3/2026",
-    "confBy": "aakshi",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 20000000,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r6",
-    "city": "noida",
-    "sector": "50.0",
-    "project": "mahagun maestro",
-    "flatSize": 3100,
-    "unitType": "4bhk+sq",
-    "tower": "TWR5",
-    "remarks": "4cr",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "17/3/2026",
-    "confBy": "aakshi",
-    "ref": "prop sol",
-    "propertyType": "apartment",
-    "priceValue": 40000000,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r7",
-    "city": "noida",
-    "sector": "52.0",
-    "project": "ANTRIKSH NATURE",
-    "flatSize": 1750,
-    "unitType": "",
-    "tower": "A",
-    "remarks": "2.5cr",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "17/3/2026",
-    "confBy": "aakshi",
-    "ref": "P calling",
-    "propertyType": "apartment",
-    "priceValue": 25000000,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r8",
-    "city": "noida",
-    "sector": "61.0",
-    "project": "shadabdi vihar",
-    "flatSize": 1850,
-    "unitType": "4bhk",
-    "tower": "",
-    "remarks": "2.7cr",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "17/3/2026",
-    "confBy": "aakshi",
-    "ref": "prop sol",
-    "propertyType": "apartment",
-    "priceValue": 27000000,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r9",
-    "city": "noida",
-    "sector": "74.0",
-    "project": "Supertech Cape TOWN",
-    "flatSize": 1150,
-    "unitType": "",
-    "tower": "CS-6",
-    "remarks": "80 Lakh",
-    "otherProp": "",
-    "status": "Sale",
-    "lastCallOn": "26/2/2026",
-    "confBy": "meenakshi",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 8000000,
-    "image": "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r10",
-    "city": "noida",
-    "sector": "74.0",
-    "project": "Supertech Cape TOWN",
-    "flatSize": 1150,
-    "unitType": "",
-    "tower": "CS-4",
-    "remarks": "90 Lakh",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "26/2/2026",
-    "confBy": "meenakshi",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 9000000,
-    "image": "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r11",
-    "city": "noida",
-    "sector": "74.0",
-    "project": "SUpertech Cape TOWN",
-    "flatSize": 1082,
-    "unitType": "",
-    "tower": "CB-4",
-    "remarks": "80 Lakh",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "26/2/2026",
-    "confBy": "meenakshi",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 8000000,
-    "image": "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r12",
-    "city": "noida",
-    "sector": "75.0",
-    "project": "Apex Athena",
-    "flatSize": 1895,
-    "unitType": "3bhk, 3toi",
-    "tower": "D",
-    "remarks": "2.75 Cr",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "17/3/2026",
-    "confBy": "aakshi",
-    "ref": "whatsapp responses calling",
-    "propertyType": "apartment",
-    "priceValue": 27500000,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r13",
-    "city": "noida",
-    "sector": "75.0",
-    "project": "DASNAC BURJ",
-    "flatSize": 3030,
-    "unitType": "4bhk",
-    "tower": "A",
-    "remarks": "4.75 cr",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "17/3/2026",
-    "confBy": "aakshi",
-    "ref": "prop sol",
-    "propertyType": "apartment",
-    "priceValue": 47500000,
-    "image": "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r14",
-    "city": "noida",
-    "sector": "75.0",
-    "project": "Ivy County",
-    "flatSize": 1485,
-    "unitType": "2bhk, lounge",
-    "tower": "C2",
-    "remarks": "2.7 cr",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "06.09.2025",
-    "confBy": "aakshi",
-    "ref": "data calling",
-    "propertyType": "apartment",
-    "priceValue": 27000000,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r15",
-    "city": "noida",
-    "sector": "75.0",
-    "project": "Ivy County",
-    "flatSize": 1465,
-    "unitType": "2bhk, lounge",
-    "tower": "",
-    "remarks": "3cr",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "13.09.2025",
-    "confBy": "aakshi",
-    "ref": "data calling",
-    "propertyType": "apartment",
-    "priceValue": 30000000,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r16",
-    "city": "noida",
-    "sector": "76.0",
-    "project": "Amrapali Crystal Homes",
-    "flatSize": 1375,
-    "unitType": "3bhk",
-    "tower": "T5",
-    "remarks": "1.8cr",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "30.06.2025",
-    "confBy": "aman",
-    "ref": "99acres",
-    "propertyType": "apartment",
-    "priceValue": 18000000,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r17",
-    "city": "noida",
-    "sector": "76.0",
-    "project": "Amrapali princely estate",
-    "flatSize": 1315,
-    "unitType": "3bhk",
-    "tower": "",
-    "remarks": "30.06.2025 aman spoke- this is miss vandana sons flat. 7th floor- rented. registered flat",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "30.06.2025",
-    "confBy": "aman",
-    "ref": "99acres",
-    "propertyType": "apartment",
-    "priceValue": 30,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r18",
-    "city": "noida",
-    "sector": "76.0",
-    "project": "AMRAPALI SILICON CITY",
-    "flatSize": 1035,
-    "unitType": "2BR",
-    "tower": "N",
-    "remarks": "1.2cr",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "08.10.2025",
-    "confBy": "aakshi",
-    "ref": "Book calling",
-    "propertyType": "apartment",
-    "priceValue": 12000000,
-    "image": "https://images.unsplash.com/photo-1554995207-c18c203602cb?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r19",
-    "city": "noida",
-    "sector": "76.0",
-    "project": "AMRAPALI SILICON CITY",
-    "flatSize": 1180,
-    "unitType": "2BR STUDY",
-    "tower": "B",
-    "remarks": "1.1cr",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "08.10.2025",
-    "confBy": "aakshi",
-    "ref": "Book calling",
-    "propertyType": "apartment",
-    "priceValue": 11000000,
-    "image": "https://images.unsplash.com/photo-1554995207-c18c203602cb?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r20",
-    "city": "noida",
-    "sector": "76.0",
-    "project": "sethi max royal",
-    "flatSize": 940,
-    "unitType": "2bhk",
-    "tower": "D",
-    "remarks": "95 lacks",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "01 Jul 2025",
-    "confBy": "aakshi",
-    "ref": "prop sol",
-    "propertyType": "apartment",
-    "priceValue": 9500000,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r21",
-    "city": "noida",
-    "sector": "76.0",
-    "project": "amrapali silicon city",
-    "flatSize": 1034,
-    "unitType": "2bhk",
-    "tower": "E",
-    "remarks": "1Cr",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "08.10.2025",
-    "confBy": "aakshi",
-    "ref": "prop sol",
-    "propertyType": "apartment",
-    "priceValue": 10000000,
-    "image": "https://images.unsplash.com/photo-1554995207-c18c203602cb?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r22",
-    "city": "noida",
-    "sector": "76.0",
-    "project": "Sethix max royal",
-    "flatSize": 940,
-    "unitType": "2bhk",
-    "tower": "D",
-    "remarks": "95 Lakhs",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "01.08.2025",
-    "confBy": "aakshi",
-    "ref": "prop sol",
-    "propertyType": "apartment",
-    "priceValue": 9500000,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r23",
-    "city": "noida",
-    "sector": "77.0",
-    "project": "Express Zenith",
-    "flatSize": 960,
-    "unitType": "2br",
-    "tower": "E",
-    "remarks": "78 Lakhs",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "13.05.2025",
-    "confBy": "aakshi",
-    "ref": "Book calling",
-    "propertyType": "apartment",
-    "priceValue": 7800000,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r24",
-    "city": "noida",
-    "sector": "77.0",
-    "project": "Express Zenith",
-    "flatSize": 1075,
-    "unitType": "2BR",
-    "tower": "B",
-    "remarks": "1.3 Cr",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "13.05.2025",
-    "confBy": "aakshi",
-    "ref": "Book calling",
-    "propertyType": "apartment",
-    "priceValue": 13000000,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r25",
-    "city": "noida",
-    "sector": "77.0",
-    "project": "Express Zenith",
-    "flatSize": 950,
-    "unitType": "2bhk",
-    "tower": "E",
-    "remarks": "1.05 Cr",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "08.10.2025",
-    "confBy": "aakshi",
-    "ref": "prop sol",
-    "propertyType": "apartment",
-    "priceValue": 10500000,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r26",
-    "city": "noida",
-    "sector": "78.0",
-    "project": "Mahagun Moderne",
-    "flatSize": 1250,
-    "unitType": "2bhk study",
-    "tower": "Siena",
-    "remarks": "1.72Cr",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "04.07.2025",
-    "confBy": "aakshi",
-    "ref": "prop sol",
-    "propertyType": "apartment",
-    "priceValue": 17200000,
-    "image": "https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r27",
-    "city": "noida",
-    "sector": "78.0",
-    "project": "Mahagun Moderne",
-    "flatSize": 1290,
-    "unitType": "2bhk, study",
-    "tower": "Latina",
-    "remarks": "1.75 Cr",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "04.07.2025",
-    "confBy": "aakshi",
-    "ref": "prop sol",
-    "propertyType": "apartment",
-    "priceValue": 17500000,
-    "image": "https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r28",
-    "city": "noida",
-    "sector": "78.0",
-    "project": "Mahagun Mezzaria",
-    "flatSize": 2500,
-    "unitType": "3br, 3 toi, SQ",
-    "tower": "Ferrara",
-    "remarks": "4.30 cr",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "17/3/2026",
-    "confBy": "aakshi",
-    "ref": "data calling",
-    "propertyType": "apartment",
-    "priceValue": 43000000,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r29",
-    "city": "noida",
-    "sector": "79.0",
-    "project": "Gaur Sportswood",
-    "flatSize": 2280,
-    "unitType": "3bhk+SQ",
-    "tower": "C",
-    "remarks": "3.65 Cr",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "30.06.2025",
-    "confBy": "aman",
-    "ref": "99acres",
-    "propertyType": "apartment",
-    "priceValue": 36500000,
-    "image": "https://images.unsplash.com/photo-1560185127-6ed189bf02f4?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r30",
-    "city": "noida",
-    "sector": "100.0",
-    "project": "LOTUS BOULVARD",
-    "flatSize": 1400,
-    "unitType": "",
-    "tower": "T8",
-    "remarks": "2.85 Cr",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "22.03.2025",
-    "confBy": "aakshi",
-    "ref": "P calling",
-    "propertyType": "apartment",
-    "priceValue": 28500000,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r31",
-    "city": "noida",
-    "sector": "107.0",
-    "project": "AMARPALI HEART BEAT",
-    "flatSize": 1735,
-    "unitType": "",
-    "tower": "E",
-    "remarks": "11K Per Sq Ft",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "16.2.2026",
-    "confBy": "meenakshi",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 11,
-    "image": "https://images.unsplash.com/photo-1600566752355-35792bedcfea?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r32",
-    "city": "noida",
-    "sector": "107.0",
-    "project": "AMARPALI HEART BEAT",
-    "flatSize": 1350,
-    "unitType": "",
-    "tower": "M",
-    "remarks": "11K Per Sq Ft",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "16.2.2026",
-    "confBy": "meenakshi",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 11,
-    "image": "https://images.unsplash.com/photo-1600566752355-35792bedcfea?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r33",
-    "city": "noida",
-    "sector": "107.0",
-    "project": "AMARPALI HEART BEAT",
-    "flatSize": 1195,
-    "unitType": "",
-    "tower": "C",
-    "remarks": "11K Per Sq Ft",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "16.2.2026",
-    "confBy": "meenakshi",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 11,
-    "image": "https://images.unsplash.com/photo-1600566752355-35792bedcfea?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r34",
-    "city": "noida",
-    "sector": "107.0",
-    "project": "AMARPALI HEART BEAT",
-    "flatSize": 1350,
-    "unitType": "",
-    "tower": "H",
-    "remarks": "11K Per Sq Ft",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "16.2.2026",
-    "confBy": "meenakshi",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 11,
-    "image": "https://images.unsplash.com/photo-1600566752355-35792bedcfea?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r35",
-    "city": "noida",
-    "sector": "107.0",
-    "project": "AMARPALI HEART BEAT",
-    "flatSize": 1350,
-    "unitType": "",
-    "tower": "G",
-    "remarks": "11K Per Sq Ft",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "16.2.2026",
-    "confBy": "meenakshi",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 11,
-    "image": "https://images.unsplash.com/photo-1600566752355-35792bedcfea?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r36",
-    "city": "noida",
-    "sector": "107.0",
-    "project": "AMARPALI HEART BEAT",
-    "flatSize": 1350,
-    "unitType": "",
-    "tower": "G",
-    "remarks": "11K Per Sq Ft",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "16.2.2026",
-    "confBy": "meenakshi",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 11,
-    "image": "https://images.unsplash.com/photo-1600566752355-35792bedcfea?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r37",
-    "city": "noida",
-    "sector": "107.0",
-    "project": "Amrapali Heart Beat",
-    "flatSize": 2125,
-    "unitType": "",
-    "tower": "A",
-    "remarks": "11K Per Sq Ft",
-    "otherProp": "",
-    "status": "Sale",
-    "lastCallOn": "16.2.2026",
-    "confBy": "meenakshi",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 11,
-    "image": "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r38",
-    "city": "noida",
-    "sector": "107.0",
-    "project": "great value sharnam",
-    "flatSize": "1791 3bhk, study",
-    "unitType": "",
-    "tower": "C",
-    "remarks": "3 cr",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "17/3/2026",
-    "confBy": "aman",
-    "ref": "sharnam data challing",
-    "propertyType": "apartment",
-    "priceValue": 30000000,
-    "image": "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r39",
-    "city": "noida",
-    "sector": "107.0",
-    "project": "Great Value Sharnam",
-    "flatSize": 1791,
-    "unitType": "3bhk, study",
-    "tower": "C",
-    "remarks": "2.75 Cr",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "17/3/2026",
-    "confBy": "aakshi",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 27500000,
-    "image": "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r40",
-    "city": "noida",
-    "sector": "107.0",
-    "project": "Great Value Sharnam",
-    "flatSize": 1139,
-    "unitType": "2bhk , 2bath",
-    "tower": "G",
-    "remarks": "1.45 Cr",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "17/3/2026",
-    "confBy": "aakshi",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 14500000,
-    "image": "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r41",
-    "city": "noida",
-    "sector": "107.0",
-    "project": "SHARANAM",
-    "flatSize": 1139,
-    "unitType": "",
-    "tower": "G",
-    "remarks": "1.5 Cr",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "27/2/2026",
-    "confBy": "meenakshi",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 15000000,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r42",
-    "city": "noida",
-    "sector": "107.0",
-    "project": "SUNWORLD VANALIKA",
-    "flatSize": 1730,
-    "unitType": "",
-    "tower": "T-12",
-    "remarks": "2.60 Cr",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "27/2/2026",
-    "confBy": "meenakshi",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 26000000,
-    "image": "https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r43",
-    "city": "noida",
-    "sector": "107.0",
-    "project": "SUNWORLD VANALIKA",
-    "flatSize": 1730,
-    "unitType": "",
-    "tower": "T-12",
-    "remarks": "2.72 Cr",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "27/2/2026",
-    "confBy": "meenakshi",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 27200000,
-    "image": "https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r44",
-    "city": "noida",
-    "sector": "108.0",
-    "project": "Daisy Meadouws",
-    "flatSize": 1060,
-    "unitType": "",
-    "tower": "Daisy",
-    "remarks": "1Cr",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "03 Feb 2026",
-    "confBy": "meenakshi",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 10000000,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r45",
-    "city": "noida",
-    "sector": "110.0",
-    "project": "lotus panache",
-    "flatSize": 1220,
-    "unitType": "2bhk",
-    "tower": "Tower-21",
-    "remarks": "11K Per Sq Ft",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "15.09.2025",
-    "confBy": "aakshi",
-    "ref": "prop sol",
-    "propertyType": "apartment",
-    "priceValue": 11,
-    "image": "https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r46",
-    "city": "noida",
-    "sector": "110.0",
-    "project": "lotus panache",
-    "flatSize": 1220,
-    "unitType": "2bhk",
-    "tower": "tower-26",
-    "remarks": "3 Cr",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "15.09.2025",
-    "confBy": "aakshi",
-    "ref": "prop sol",
-    "propertyType": "apartment",
-    "priceValue": 30000000,
-    "image": "https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r47",
-    "city": "noida",
-    "sector": "110.0",
-    "project": "lotus panache",
-    "flatSize": 1220,
-    "unitType": "2bhk",
-    "tower": "Tower-21",
-    "remarks": "10.5 K per sqft",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "15.09.2025",
-    "confBy": "aakshi",
-    "ref": "prop sol",
-    "propertyType": "apartment",
-    "priceValue": 10,
-    "image": "https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r48",
-    "city": "noida",
-    "sector": "110.0",
-    "project": "lotus panache",
-    "flatSize": 1220,
-    "unitType": "2bhk",
-    "tower": "tower-2",
-    "remarks": "1cr",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "15.09.2025",
-    "confBy": "aakshi",
-    "ref": "prop sol",
-    "propertyType": "apartment",
-    "priceValue": 10000000,
-    "image": "https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r49",
-    "city": "noida",
-    "sector": "110.0",
-    "project": "lotus panache",
-    "flatSize": 1067,
-    "unitType": "2bhk",
-    "tower": "tower-5",
-    "remarks": "10.5 K per sqft",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "15.09.2025",
-    "confBy": "aakshi",
-    "ref": "prop sol",
-    "propertyType": "apartment",
-    "priceValue": 10,
-    "image": "https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r50",
-    "city": "noida",
-    "sector": "110.0",
-    "project": "lotus panache",
-    "flatSize": 1720,
-    "unitType": "",
-    "tower": "T24",
-    "remarks": "6k per sq ft",
-    "otherProp": "lotus zing 1500sft",
-    "status": "sale",
-    "lastCallOn": "17/3/2026",
-    "confBy": "aakshi",
-    "ref": "sharnam data calling",
-    "propertyType": "apartment",
-    "priceValue": 6,
-    "image": "https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r51",
-    "city": "noida",
-    "sector": "115.0",
-    "project": "Ivory county",
-    "flatSize": 2727,
-    "unitType": "4bhk, 4 toi, U",
-    "tower": "C4",
-    "remarks": "15500k Per sq ft",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "17/3/2026",
-    "confBy": "aakshi",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 15500,
-    "image": "https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r52",
-    "city": "noida",
-    "sector": "115.0",
-    "project": "ivory county",
-    "flatSize": 2034,
-    "unitType": "3bhk, 3toi",
-    "tower": "A3",
-    "remarks": "3.3 Cr",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "17/3/2026",
-    "confBy": "aakshi",
-    "ref": "email",
-    "propertyType": "apartment",
-    "priceValue": 33000000,
-    "image": "https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r53",
-    "city": "noida",
-    "sector": "115.0",
-    "project": "Ivory county",
-    "flatSize": 2034,
-    "unitType": "3bhk, 3toi",
-    "tower": "A3",
-    "remarks": "14K per Sq ft",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "17/3/2026",
-    "confBy": "aakshi",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 14,
-    "image": "https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r54",
-    "city": "noida",
-    "sector": "115.0",
-    "project": "ivory county",
-    "flatSize": 2304,
-    "unitType": "3bhk, 3toi",
-    "tower": "B3",
-    "remarks": "17k Per sq ft",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "17/3/2026",
-    "confBy": "aakshi",
-    "ref": "prop sol",
-    "propertyType": "apartment",
-    "priceValue": 17,
-    "image": "https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r55",
-    "city": "noida",
-    "sector": "115.0",
-    "project": "Ivory county",
-    "flatSize": 2304,
-    "unitType": "4bhk, 4 toi, U",
-    "tower": "B6",
-    "remarks": "15k per sq ft",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "18/3/2026",
-    "confBy": "aakshi",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 15,
-    "image": "https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r56",
-    "city": "noida",
-    "sector": "115.0",
-    "project": "Ivory county",
-    "flatSize": 2034,
-    "unitType": "3bhk, 3toi",
-    "tower": "A1",
-    "remarks": "15k per sq ft",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "18/3/2026",
-    "confBy": "aakshi",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 15,
-    "image": "https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r57",
-    "city": "noida",
-    "sector": "115.0",
-    "project": "Ivory county",
-    "flatSize": 2727,
-    "unitType": "4bhk, 4 toi, U",
-    "tower": "C3",
-    "remarks": "14.5 K per sq ft",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "18/3/2026",
-    "confBy": "aakshi",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 14,
-    "image": "https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r58",
-    "city": "noida",
-    "sector": "115.0",
-    "project": "Ivory county",
-    "flatSize": 2034,
-    "unitType": "3bhk, 3toi",
-    "tower": "A3",
-    "remarks": "16k per sq ft",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "18/3/2026",
-    "confBy": "aakshi",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 16,
-    "image": "https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r59",
-    "city": "noida",
-    "sector": "115.0",
-    "project": "Ivory county",
-    "flatSize": 2034,
-    "unitType": "3bhk, 3toi",
-    "tower": "A3",
-    "remarks": "15k per sq ft",
-    "otherProp": "",
-    "status": "sale",
-    "lastCallOn": "18/3/2026",
-    "confBy": "aakshi",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 15,
-    "image": "https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r60",
-    "city": "noida",
-    "sector": "121.0",
-    "project": "Cleo County",
-    "flatSize": 3195,
-    "unitType": "4bhk, utility, 5 bath",
-    "tower": "G",
-    "remarks": "7.5 cr",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "18/3/2026",
-    "confBy": "aakshi",
-    "ref": "prop sol",
-    "propertyType": "apartment",
-    "priceValue": 75000000,
-    "image": "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r61",
-    "city": "noida",
-    "sector": "124.0",
-    "project": "Ats Knightbridge",
-    "flatSize": 6000,
-    "unitType": "TYPE 1",
-    "tower": "",
-    "remarks": "30K per sq ft",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "18/3/2026",
-    "confBy": "aakshi",
-    "ref": "whatsapp",
-    "propertyType": "apartment",
-    "priceValue": 30,
-    "image": "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r62",
-    "city": "noida",
-    "sector": "128.0",
-    "project": "Kalpatru Vista",
-    "flatSize": 3095,
-    "unitType": "",
-    "tower": "A",
-    "remarks": "22k Per sq ft",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "18/3/2026",
-    "confBy": "aakshi",
-    "ref": "prop sol",
-    "propertyType": "apartment",
-    "priceValue": 22,
-    "image": "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r63",
-    "city": "noida",
-    "sector": "150.0",
-    "project": "ACE GOLF SHIRE",
-    "flatSize": 1690,
-    "unitType": "",
-    "tower": "2",
-    "remarks": "3.45 Cr",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "18/3/2026",
-    "confBy": "meenakshi",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 34500000,
-    "image": "https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r64",
-    "city": "",
-    "sector": "134.0",
-    "project": "KOSMOS",
-    "flatSize": "850SQFT",
-    "unitType": "2BHK",
-    "tower": "KM47",
-    "remarks": "9.5 k per sq ft",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "16/3/2026",
-    "confBy": "MEENAKSHI",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 9,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r65",
-    "city": "",
-    "sector": "45.0",
-    "project": "SAPPHIR PH1",
-    "flatSize": "1140SQFT",
-    "unitType": "2 BHK+2 Toile",
-    "tower": "D",
-    "remarks": "1.5 Cr",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "16/3/2026",
-    "confBy": "MEENAKSHI",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 15000000,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r66",
-    "city": "",
-    "sector": "45.0",
-    "project": "SAPPHIR PH1",
-    "flatSize": 1640,
-    "unitType": "3BHK+3 Toilet",
-    "tower": "G",
-    "remarks": "2.2 cr",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "20/12/2025",
-    "confBy": "MEENAKSHI",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 22000000,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r67",
-    "city": "",
-    "sector": "45.0",
-    "project": "SAPPHIR PH2",
-    "flatSize": "1140SQFT",
-    "unitType": "2BHK+2 Toilet",
-    "tower": "S",
-    "remarks": "1.35 Cr",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "15/11/2025/16/3/2026",
-    "confBy": "MEENAKSHI",
-    "ref": "amodksoni@gmail.com",
-    "propertyType": "apartment",
-    "priceValue": 13500000,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r68",
-    "city": "",
-    "sector": "77.0",
-    "project": "PRATEEK WISTERA",
-    "flatSize": 1735,
-    "unitType": "",
-    "tower": "B",
-    "remarks": "3.3 Cr",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "",
-    "confBy": "MEENAKSHI",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 33000000,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r69",
-    "city": "",
-    "sector": "77.0",
-    "project": "PRATEEK WISTERA",
-    "flatSize": 955,
-    "unitType": "",
-    "tower": "N",
-    "remarks": "1.2 Cr",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "",
-    "confBy": "",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": 12000000,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r70",
-    "city": "",
-    "sector": "46.0",
-    "project": "WOODS",
-    "flatSize": 2088.09,
-    "unitType": "3 BHK",
-    "tower": "T2",
-    "remarks": "4.25 Cr",
-    "otherProp": "",
-    "status": "SALE",
-    "lastCallOn": "",
-    "confBy": "",
-    "ref": "mailtoparvesh@gmail.com",
-    "propertyType": "apartment",
-    "priceValue": 42500000,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r71",
-    "city": "",
-    "sector": "nan",
-    "project": "Resale Unit",
-    "flatSize": null,
-    "unitType": "",
-    "tower": "",
-    "remarks": "",
-    "otherProp": "",
-    "status": "",
-    "lastCallOn": "",
-    "confBy": "",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": null,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r72",
-    "city": "",
-    "sector": "nan",
-    "project": "Resale Unit",
-    "flatSize": null,
-    "unitType": "",
-    "tower": "",
-    "remarks": "",
-    "otherProp": "",
-    "status": "",
-    "lastCallOn": "",
-    "confBy": "",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": null,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r73",
-    "city": "",
-    "sector": "nan",
-    "project": "Resale Unit",
-    "flatSize": null,
-    "unitType": "",
-    "tower": "",
-    "remarks": "",
-    "otherProp": "",
-    "status": "",
-    "lastCallOn": "",
-    "confBy": "",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": null,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r74",
-    "city": "",
-    "sector": "nan",
-    "project": "Resale Unit",
-    "flatSize": null,
-    "unitType": "",
-    "tower": "",
-    "remarks": "",
-    "otherProp": "",
-    "status": "",
-    "lastCallOn": "",
-    "confBy": "",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": null,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r75",
-    "city": "",
-    "sector": "nan",
-    "project": "Resale Unit",
-    "flatSize": null,
-    "unitType": "",
-    "tower": "",
-    "remarks": "",
-    "otherProp": "",
-    "status": "",
-    "lastCallOn": "",
-    "confBy": "",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": null,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r76",
-    "city": "",
-    "sector": "nan",
-    "project": "Resale Unit",
-    "flatSize": null,
-    "unitType": "",
-    "tower": "",
-    "remarks": "",
-    "otherProp": "",
-    "status": "",
-    "lastCallOn": "",
-    "confBy": "",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": null,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    "id": "r77",
-    "city": "",
-    "sector": "nan",
-    "project": "Resale Unit",
-    "flatSize": null,
-    "unitType": "",
-    "tower": "",
-    "remarks": "",
-    "otherProp": "",
-    "status": "",
-    "lastCallOn": "",
-    "confBy": "",
-    "ref": "",
-    "propertyType": "apartment",
-    "priceValue": null,
-    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
+// --- RICH CONTENT (Injected to make property details realistic) ---
+const featuredProperties = [
+  { 
+    id: 'f1', title: 'Experion Saatori', city: 'Noida', location: 'Sector 151', propertyType: 'Apartment', 
+    category: 'buy', price: '₹ 1.85 Cr onwards', 
+    image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80',
+    tag: 'New Launch'
+  },
+  { 
+    id: 'f3', title: 'M3M Jacob & Co', city: 'Noida', location: 'Sector 97', propertyType: 'Villa', 
+    category: 'buy', price: '₹ 3.50 Cr onwards', 
+    image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80',
+    tag: 'Ultra Luxury'
+  },
+  { 
+    id: 'c1', title: 'M3M Line', city: 'Noida', location: 'Sector 72', propertyType: 'Commercial', 
+    category: 'buy', price: '₹ 80 L onwards', 
+    image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80',
+    tag: 'High ROI'
+  },
+  { 
+    id: 'p1', title: 'Bajrang Vatika', city: 'Noida Extension', location: 'Sector 10', propertyType: 'Plot', 
+    category: 'buy', price: '₹ 45 L onwards', 
+    image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80',
+    tag: 'Premium Plots'
+  },
+];
+
+
+// --- REAL ESTATE IMAGE HELPERS + RESALE DATA ---
+const buildRealEstateImage = (seed, label = 'real-estate') =>
+  `https://source.unsplash.com/featured/900x700/?${encodeURIComponent(`${label},real-estate,property,home`)}&sig=${seed}`;
+
+const buildLocalityImage = (seed, label = 'locality') =>
+  `https://source.unsplash.com/featured/900x700/?${encodeURIComponent(`${label},city,neighborhood,apartments`)}&sig=${seed}`;
+
+const resaleProperties = [
+  {
+    id: 'r1',
+    title: 'Jalvayu Vihar',
+    city: 'Noida',
+    sector: 'Sector 25',
+    size: '1050 sq ft',
+    unitType: '2bhk Study',
+    tower: 'G',
+    price: '1.40cr',
+    status: 'Sale',
+    lastCallOn: '2025-05-01 00:00:00',
+    confBy: 'Aakshi',
+    ref: 'Prop Sol',
+    otherProp: '',
+    note: '1.40cr',
+    image: buildRealEstateImage(1, 'Jalvayu Vihar'),
+  },
+  {
+    id: 'r2',
+    title: 'Amrapali Sapphire',
+    city: 'Noida',
+    sector: 'Sector 45',
+    size: '1640 sq ft',
+    unitType: '3BHK+3 Toilet',
+    tower: 'L',
+    price: '2.5cr',
+    status: 'Sale',
+    lastCallOn: '25/2/2026',
+    confBy: 'Meenakshi',
+    ref: 'Calling',
+    otherProp: '',
+    note: '2.5cr',
+    image: buildRealEstateImage(2, 'Amrapali Sapphire'),
+  },
+  {
+    id: 'r3',
+    title: 'Amarpali Sapphire',
+    city: 'Noida',
+    sector: 'Sector 45',
+    size: '1640 sq ft',
+    unitType: '',
+    tower: 'O',
+    price: '2.2cr',
+    status: 'SALE',
+    lastCallOn: '25/2/2026',
+    confBy: 'Meenakshi',
+    ref: '',
+    otherProp: '',
+    note: '2.2cr',
+    image: buildRealEstateImage(3, 'Amarpali Sapphire'),
+  },
+  {
+    id: 'r4',
+    title: 'Amrapali Sapphire',
+    city: 'Noida',
+    sector: 'Sector 45',
+    size: '3075 sq ft',
+    unitType: '4BHK + Family Lounge + Svt. Room(3075 SQ FT)',
+    tower: 'N',
+    price: '3.4cr',
+    status: 'Sale',
+    lastCallOn: '20.09.2025',
+    confBy: 'Aakshi',
+    ref: 'P',
+    otherProp: '',
+    note: '3.4cr',
+    image: buildRealEstateImage(4, 'Amrapali Sapphire'),
+  },
+  {
+    id: 'r5',
+    title: 'Amrapali Sapphire',
+    city: 'Noida',
+    sector: 'Sector 45',
+    size: '1640 sq ft',
+    unitType: '3BHK+3 Toilet',
+    tower: 'H',
+    price: '2cr',
+    status: 'SALE',
+    lastCallOn: '17/3/2026',
+    confBy: 'Aakshi',
+    ref: '',
+    otherProp: '',
+    note: '2cr',
+    image: buildRealEstateImage(5, 'Amrapali Sapphire'),
+  },
+  {
+    id: 'r6',
+    title: 'Mahagun Maestro',
+    city: 'Noida',
+    sector: 'Sector 50',
+    size: '3100 sq ft',
+    unitType: '4bhk+sq',
+    tower: 'TWR5',
+    price: '4cr',
+    status: 'SALE',
+    lastCallOn: '17/3/2026',
+    confBy: 'Aakshi',
+    ref: 'Prop Sol',
+    otherProp: '',
+    note: '4cr',
+    image: buildRealEstateImage(6, 'Mahagun Maestro'),
+  },
+  {
+    id: 'r7',
+    title: 'Antriksh NATURE',
+    city: 'Noida',
+    sector: 'Sector 52',
+    size: '1750 sq ft',
+    unitType: '',
+    tower: 'A',
+    price: '2.5cr',
+    status: 'Sale',
+    lastCallOn: '17/3/2026',
+    confBy: 'Aakshi',
+    ref: 'P Calling',
+    otherProp: '',
+    note: '2.5cr',
+    image: buildRealEstateImage(7, 'Antriksh NATURE'),
+  },
+  {
+    id: 'r8',
+    title: 'Shadabdi Vihar',
+    city: 'Noida',
+    sector: 'Sector 61',
+    size: '1850 sq ft',
+    unitType: '4bhk',
+    tower: '',
+    price: '2.7cr',
+    status: 'Sale',
+    lastCallOn: '17/3/2026',
+    confBy: 'Aakshi',
+    ref: 'Prop Sol',
+    otherProp: '',
+    note: '2.7cr',
+    image: buildRealEstateImage(8, 'Shadabdi Vihar'),
+  },
+  {
+    id: 'r9',
+    title: 'Supertech Cape TOWN',
+    city: 'Noida',
+    sector: 'Sector 74',
+    size: '1150 sq ft',
+    unitType: '',
+    tower: 'CS-6',
+    price: '80 Lakh',
+    status: 'Sale',
+    lastCallOn: '26/2/2026',
+    confBy: 'Meenakshi',
+    ref: '',
+    otherProp: '',
+    note: '80 Lakh',
+    image: buildRealEstateImage(9, 'Supertech Cape TOWN'),
+  },
+  {
+    id: 'r10',
+    title: 'Supertech Cape TOWN',
+    city: 'Noida',
+    sector: 'Sector 74',
+    size: '1150 sq ft',
+    unitType: '',
+    tower: 'CS-4',
+    price: '90 Lakh',
+    status: 'SALE',
+    lastCallOn: '26/2/2026',
+    confBy: 'Meenakshi',
+    ref: '',
+    otherProp: '',
+    note: '90 Lakh',
+    image: buildRealEstateImage(10, 'Supertech Cape TOWN'),
+  },
+  {
+    id: 'r11',
+    title: 'Supertech Cape TOWN',
+    city: 'Noida',
+    sector: 'Sector 74',
+    size: '1082 sq ft',
+    unitType: '',
+    tower: 'CB-4',
+    price: '80 Lakh',
+    status: 'SALE',
+    lastCallOn: '26/2/2026',
+    confBy: 'Meenakshi',
+    ref: '',
+    otherProp: '',
+    note: '80 Lakh',
+    image: buildRealEstateImage(11, 'Supertech Cape TOWN'),
+  },
+  {
+    id: 'r12',
+    title: 'Apex Athena',
+    city: 'Noida',
+    sector: 'Sector 75',
+    size: '1895 sq ft',
+    unitType: '3bhk, 3toi',
+    tower: 'D',
+    price: '2.75 Cr',
+    status: 'SALE',
+    lastCallOn: '17/3/2026',
+    confBy: 'Aakshi',
+    ref: 'Whatsapp Responses Calling',
+    otherProp: '',
+    note: '2.75 Cr',
+    image: buildRealEstateImage(12, 'Apex Athena'),
+  },
+  {
+    id: 'r13',
+    title: 'DASNAC BURJ',
+    city: 'Noida',
+    sector: 'Sector 75',
+    size: '3030 sq ft',
+    unitType: '4bhk',
+    tower: 'A',
+    price: '4.75 cr',
+    status: 'SALE',
+    lastCallOn: '17/3/2026',
+    confBy: 'Aakshi',
+    ref: 'Prop Sol',
+    otherProp: '',
+    note: '4.75 cr',
+    image: buildRealEstateImage(13, 'DASNAC BURJ'),
+  },
+  {
+    id: 'r14',
+    title: 'Ivy County',
+    city: 'Noida',
+    sector: 'Sector 75',
+    size: '1485 sq ft',
+    unitType: '2bhk, Lounge',
+    tower: 'C2',
+    price: '2.7 cr',
+    status: 'Sale',
+    lastCallOn: '06.09.2025',
+    confBy: 'Aakshi',
+    ref: 'Data Calling',
+    otherProp: '',
+    note: '2.7 cr',
+    image: buildRealEstateImage(14, 'Ivy County'),
+  },
+  {
+    id: 'r15',
+    title: 'Ivy County',
+    city: 'Noida',
+    sector: 'Sector 75',
+    size: '1465 sq ft',
+    unitType: '2bhk, Lounge',
+    tower: '',
+    price: '3cr',
+    status: 'Sale',
+    lastCallOn: '13.09.2025',
+    confBy: 'Aakshi',
+    ref: 'Data Calling',
+    otherProp: '',
+    note: '3cr',
+    image: buildRealEstateImage(15, 'Ivy County'),
+  },
+  {
+    id: 'r16',
+    title: 'Amrapali Crystal Homes',
+    city: 'Noida',
+    sector: 'Sector 76',
+    size: '1375 sq ft',
+    unitType: '3bhk',
+    tower: 'T5',
+    price: '1.8cr',
+    status: 'Sale',
+    lastCallOn: '30.06.2025',
+    confBy: 'Aman',
+    ref: '99acres',
+    otherProp: '',
+    note: '1.8cr',
+    image: buildRealEstateImage(16, 'Amrapali Crystal Homes'),
+  },
+  {
+    id: 'r17',
+    title: 'Amrapali Princely Estate',
+    city: 'Noida',
+    sector: 'Sector 76',
+    size: '1315 sq ft',
+    unitType: '3bhk',
+    tower: '',
+    price: '30.06.2025 aman spoke- this is miss vandana sons flat. 7th floor- rented. registered flat',
+    status: 'Sale',
+    lastCallOn: '30.06.2025',
+    confBy: 'Aman',
+    ref: '99acres',
+    otherProp: '',
+    note: '30.06.2025 aman spoke- this is miss vandana sons flat. 7th floor- rented. registered flat',
+    image: buildRealEstateImage(17, 'Amrapali Princely Estate'),
+  },
+  {
+    id: 'r18',
+    title: 'Amrapali Silicon CITY',
+    city: 'Noida',
+    sector: 'Sector 76',
+    size: '1035 sq ft',
+    unitType: '2BR',
+    tower: 'N',
+    price: '1.2cr',
+    status: 'Sale',
+    lastCallOn: '08.10.2025',
+    confBy: 'Aakshi',
+    ref: 'Book Calling',
+    otherProp: '',
+    note: '1.2cr',
+    image: buildRealEstateImage(18, 'Amrapali Silicon CITY'),
+  },
+  {
+    id: 'r19',
+    title: 'Amrapali Silicon CITY',
+    city: 'Noida',
+    sector: 'Sector 76',
+    size: '1180 sq ft',
+    unitType: '2BR STUDY',
+    tower: 'B',
+    price: '1.1cr',
+    status: 'Sale',
+    lastCallOn: '08.10.2025',
+    confBy: 'Aakshi',
+    ref: 'Book Calling',
+    otherProp: '',
+    note: '1.1cr',
+    image: buildRealEstateImage(19, 'Amrapali Silicon CITY'),
+  },
+  {
+    id: 'r20',
+    title: 'Sethi Max Royal',
+    city: 'Noida',
+    sector: 'Sector 76',
+    size: '940 sq ft',
+    unitType: '2bhk',
+    tower: 'D',
+    price: '95 lacks',
+    status: 'Sale',
+    lastCallOn: '2025-07-01 00:00:00',
+    confBy: 'Aakshi',
+    ref: 'Prop Sol',
+    otherProp: '',
+    note: '95 lacks',
+    image: buildRealEstateImage(20, 'Sethi Max Royal'),
+  },
+  {
+    id: 'r21',
+    title: 'Amrapali Silicon City',
+    city: 'Noida',
+    sector: 'Sector 76',
+    size: '1034 sq ft',
+    unitType: '2bhk',
+    tower: 'E',
+    price: '1Cr',
+    status: 'Sale',
+    lastCallOn: '08.10.2025',
+    confBy: 'Aakshi',
+    ref: 'Prop Sol',
+    otherProp: '',
+    note: '1Cr',
+    image: buildRealEstateImage(21, 'Amrapali Silicon City'),
+  },
+  {
+    id: 'r22',
+    title: 'Sethix Max Royal',
+    city: 'Noida',
+    sector: 'Sector 76',
+    size: '940 sq ft',
+    unitType: '2bhk',
+    tower: 'D',
+    price: '95 Lakhs',
+    status: 'Sale',
+    lastCallOn: '01.08.2025',
+    confBy: 'Aakshi',
+    ref: 'Prop Sol',
+    otherProp: '',
+    note: '95 Lakhs',
+    image: buildRealEstateImage(22, 'Sethix Max Royal'),
+  },
+  {
+    id: 'r23',
+    title: 'Express Zenith',
+    city: 'Noida',
+    sector: 'Sector 77',
+    size: '960 sq ft',
+    unitType: '2br',
+    tower: 'E',
+    price: '78 Lakhs',
+    status: 'Sale',
+    lastCallOn: '13.05.2025',
+    confBy: 'Aakshi',
+    ref: 'Book Calling',
+    otherProp: '',
+    note: '78 Lakhs',
+    image: buildRealEstateImage(23, 'Express Zenith'),
+  },
+  {
+    id: 'r24',
+    title: 'Express Zenith',
+    city: 'Noida',
+    sector: 'Sector 77',
+    size: '1075 sq ft',
+    unitType: '2BR',
+    tower: 'B',
+    price: '1.3 Cr',
+    status: 'Sale',
+    lastCallOn: '13.05.2025',
+    confBy: 'Aakshi',
+    ref: 'Book Calling',
+    otherProp: '',
+    note: '1.3 Cr',
+    image: buildRealEstateImage(24, 'Express Zenith'),
+  },
+  {
+    id: 'r25',
+    title: 'Express Zenith',
+    city: 'Noida',
+    sector: 'Sector 77',
+    size: '950 sq ft',
+    unitType: '2bhk',
+    tower: 'E',
+    price: '1.05 Cr',
+    status: 'Sale',
+    lastCallOn: '08.10.2025',
+    confBy: 'Aakshi',
+    ref: 'Prop Sol',
+    otherProp: '',
+    note: '1.05 Cr',
+    image: buildRealEstateImage(25, 'Express Zenith'),
+  },
+  {
+    id: 'r26',
+    title: 'Mahagun Moderne',
+    city: 'Noida',
+    sector: 'Sector 78',
+    size: '1250 sq ft',
+    unitType: '2bhk Study',
+    tower: 'Siena',
+    price: '1.72Cr',
+    status: 'Sale',
+    lastCallOn: '04.07.2025',
+    confBy: 'Aakshi',
+    ref: 'Prop Sol',
+    otherProp: '',
+    note: '1.72Cr',
+    image: buildRealEstateImage(26, 'Mahagun Moderne'),
+  },
+  {
+    id: 'r27',
+    title: 'Mahagun Moderne',
+    city: 'Noida',
+    sector: 'Sector 78',
+    size: '1290 sq ft',
+    unitType: '2bhk, Study',
+    tower: 'Latina',
+    price: '1.75 Cr',
+    status: 'Sale',
+    lastCallOn: '04.07.2025',
+    confBy: 'Aakshi',
+    ref: 'Prop Sol',
+    otherProp: '',
+    note: '1.75 Cr',
+    image: buildRealEstateImage(27, 'Mahagun Moderne'),
+  },
+  {
+    id: 'r28',
+    title: 'Mahagun Mezzaria',
+    city: 'Noida',
+    sector: 'Sector 78',
+    size: '2500 sq ft',
+    unitType: '3br, 3 toi, SQ',
+    tower: 'Ferrara',
+    price: '4.30 cr',
+    status: 'Sale',
+    lastCallOn: '17/3/2026',
+    confBy: 'Aakshi',
+    ref: 'Data Calling',
+    otherProp: '',
+    note: '4.30 cr',
+    image: buildRealEstateImage(28, 'Mahagun Mezzaria'),
+  },
+  {
+    id: 'r29',
+    title: 'Gaur Sportswood',
+    city: 'Noida',
+    sector: 'Sector 79',
+    size: '2280 sq ft',
+    unitType: '3bhk+SQ',
+    tower: 'C',
+    price: '3.65 Cr',
+    status: 'Sale',
+    lastCallOn: '30.06.2025',
+    confBy: 'Aman',
+    ref: '99acres',
+    otherProp: '',
+    note: '3.65 Cr',
+    image: buildRealEstateImage(29, 'Gaur Sportswood'),
+  },
+  {
+    id: 'r30',
+    title: 'LOTUS Boulvard',
+    city: 'Noida',
+    sector: 'Sector 100',
+    size: '1400 sq ft',
+    unitType: '',
+    tower: 'T8',
+    price: '2.85 Cr',
+    status: 'Sale',
+    lastCallOn: '22.03.2025',
+    confBy: 'Aakshi',
+    ref: 'P Calling',
+    otherProp: '',
+    note: '2.85 Cr',
+    image: buildRealEstateImage(30, 'LOTUS Boulvard'),
+  },
+  {
+    id: 'r31',
+    title: 'Amarpali HEART BEAT',
+    city: 'Noida',
+    sector: 'Sector 107',
+    size: '1735 sq ft',
+    unitType: '',
+    tower: 'E',
+    price: '11K Per Sq Ft',
+    status: 'SALE',
+    lastCallOn: '16.2.2026',
+    confBy: 'Meenakshi',
+    ref: '',
+    otherProp: '',
+    note: '11K Per Sq Ft',
+    image: buildRealEstateImage(31, 'Amarpali HEART BEAT'),
+  },
+  {
+    id: 'r32',
+    title: 'Amarpali HEART BEAT',
+    city: 'Noida',
+    sector: 'Sector 107',
+    size: '1350 sq ft',
+    unitType: '',
+    tower: 'M',
+    price: '11K Per Sq Ft',
+    status: 'SALE',
+    lastCallOn: '16.2.2026',
+    confBy: 'Meenakshi',
+    ref: '',
+    otherProp: '',
+    note: '11K Per Sq Ft',
+    image: buildRealEstateImage(32, 'Amarpali HEART BEAT'),
+  },
+  {
+    id: 'r33',
+    title: 'Amarpali HEART BEAT',
+    city: 'Noida',
+    sector: 'Sector 107',
+    size: '1195 sq ft',
+    unitType: '',
+    tower: 'C',
+    price: '11K Per Sq Ft',
+    status: 'SALE',
+    lastCallOn: '16.2.2026',
+    confBy: 'Meenakshi',
+    ref: '',
+    otherProp: '',
+    note: '11K Per Sq Ft',
+    image: buildRealEstateImage(33, 'Amarpali HEART BEAT'),
+  },
+  {
+    id: 'r34',
+    title: 'Amarpali HEART BEAT',
+    city: 'Noida',
+    sector: 'Sector 107',
+    size: '1350 sq ft',
+    unitType: '',
+    tower: 'H',
+    price: '11K Per Sq Ft',
+    status: 'SALE',
+    lastCallOn: '16.2.2026',
+    confBy: 'Meenakshi',
+    ref: '',
+    otherProp: '',
+    note: '11K Per Sq Ft',
+    image: buildRealEstateImage(34, 'Amarpali HEART BEAT'),
+  },
+  {
+    id: 'r35',
+    title: 'Amarpali HEART BEAT',
+    city: 'Noida',
+    sector: 'Sector 107',
+    size: '1350 sq ft',
+    unitType: '',
+    tower: 'G',
+    price: '11K Per Sq Ft',
+    status: 'SALE',
+    lastCallOn: '16.2.2026',
+    confBy: 'Meenakshi',
+    ref: '',
+    otherProp: '',
+    note: '11K Per Sq Ft',
+    image: buildRealEstateImage(35, 'Amarpali HEART BEAT'),
+  },
+  {
+    id: 'r36',
+    title: 'Amarpali HEART BEAT',
+    city: 'Noida',
+    sector: 'Sector 107',
+    size: '1350 sq ft',
+    unitType: '',
+    tower: 'G',
+    price: '11K Per Sq Ft',
+    status: 'SALE',
+    lastCallOn: '16.2.2026',
+    confBy: 'Meenakshi',
+    ref: '',
+    otherProp: '',
+    note: '11K Per Sq Ft',
+    image: buildRealEstateImage(36, 'Amarpali HEART BEAT'),
+  },
+  {
+    id: 'r37',
+    title: 'Amrapali Heart Beat',
+    city: 'Noida',
+    sector: 'Sector 107',
+    size: '2125 sq ft',
+    unitType: '',
+    tower: 'A',
+    price: '11K Per Sq Ft',
+    status: 'Sale',
+    lastCallOn: '16.2.2026',
+    confBy: 'Meenakshi',
+    ref: '',
+    otherProp: '',
+    note: '11K Per Sq Ft',
+    image: buildRealEstateImage(37, 'Amrapali Heart Beat'),
+  },
+  {
+    id: 'r38',
+    title: 'Great Value Sharnam',
+    city: 'Noida',
+    sector: 'Sector 107',
+    size: '1791 3bhk, study sq ft',
+    unitType: '',
+    tower: 'C',
+    price: '3 cr',
+    status: 'SALE',
+    lastCallOn: '17/3/2026',
+    confBy: 'Aman',
+    ref: 'Sharnam Data Challing',
+    otherProp: '',
+    note: '3 cr',
+    image: buildRealEstateImage(38, 'Great Value Sharnam'),
+  },
+  {
+    id: 'r39',
+    title: 'Great Value Sharnam',
+    city: 'Noida',
+    sector: 'Sector 107',
+    size: '1791 sq ft',
+    unitType: '3bhk, Study',
+    tower: 'C',
+    price: '2.75 Cr',
+    status: 'SALE',
+    lastCallOn: '17/3/2026',
+    confBy: 'Aakshi',
+    ref: '',
+    otherProp: '',
+    note: '2.75 Cr',
+    image: buildRealEstateImage(39, 'Great Value Sharnam'),
+  },
+  {
+    id: 'r40',
+    title: 'Great Value Sharnam',
+    city: 'Noida',
+    sector: 'Sector 107',
+    size: '1139 sq ft',
+    unitType: '2bhk , 2bath',
+    tower: 'G',
+    price: '1.45 Cr',
+    status: 'SALE',
+    lastCallOn: '17/3/2026',
+    confBy: 'Aakshi',
+    ref: '',
+    otherProp: '',
+    note: '1.45 Cr',
+    image: buildRealEstateImage(40, 'Great Value Sharnam'),
+  },
+  {
+    id: 'r41',
+    title: 'Sharanam',
+    city: 'Noida',
+    sector: 'Sector 107',
+    size: '1139 sq ft',
+    unitType: '',
+    tower: 'G',
+    price: '1.5 Cr',
+    status: 'SALE',
+    lastCallOn: '27/2/2026',
+    confBy: 'Meenakshi',
+    ref: '',
+    otherProp: '',
+    note: '1.5 Cr',
+    image: buildRealEstateImage(41, 'Sharanam'),
+  },
+  {
+    id: 'r42',
+    title: 'Sunworld Vanalika',
+    city: 'Noida',
+    sector: 'Sector 107',
+    size: '1730 sq ft',
+    unitType: '',
+    tower: 'T-12',
+    price: '2.60 Cr',
+    status: 'SALE',
+    lastCallOn: '27/2/2026',
+    confBy: 'Meenakshi',
+    ref: '',
+    otherProp: '',
+    note: '2.60 Cr',
+    image: buildRealEstateImage(42, 'Sunworld Vanalika'),
+  },
+  {
+    id: 'r43',
+    title: 'Sunworld Vanalika',
+    city: 'Noida',
+    sector: 'Sector 107',
+    size: '1730 sq ft',
+    unitType: '',
+    tower: 'T-12',
+    price: '2.72 Cr',
+    status: 'SALE',
+    lastCallOn: '27/2/2026',
+    confBy: 'Meenakshi',
+    ref: '',
+    otherProp: '',
+    note: '2.72 Cr',
+    image: buildRealEstateImage(43, 'Sunworld Vanalika'),
+  },
+  {
+    id: 'r44',
+    title: 'Daisy Meadouws',
+    city: 'Noida',
+    sector: 'Sector 108',
+    size: '1060 sq ft',
+    unitType: '',
+    tower: 'Daisy',
+    price: '1Cr',
+    status: 'SALE',
+    lastCallOn: '2026-02-03 00:00:00',
+    confBy: 'Meenakshi',
+    ref: '',
+    otherProp: '',
+    note: '1Cr',
+    image: buildRealEstateImage(44, 'Daisy Meadouws'),
+  },
+  {
+    id: 'r45',
+    title: 'Lotus Panache',
+    city: 'Noida',
+    sector: 'Sector 110',
+    size: '1220 sq ft',
+    unitType: '2bhk',
+    tower: 'Tower-21',
+    price: '11K Per Sq Ft',
+    status: 'Sale',
+    lastCallOn: '15.09.2025',
+    confBy: 'Aakshi',
+    ref: 'Prop Sol',
+    otherProp: '',
+    note: '11K Per Sq Ft',
+    image: buildRealEstateImage(45, 'Lotus Panache'),
+  },
+  {
+    id: 'r46',
+    title: 'Lotus Panache',
+    city: 'Noida',
+    sector: 'Sector 110',
+    size: '1220 sq ft',
+    unitType: '2bhk',
+    tower: 'Tower-26',
+    price: '3 Cr',
+    status: 'Sale',
+    lastCallOn: '15.09.2025',
+    confBy: 'Aakshi',
+    ref: 'Prop Sol',
+    otherProp: '',
+    note: '3 Cr',
+    image: buildRealEstateImage(46, 'Lotus Panache'),
+  },
+  {
+    id: 'r47',
+    title: 'Lotus Panache',
+    city: 'Noida',
+    sector: 'Sector 110',
+    size: '1220 sq ft',
+    unitType: '2bhk',
+    tower: 'Tower-21',
+    price: '10.5 K per sqft',
+    status: 'Sale',
+    lastCallOn: '15.09.2025',
+    confBy: 'Aakshi',
+    ref: 'Prop Sol',
+    otherProp: '',
+    note: '10.5 K per sqft',
+    image: buildRealEstateImage(47, 'Lotus Panache'),
+  },
+  {
+    id: 'r48',
+    title: 'Lotus Panache',
+    city: 'Noida',
+    sector: 'Sector 110',
+    size: '1220 sq ft',
+    unitType: '2bhk',
+    tower: 'Tower-2',
+    price: '1cr',
+    status: 'Sale',
+    lastCallOn: '15.09.2025',
+    confBy: 'Aakshi',
+    ref: 'Prop Sol',
+    otherProp: '',
+    note: '1cr',
+    image: buildRealEstateImage(48, 'Lotus Panache'),
+  },
+  {
+    id: 'r49',
+    title: 'Lotus Panache',
+    city: 'Noida',
+    sector: 'Sector 110',
+    size: '1067 sq ft',
+    unitType: '2bhk',
+    tower: 'Tower-5',
+    price: '10.5 K per sqft',
+    status: 'Sale',
+    lastCallOn: '15.09.2025',
+    confBy: 'Aakshi',
+    ref: 'Prop Sol',
+    otherProp: '',
+    note: '10.5 K per sqft',
+    image: buildRealEstateImage(49, 'Lotus Panache'),
+  },
+  {
+    id: 'r50',
+    title: 'Lotus Panache',
+    city: 'Noida',
+    sector: 'Sector 110',
+    size: '1720 sq ft',
+    unitType: '',
+    tower: 'T24',
+    price: '6k per sq ft',
+    status: 'Sale',
+    lastCallOn: '17/3/2026',
+    confBy: 'Aakshi',
+    ref: 'Sharnam Data Calling',
+    otherProp: 'Lotus Zing 1500sft',
+    note: '6k per sq ft',
+    image: buildRealEstateImage(50, 'Lotus Panache'),
+  },
+  {
+    id: 'r51',
+    title: 'Ivory County',
+    city: 'Noida',
+    sector: 'Sector 115',
+    size: '2727 sq ft',
+    unitType: '4bhk, 4 toi, U',
+    tower: 'C4',
+    price: '15500k Per sq ft',
+    status: 'SALE',
+    lastCallOn: '17/3/2026',
+    confBy: 'Aakshi',
+    ref: '',
+    otherProp: '',
+    note: '15500k Per sq ft',
+    image: buildRealEstateImage(51, 'Ivory County'),
+  },
+  {
+    id: 'r52',
+    title: 'Ivory County',
+    city: 'Noida',
+    sector: 'Sector 115',
+    size: '2034 sq ft',
+    unitType: '3bhk, 3toi',
+    tower: 'A3',
+    price: '3.3 Cr',
+    status: 'Sale',
+    lastCallOn: '17/3/2026',
+    confBy: 'Aakshi',
+    ref: 'Email',
+    otherProp: '',
+    note: '3.3 Cr',
+    image: buildRealEstateImage(52, 'Ivory County'),
+  },
+  {
+    id: 'r53',
+    title: 'Ivory County',
+    city: 'Noida',
+    sector: 'Sector 115',
+    size: '2034 sq ft',
+    unitType: '3bhk, 3toi',
+    tower: 'A3',
+    price: '14K per Sq ft',
+    status: 'Sale',
+    lastCallOn: '17/3/2026',
+    confBy: 'Aakshi',
+    ref: '',
+    otherProp: '',
+    note: '14K per Sq ft',
+    image: buildRealEstateImage(53, 'Ivory County'),
+  },
+  {
+    id: 'r54',
+    title: 'Ivory County',
+    city: 'Noida',
+    sector: 'Sector 115',
+    size: '2304 sq ft',
+    unitType: '3bhk, 3toi',
+    tower: 'B3',
+    price: '17k Per sq ft',
+    status: 'Sale',
+    lastCallOn: '17/3/2026',
+    confBy: 'Aakshi',
+    ref: 'Prop Sol',
+    otherProp: '',
+    note: '17k Per sq ft',
+    image: buildRealEstateImage(54, 'Ivory County'),
+  },
+  {
+    id: 'r55',
+    title: 'Ivory County',
+    city: 'Noida',
+    sector: 'Sector 115',
+    size: '2304 sq ft',
+    unitType: '4bhk, 4 toi, U',
+    tower: 'B6',
+    price: '15k per sq ft',
+    status: 'SALE',
+    lastCallOn: '18/3/2026',
+    confBy: 'Aakshi',
+    ref: '',
+    otherProp: '',
+    note: '15k per sq ft',
+    image: buildRealEstateImage(55, 'Ivory County'),
+  },
+  {
+    id: 'r56',
+    title: 'Ivory County',
+    city: 'Noida',
+    sector: 'Sector 115',
+    size: '2034 sq ft',
+    unitType: '3bhk, 3toi',
+    tower: 'A1',
+    price: '15k per sq ft',
+    status: 'SALE',
+    lastCallOn: '18/3/2026',
+    confBy: 'Aakshi',
+    ref: '',
+    otherProp: '',
+    note: '15k per sq ft',
+    image: buildRealEstateImage(56, 'Ivory County'),
+  },
+  {
+    id: 'r57',
+    title: 'Ivory County',
+    city: 'Noida',
+    sector: 'Sector 115',
+    size: '2727 sq ft',
+    unitType: '4bhk, 4 toi, U',
+    tower: 'C3',
+    price: '14.5 K per sq ft',
+    status: 'SALE',
+    lastCallOn: '18/3/2026',
+    confBy: 'Aakshi',
+    ref: '',
+    otherProp: '',
+    note: '14.5 K per sq ft',
+    image: buildRealEstateImage(57, 'Ivory County'),
+  },
+  {
+    id: 'r58',
+    title: 'Ivory County',
+    city: 'Noida',
+    sector: 'Sector 115',
+    size: '2034 sq ft',
+    unitType: '3bhk, 3toi',
+    tower: 'A3',
+    price: '16k per sq ft',
+    status: 'Sale',
+    lastCallOn: '18/3/2026',
+    confBy: 'Aakshi',
+    ref: '',
+    otherProp: '',
+    note: '16k per sq ft',
+    image: buildRealEstateImage(58, 'Ivory County'),
+  },
+  {
+    id: 'r59',
+    title: 'Ivory County',
+    city: 'Noida',
+    sector: 'Sector 115',
+    size: '2034 sq ft',
+    unitType: '3bhk, 3toi',
+    tower: 'A3',
+    price: '15k per sq ft',
+    status: 'Sale',
+    lastCallOn: '18/3/2026',
+    confBy: 'Aakshi',
+    ref: '',
+    otherProp: '',
+    note: '15k per sq ft',
+    image: buildRealEstateImage(59, 'Ivory County'),
+  },
+  {
+    id: 'r60',
+    title: 'Cleo County',
+    city: 'Noida',
+    sector: 'Sector 121',
+    size: '3195 sq ft',
+    unitType: '4bhk, utility, 5 Bath',
+    tower: 'G',
+    price: '7.5 cr',
+    status: 'SALE',
+    lastCallOn: '18/3/2026',
+    confBy: 'Aakshi',
+    ref: 'Prop Sol',
+    otherProp: '',
+    note: '7.5 cr',
+    image: buildRealEstateImage(60, 'Cleo County'),
+  },
+  {
+    id: 'r61',
+    title: 'Ats Knightbridge',
+    city: 'Noida',
+    sector: 'Sector 124',
+    size: '6000 sq ft',
+    unitType: 'TYPE 1',
+    tower: '',
+    price: '30K per sq ft',
+    status: 'SALE',
+    lastCallOn: '18/3/2026',
+    confBy: 'Aakshi',
+    ref: 'Whatsapp',
+    otherProp: '',
+    note: '30K per sq ft',
+    image: buildRealEstateImage(61, 'Ats Knightbridge'),
+  },
+  {
+    id: 'r62',
+    title: 'Kalpatru Vista',
+    city: 'Noida',
+    sector: 'Sector 128',
+    size: '3095 sq ft',
+    unitType: '',
+    tower: 'A',
+    price: '22k Per sq ft',
+    status: 'SALE',
+    lastCallOn: '18/3/2026',
+    confBy: 'Aakshi',
+    ref: 'Prop Sol',
+    otherProp: '',
+    note: '22k Per sq ft',
+    image: buildRealEstateImage(62, 'Kalpatru Vista'),
+  },
+  {
+    id: 'r63',
+    title: 'ACE GOLF SHIRE',
+    city: 'Noida',
+    sector: 'Sector 150',
+    size: '1690 sq ft',
+    unitType: '',
+    tower: '2',
+    price: '3.45 Cr',
+    status: 'SALE',
+    lastCallOn: '18/3/2026',
+    confBy: 'Meenakshi',
+    ref: '',
+    otherProp: '',
+    note: '3.45 Cr',
+    image: buildRealEstateImage(63, 'ACE GOLF SHIRE'),
+  },
+  {
+    id: 'r64',
+    title: 'KOSMOS',
+    city: 'Noida',
+    sector: 'Sector 134',
+    size: '850SQFT sq ft',
+    unitType: '2BHK',
+    tower: 'KM47',
+    price: '9.5 k per sq ft',
+    status: 'SALE',
+    lastCallOn: '16/3/2026',
+    confBy: 'Meenakshi',
+    ref: '',
+    otherProp: '',
+    note: '9.5 k per sq ft',
+    image: buildRealEstateImage(64, 'KOSMOS'),
+  },
+  {
+    id: 'r65',
+    title: 'Sapphir PH1',
+    city: 'Noida',
+    sector: 'Sector 45',
+    size: '1140SQFT sq ft',
+    unitType: '2 BHK+2 Toile',
+    tower: 'D',
+    price: '1.5 Cr',
+    status: 'SALE',
+    lastCallOn: '16/3/2026',
+    confBy: 'Meenakshi',
+    ref: '',
+    otherProp: '',
+    note: '1.5 Cr',
+    image: buildRealEstateImage(65, 'Sapphir PH1'),
+  },
+  {
+    id: 'r66',
+    title: 'Sapphir PH1',
+    city: 'Noida',
+    sector: 'Sector 45',
+    size: '1640 sq ft',
+    unitType: '3BHK+3 Toilet',
+    tower: 'G',
+    price: '2.2 cr',
+    status: 'SALE',
+    lastCallOn: '20/12/2025',
+    confBy: 'Meenakshi',
+    ref: '',
+    otherProp: '',
+    note: '2.2 cr',
+    image: buildRealEstateImage(66, 'Sapphir PH1'),
+  },
+  {
+    id: 'r67',
+    title: 'Sapphir PH2',
+    city: 'Noida',
+    sector: 'Sector 45',
+    size: '1140SQFT sq ft',
+    unitType: '2BHK+2 Toilet',
+    tower: 'S',
+    price: '1.35 Cr',
+    status: 'SALE',
+    lastCallOn: '15/11/2025/16/3/2026',
+    confBy: 'Meenakshi',
+    ref: 'amodksoni@gmail.com',
+    otherProp: '',
+    note: '1.35 Cr',
+    image: buildRealEstateImage(67, 'Sapphir PH2'),
+  },
+  {
+    id: 'r68',
+    title: 'Prateek Wistera',
+    city: 'Noida',
+    sector: 'Sector 77',
+    size: '1735 sq ft',
+    unitType: '',
+    tower: 'B',
+    price: '3.3 Cr',
+    status: 'SALE',
+    lastCallOn: '',
+    confBy: 'Meenakshi',
+    ref: '',
+    otherProp: '',
+    note: '3.3 Cr',
+    image: buildRealEstateImage(68, 'Prateek Wistera'),
+  },
+  {
+    id: 'r69',
+    title: 'Prateek Wistera',
+    city: 'Noida',
+    sector: 'Sector 77',
+    size: '955 sq ft',
+    unitType: '',
+    tower: 'N',
+    price: '1.2 Cr',
+    status: 'SALE',
+    lastCallOn: '',
+    confBy: '',
+    ref: '',
+    otherProp: '',
+    note: '1.2 Cr',
+    image: buildRealEstateImage(69, 'Prateek Wistera'),
+  },
+  {
+    id: 'r70',
+    title: 'WOODS',
+    city: 'Noida',
+    sector: 'Sector 46',
+    size: '2088.09 sq ft',
+    unitType: '3 BHK',
+    tower: 'T2',
+    price: '4.25 Cr',
+    status: 'SALE',
+    lastCallOn: '',
+    confBy: '',
+    ref: 'mailtoparvesh@gmail.com',
+    otherProp: '',
+    note: '4.25 Cr',
+    image: buildRealEstateImage(70, 'WOODS'),
   }
 ];
 
+const exploreLocalitiesWithImages = exploreLocalities.map((item, index) => ({
+  ...item,
+  image: buildLocalityImage(index + 401, `${item.name} ${item.city}`),
+}));
+
+// --- LOGO ARRAYS FOR ANIMATION (From 3rd Code) ---
 const topRowLogos = [
   "/images (3).png",
   "/images__9_-removebg-preview.png",
@@ -1453,142 +1282,12 @@ const socialIconMap = {
   whatsapp: MessageCircle,
 };
 
-const fallbackPropertyImages = {
-  apartment: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',
-  plot: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1200&q=80',
-  commercial: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80',
-  villa: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80',
-};
-
-const localityImageMap = {
-  'sector 137': 'https://images.unsplash.com/photo-1582407947304-fd86f028f716?auto=format&fit=crop&w=1200&q=80',
-  'sector 151': 'https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=1200&q=80',
-  'noida extension': 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=80',
-  'greater noida': 'https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&w=1200&q=80',
-  'sector 72': 'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80',
-  'sector 128': 'https://images.unsplash.com/photo-1572120360610-d971b9d7767c?auto=format&fit=crop&w=1200&q=80',
-};
-
-const interestCards = [
-  {
-    title: 'Luxury Apartments',
-    body: 'Large 2/3/4 BHK resale homes with strong demand.',
-    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',
-    to: '/properties?property_type=apartment',
-  },
-  {
-    title: 'Residential Plots',
-    body: 'Open land options for long-term appreciation.',
-    image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1200&q=80',
-    to: '/properties?property_type=plot',
-  },
-  {
-    title: 'Commercial Spaces',
-    body: 'High-footfall office and retail investment choices.',
-    image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80',
-    to: '/properties?property_type=commercial',
-  },
-  {
-    title: 'Prime Localities',
-    body: 'Sector-led clusters where buyers keep searching.',
-    image: 'https://images.unsplash.com/photo-1582407947304-fd86f028f716?auto=format&fit=crop&w=1200&q=80',
-    to: '/properties',
-  },
-];
-
-const resaleProjectImagePool = [
-  'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1572120360610-d971b9d7767c?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1582407947304-fd86f028f716?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1523217582562-09d0def993a6?auto=format&fit=crop&w=1200&q=80',
-  'https://picsum.photos/id/10/1200/800',
-  'https://picsum.photos/id/11/1200/800',
-  'https://picsum.photos/id/12/1200/800',
-  'https://picsum.photos/id/13/1200/800',
-  'https://picsum.photos/id/14/1200/800',
-  'https://picsum.photos/id/15/1200/800',
-  'https://picsum.photos/id/16/1200/800',
-  'https://picsum.photos/id/17/1200/800',
-  'https://picsum.photos/id/18/1200/800',
-  'https://picsum.photos/id/19/1200/800',
-  'https://picsum.photos/id/20/1200/800',
-  'https://picsum.photos/id/21/1200/800',
-  'https://picsum.photos/id/22/1200/800',
-  'https://picsum.photos/id/23/1200/800',
-  'https://picsum.photos/id/24/1200/800',
-  'https://picsum.photos/id/25/1200/800',
-  'https://picsum.photos/id/26/1200/800',
-  'https://picsum.photos/id/27/1200/800',
-  'https://picsum.photos/id/28/1200/800',
-  'https://picsum.photos/id/29/1200/800',
-  'https://picsum.photos/id/30/1200/800',
-  'https://picsum.photos/id/31/1200/800',
-  'https://picsum.photos/id/32/1200/800',
-  'https://picsum.photos/id/33/1200/800',
-  'https://picsum.photos/id/34/1200/800',
-  'https://picsum.photos/id/35/1200/800',
-  'https://picsum.photos/id/36/1200/800',
-  'https://picsum.photos/id/37/1200/800',
-  'https://picsum.photos/id/38/1200/800',
-];
-
-const resaleProjectImageMap = (() => {
-  const uniqueProjects = Array.from(
-    new Set(
-      resaleUnits
-        .map((unit) => String(unit.project ?? '').replace(/\s+/g, ' ').trim().toLowerCase())
-        .filter(Boolean),
-    ),
-  );
-
-  return Object.fromEntries(
-    uniqueProjects.map((project, index) => [project, resaleProjectImagePool[index % resaleProjectImagePool.length]]),
-  );
-})();
-
-function normalizeText(value) {
-  return String(value ?? '').replace(/\s+/g, ' ').trim();
-}
-
-function formatPriceLabel(value) {
-  const text = normalizeText(value);
-  if (!text) return 'Price on request';
-  return text.startsWith('₹') ? text : `₹ ${text}`;
-}
-
-function formatSector(sector) {
-  const text = normalizeText(sector);
-  if (!text) return '';
-  return /sector/i.test(text) ? text : `Sector ${text}`;
-}
-
-function getImageFromLocality(item) {
-  const key = normalizeText(item.name || item.badge || item.city).toLowerCase();
-  return localityImageMap[key] || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1200&q=80';
-}
-
-function getResaleImage(item) {
-  const key = String(item?.project ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
-  return resaleProjectImageMap[key] || fallbackPropertyImages[item?.propertyType] || fallbackPropertyImages.apartment;
-}
-
 export default function HomePage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState({ category: 'buy', city: '', property_type: '', max_price: '' });
   const [searchFocused, setSearchFocused] = useState(false);
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [loanLead, setLoanLead] = useState({ name: '', phone: '' });
-  const [resaleQuery, setResaleQuery] = useState('');
-  const [resaleCity, setResaleCity] = useState('');
-  const [resaleType, setResaleType] = useState('');
 
   const suggestions = useMemo(() => {
     const query = search.city.trim().toLowerCase();
@@ -1596,38 +1295,13 @@ export default function HomePage() {
     return exploreLocalities.filter((item) => item.name.toLowerCase().includes(query) || item.city.toLowerCase().includes(query));
   }, [search.city]);
 
-  const resaleCities = useMemo(() => {
-    return Array.from(new Set(resaleUnits.map((unit) => normalizeText(unit.city).toLowerCase()).filter(Boolean))).sort();
-  }, []);
-
-  const filteredResale = useMemo(() => {
-    const q = resaleQuery.trim().toLowerCase();
-    return resaleUnits.filter((unit) => {
-      const haystack = [
-        unit.project,
-        unit.city,
-        unit.sector,
-        unit.unitType,
-        unit.tower,
-        unit.remarks,
-        unit.status,
-        unit.ref,
-      ].join(' ').toLowerCase();
-
-      const matchesQuery = !q || haystack.includes(q);
-      const matchesCity = !resaleCity || normalizeText(unit.city).toLowerCase() === resaleCity;
-      const matchesType = !resaleType || unit.propertyType === resaleType;
-      return matchesQuery && matchesCity && matchesType;
-    });
-  }, [resaleQuery, resaleCity, resaleType]);
-
   const handleSearch = () => navigate(createPropertySearch(search));
-
+  
   const handleNewsletter = () => {
     if (!newsletterEmail.includes('@')) return;
     window.open(`${WHATSAPP_URL}?text=${encodeURIComponent(`Hi ANK Realty, subscribe me for property deals. My email is ${newsletterEmail}.`)}`, '_blank', 'noopener,noreferrer');
   };
-
+  
   const handleLoanLead = () => {
     if (!loanLead.name || loanLead.phone.replace(/\D/g, '').length < 10) return;
     window.open(`${WHATSAPP_URL}?text=${encodeURIComponent(`Hi ANK Realty, I want a home-loan comparison. Name: ${loanLead.name}, Phone: ${loanLead.phone}.`)}`, '_blank', 'noopener,noreferrer');
@@ -1638,13 +1312,14 @@ export default function HomePage() {
       <Navbar />
       <RegisterPopup />
 
+      {/* --- HERO SECTION (Base Code 1) --- */}
       <section className="relative pt-32 pb-28 px-4 md:px-6 overflow-hidden min-h-[85vh]">
         <div className="absolute inset-0 z-0" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1582407947304-fd86f028f716?q=80&w=2000&auto=format&fit=crop')`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
         <div className="absolute inset-0 bg-slate-900/85 z-10" />
         <div className="relative z-20 max-w-6xl mx-auto text-center mt-10">
           <div className="inline-block mb-6 px-4 py-1.5 rounded-full border border-red-500/30 bg-red-500/10 text-red-400 text-sm font-bold tracking-widest uppercase">Trusted by thousands of buyers across India</div>
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-6 leading-[1.1] tracking-tight uppercase">Discover premium property opportunities across <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-red-600">Delhi NCR</span></h1>
-          <p className="text-lg md:text-xl text-slate-300 mb-12 max-w-3xl mx-auto font-medium leading-relaxed">Search verified homes, plotted developments, resale flats, and commercial spaces with a faster, cleaner, production-ready experience.</p>
+          <p className="text-lg md:text-xl text-slate-300 mb-12 max-w-3xl mx-auto font-medium leading-relaxed">Search verified homes, plotted developments, rentals, and commercial spaces with a faster, cleaner, production-ready experience.</p>
 
           <div className="bg-white rounded-[2rem] shadow-2xl p-4 md:p-6 max-w-5xl mx-auto border border-slate-100 text-left">
             <div className="flex flex-wrap justify-center md:justify-start gap-3 mb-6 px-2 border-b border-slate-100 pb-4">
@@ -1690,13 +1365,19 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* --- ADDED: TRUSTED BRANDS ANIMATION (From Code 3) --- */}
       <section className="py-12 sm:py-16 relative w-full overflow-hidden bg-white -mt-10 z-20 rounded-t-[3rem] shadow-[0_-10px_40px_rgba(0,0,0,0.05)] border-b border-slate-100">
         <div className="w-full">
           <h2 className="text-xs sm:text-sm font-bold uppercase tracking-widest text-slate-400 mb-8 sm:mb-12 text-center">
             Trusted by leading brands across India
           </h2>
           <div className="relative flex flex-col gap-8 sm:gap-12 overflow-hidden w-full">
-            <motion.div animate={{ x: ["0%", "-50%"] }} transition={{ duration: 30, repeat: Number.POSITIVE_INFINITY, ease: "linear" }} className="flex gap-8 sm:gap-16 w-max">
+            {/* First Row: Moving Left */}
+            <motion.div
+              animate={{ x: ["0%", "-50%"] }}
+              transition={{ duration: 30, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+              className="flex gap-8 sm:gap-16 w-max"
+            >
               {[...topRowLogos, ...topRowLogos, ...topRowLogos, ...topRowLogos].map((src, i) => (
                 <div key={`top-${i}`} className="flex-shrink-0 w-32 sm:w-48 h-16 sm:h-20 flex items-center justify-center">
                   <img src={src} alt={`Client logo ${i}`} className="max-w-full max-h-full object-contain filter brightness-0 opacity-80 hover:opacity-100 transition-opacity duration-300" />
@@ -1704,7 +1385,12 @@ export default function HomePage() {
               ))}
             </motion.div>
 
-            <motion.div animate={{ x: ["-50%", "0%"] }} transition={{ duration: 30, repeat: Number.POSITIVE_INFINITY, ease: "linear" }} className="flex gap-8 sm:gap-16 w-max">
+            {/* Second Row: Moving Right */}
+            <motion.div
+              animate={{ x: ["-50%", "0%"] }}
+              transition={{ duration: 30, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+              className="flex gap-8 sm:gap-16 w-max"
+            >
               {[...bottomRowLogos, ...bottomRowLogos, ...bottomRowLogos, ...bottomRowLogos].map((src, i) => (
                 <div key={`bottom-${i}`} className="flex-shrink-0 w-32 sm:w-48 h-16 sm:h-20 flex items-center justify-center">
                   <img src={src} alt={`Client logo ${i}`} className="max-w-full max-h-full object-contain filter brightness-0 opacity-80 hover:opacity-100 transition-opacity duration-300" />
@@ -1712,31 +1398,40 @@ export default function HomePage() {
               ))}
             </motion.div>
 
+            {/* Fade Gradients (Left & Right Edges) */}
             <div className="absolute inset-y-0 left-0 w-16 sm:w-32 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
             <div className="absolute inset-y-0 right-0 w-16 sm:w-32 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
           </div>
         </div>
       </section>
 
+      {/* --- EXPLORE LOCALITIES (Base Code 1) --- */}
       <section className="py-16 bg-white relative z-20 border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
             <div>
-              <p className="text-red-600 font-bold uppercase tracking-[0.25em] text-xs mb-3">High-interest localities</p>
+              <p className="text-red-600 font-bold uppercase tracking-[0.25em] text-xs mb-3">Explore Localities</p>
               <h2 className="text-3xl md:text-5xl font-black text-slate-900">Explore high-intent localities</h2>
               <p className="text-slate-500 mt-3 max-w-2xl">Jump straight into the corridors buyers and investors ask about most often.</p>
             </div>
             <Link to="/properties"><Button variant="outline" className="border-slate-300 font-bold">Browse all inventory <ChevronRight className="w-4 h-4 ml-2" /></Button></Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            {exploreLocalities.map((item) => (
-              <button key={item.name} onClick={() => navigate(createPropertySearch({ city: item.city, property_type: item.propertyType, category: 'buy' }))} className="text-left rounded-[1.75rem] overflow-hidden bg-slate-50 hover:bg-red-50 border border-slate-200 hover:border-red-200 transition-all group">
-                <div className="h-36 w-full overflow-hidden">
-                  <img src={getImageFromLocality(item)} alt={item.name} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" />
+            {exploreLocalitiesWithImages.map((item) => (
+              <button
+                key={item.name}
+                onClick={() => navigate(createPropertySearch({ city: item.city, property_type: item.propertyType, category: 'buy' }))}
+                className="text-left rounded-[1.75rem] overflow-hidden bg-white border border-slate-200 hover:border-red-200 hover:shadow-xl transition-all group"
+              >
+                <div className="relative h-44 overflow-hidden">
+                  <img src={item.image} alt={item.name} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-slate-950/20 to-transparent" />
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <p className="text-[11px] uppercase tracking-[0.25em] text-red-200 font-bold mb-2">{item.badge}</p>
+                    <h3 className="text-xl font-black text-white leading-tight">{item.name}</h3>
+                  </div>
                 </div>
-                <div className="p-6">
-                  <p className="text-xs uppercase tracking-[0.25em] text-red-500 font-bold mb-3">{item.badge}</p>
-                  <h3 className="text-xl font-black text-slate-900 mb-2 group-hover:text-red-600">{item.name}</h3>
+                <div className="p-5">
                   <p className="text-slate-500 text-sm">View curated property options in {item.city}.</p>
                 </div>
               </button>
@@ -1745,123 +1440,139 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* --- FEATURED INVENTORY (Base Code 1 Layout + Rich Content) --- */}
       <section className="py-20 px-6 bg-slate-50 border-b border-slate-200">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-end mb-10 gap-4">
             <div>
-              <p className="text-red-600 font-bold uppercase tracking-[0.25em] text-xs mb-3">Buyer interest</p>
-              <h2 className="text-3xl md:text-4xl font-black">What buyers search most</h2>
+              <p className="text-red-600 font-bold uppercase tracking-[0.25em] text-xs mb-3">Featured inventory</p>
+              <h2 className="text-3xl md:text-4xl font-black">Buy, sell, and rent with confidence</h2>
             </div>
-            <Link to="/properties"><Button variant="outline">View all categories</Button></Link>
+            <Link to="/properties"><Button variant="outline">View all properties</Button></Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {interestCards.map((card) => (
-              <Link key={card.title} to={card.to} className="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition-all group">
-                <div className="h-52 overflow-hidden">
-                  <img src={card.image} alt={card.title} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+            {featuredProperties.map((property) => (
+              <div key={property.id} onClick={() => navigate(`/property/${property.id}`, { state: { property } })} className="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition cursor-pointer relative group">
+                {/* Dynamic Tag */}
+                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-black text-slate-900 shadow-sm z-10">
+                  {property.tag}
                 </div>
-                <div className="p-6">
-                  <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center mb-4">
-                    <Sparkles className="w-6 h-6" />
+                
+                <div className="relative h-48 overflow-hidden">
+                   <img src={property.image} alt={property.title} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                </div>
+                
+                <div className="p-5">
+                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-red-600 mb-2">{property.category} • {property.propertyType}</p>
+                  <h3 className="text-xl font-black text-slate-900 mb-1 group-hover:text-red-600 transition-colors line-clamp-1">{property.title}</h3>
+                  <p className="text-slate-500 text-sm mb-4"><MapPin className="inline w-3 h-3 mr-1"/> {property.location}, {property.city}</p>
+                  
+                  <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                    <span className="font-black text-slate-900 text-lg">{property.price}</span>
+                    <span className="text-red-600 font-bold flex items-center text-sm">Details <ArrowRight className="w-4 h-4 ml-1" /></span>
                   </div>
-                  <h3 className="text-xl font-black text-slate-900 mb-2">{card.title}</h3>
-                  <p className="text-slate-500 text-sm leading-7">{card.body}</p>
                 </div>
-              </Link>
+              </button>
             ))}
           </div>
         </div>
       </section>
 
+
+      {/* --- RESALE FLATS / PLOTS SECTION --- */}
       <section className="py-20 px-6 bg-white border-b border-slate-100">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-10">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
             <div>
-              <p className="text-red-600 font-bold uppercase tracking-[0.25em] text-xs mb-3">Resale inventory</p>
-              <h2 className="text-3xl md:text-4xl font-black">All resale flats and plot-style leads from your sheet</h2>
-              <p className="text-slate-500 mt-3 max-w-3xl">Each card below is pulled from the Excel sheet and shown with a real property photo, sector, unit size, and price note.</p>
+              <p className="text-red-600 font-bold uppercase tracking-[0.25em] text-xs mb-3">Resale Inventory</p>
+              <h2 className="text-3xl md:text-4xl font-black">All resale flats and plot units</h2>
+              <p className="text-slate-500 mt-3 max-w-2xl">
+                Added directly from your resale sheet, with a different image on every card and the original details kept intact.
+              </p>
             </div>
-            <Link to="/properties"><Button variant="outline">Open full inventory</Button></Link>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 mb-6">
-            <div className="lg:col-span-2 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <Input value={resaleQuery} onChange={(e) => setResaleQuery(e.target.value)} placeholder="Search project, sector, tower, price, or broker name" className="h-12 pl-12 rounded-xl bg-slate-50 border-slate-200" />
-            </div>
-            <div className="relative">
-              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <select value={resaleCity} onChange={(e) => setResaleCity(e.target.value)} className="h-12 pl-12 pr-4 rounded-xl bg-slate-50 border border-slate-200 w-full outline-none">
-                <option value="">All cities</option>
-                {resaleCities.map((city) => <option key={city} value={city}>{city.toUpperCase()}</option>)}
-              </select>
-            </div>
-            <div className="relative">
-              <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <select value={resaleType} onChange={(e) => setResaleType(e.target.value)} className="h-12 pl-12 pr-4 rounded-xl bg-slate-50 border border-slate-200 w-full outline-none">
-                <option value="">All types</option>
-                {propertyTypeOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-              </select>
+            <div className="flex flex-wrap gap-3">
+              <div className="px-4 py-2 rounded-full bg-red-50 text-red-700 font-bold text-sm border border-red-100">
+                {resaleProperties.length} listings
+              </div>
+              <div className="px-4 py-2 rounded-full bg-slate-50 text-slate-700 font-bold text-sm border border-slate-200">
+                {new Set(resaleProperties.map((item) => item.sector)).size} sectors
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-between mb-4 text-sm text-slate-500">
-            <p>{filteredResale.length} leads shown</p>
-            <p>Sheet row data + image</p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-            {filteredResale.map((property) => (
-              <div
-                key={property.id}
-                onClick={() => navigate(`/property/${property.id}`, { state: { property } })}
-                className="bg-slate-50 rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition cursor-pointer relative group"
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+            {resaleProperties.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => navigate(createPropertySearch({ city: item.city, property_type: 'apartment', category: 'buy' }))}
+                className="text-left bg-slate-50 rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition-all group cursor-pointer"
               >
-                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-black text-slate-900 shadow-sm z-10">
-                  {property.status || 'resale'}
-                </div>
-
-                <div className="relative h-48 overflow-hidden">
-                  <img src={getResaleImage(property)} alt={property.project} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                <div className="relative h-52 overflow-hidden">
+                  <img
+                    src={item.image}
+                    alt={item.title}
+                    className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
+                  <div className="absolute top-4 left-4 flex flex-wrap gap-2">
+                    {item.status && (
+                      <span className="px-3 py-1 rounded-full bg-white/90 backdrop-blur text-slate-900 text-xs font-black">
+                        {item.status}
+                      </span>
+                    )}
+                    {item.confBy && (
+                      <span className="px-3 py-1 rounded-full bg-red-600/90 backdrop-blur text-white text-xs font-black">
+                        {item.confBy}
+                      </span>
+                    )}
+                  </div>
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <p className="text-[11px] uppercase tracking-[0.25em] text-red-100 font-bold mb-1">{item.sector}</p>
+                    <h3 className="text-xl font-black text-white leading-tight">{item.title}</h3>
+                  </div>
                 </div>
 
                 <div className="p-5">
-                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-red-600 mb-2">
-                    {property.city} • {property.propertyType}
-                  </p>
-                  <h3 className="text-xl font-black text-slate-900 mb-1 group-hover:text-red-600 transition-colors line-clamp-1">
-                    {property.project}
-                  </h3>
-                  <p className="text-slate-500 text-sm mb-3">
-                    <MapPin className="inline w-3 h-3 mr-1"/> {formatSector(property.sector)}
-                  </p>
+                  <p className="text-slate-500 text-sm mb-3">{item.city}{item.otherProp ? ` • ${item.otherProp}` : ''}</p>
 
-                  <div className="grid grid-cols-2 gap-2 text-xs text-slate-500 mb-4">
-                    <div className="rounded-xl bg-white p-3 border border-slate-200">
-                      <span className="block uppercase tracking-wider text-[10px] text-slate-400 mb-1">Size</span>
-                      <span className="font-bold text-slate-900">{property.flatSize || '—'} sq ft</span>
+                  <div className="grid grid-cols-2 gap-3 text-sm mb-4">
+                    <div className="p-3 rounded-2xl bg-white border border-slate-200">
+                      <p className="text-slate-400 text-xs uppercase tracking-[0.2em] font-bold mb-1">Size</p>
+                      <p className="font-black text-slate-900">{item.size || '—'}</p>
                     </div>
-                    <div className="rounded-xl bg-white p-3 border border-slate-200">
-                      <span className="block uppercase tracking-wider text-[10px] text-slate-400 mb-1">Tower</span>
-                      <span className="font-bold text-slate-900">{property.tower || '—'}</span>
+                    <div className="p-3 rounded-2xl bg-white border border-slate-200">
+                      <p className="text-slate-400 text-xs uppercase tracking-[0.2em] font-bold mb-1">Unit Type</p>
+                      <p className="font-black text-slate-900">{item.unitType || '—'}</p>
+                    </div>
+                    <div className="p-3 rounded-2xl bg-white border border-slate-200">
+                      <p className="text-slate-400 text-xs uppercase tracking-[0.2em] font-bold mb-1">Tower</p>
+                      <p className="font-black text-slate-900">{item.tower || '—'}</p>
+                    </div>
+                    <div className="p-3 rounded-2xl bg-white border border-slate-200">
+                      <p className="text-slate-400 text-xs uppercase tracking-[0.2em] font-bold mb-1">Call On</p>
+                      <p className="font-black text-slate-900">{item.lastCallOn || '—'}</p>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-4 border-t border-slate-200">
-                    <span className="font-black text-slate-900 text-lg">{formatPriceLabel(property.remarks)}</span>
-                    <span className="text-red-600 font-bold flex items-center text-sm">Open <ArrowRight className="w-4 h-4 ml-1" /></span>
+                  <div className="flex items-start justify-between gap-4 pt-4 border-t border-slate-200">
+                    <div>
+                      <p className="text-slate-400 text-xs uppercase tracking-[0.2em] font-bold mb-1">Remarks</p>
+                      <p className="font-black text-slate-900">{item.price}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-slate-400 text-xs uppercase tracking-[0.2em] font-bold mb-1">Ref</p>
+                      <p className="font-bold text-slate-700">{item.ref || '—'}</p>
+                    </div>
                   </div>
-
-                  <p className="text-[11px] text-slate-400 mt-3">
-                    Last call: {property.lastCallOn || '—'} • {property.confBy || '—'}
-                  </p>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
       </section>
 
+      {/* --- WHY INDIA & LOAN FORM (Base Code 1) --- */}
       <section className="py-20 px-6 bg-white border-b border-slate-100">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-start">
           <div>
@@ -1869,19 +1580,17 @@ export default function HomePage() {
             <h2 className="text-3xl md:text-5xl font-black mb-6">Why buyers continue choosing India’s growth markets</h2>
             <p className="text-slate-600 text-lg leading-8 mb-8">Strong infrastructure pipelines, expanding business districts, and maturing social infrastructure continue to improve end-user demand and investment resilience. Trusted by thousands of buyers across India, ANK Realty simplifies the journey with verified inventory and human support.</p>
             <div className="grid sm:grid-cols-2 gap-6">
-              {
-                [
-                  ['Verified listings', 'Property screening and lead qualification reduce wasted site visits.'],
-                  ['Local market guidance', 'Actionable help on pricing, ROI, and document readiness.'],
-                  ['Cross-category discovery', 'Explore residential, plotted, rental, and corporate inventory in one flow.'],
-                  ['Human support', 'Dedicated experts for search, loan guidance, and leasing support.'],
-                ].map(([title, body]) => (
-                  <div key={title} className="p-6 rounded-3xl bg-slate-50 border border-slate-200">
-                    <h3 className="font-black text-slate-900 mb-2">{title}</h3>
-                    <p className="text-slate-500 text-sm leading-7">{body}</p>
-                  </div>
-                ))
-              }
+              {[
+                ['Verified listings', 'Property screening and lead qualification reduce wasted site visits.'],
+                ['Local market guidance', 'Actionable help on pricing, ROI, and document readiness.'],
+                ['Cross-category discovery', 'Explore residential, plotted, rental, and corporate inventory in one flow.'],
+                ['Human support', 'Dedicated experts for search, loan guidance, and leasing support.'],
+              ].map(([title, body]) => (
+                <div key={title} className="p-6 rounded-3xl bg-slate-50 border border-slate-200">
+                  <h3 className="font-black text-slate-900 mb-2">{title}</h3>
+                  <p className="text-slate-500 text-sm leading-7">{body}</p>
+                </div>
+              ))}
             </div>
           </div>
           <div className="bg-slate-900 text-white rounded-[2.5rem] p-8 md:p-10 shadow-2xl">
@@ -1912,6 +1621,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* --- NEWS & INSIGHTS (Base Code 1) --- */}
       <section className="py-20 px-6 bg-slate-50 border-b border-slate-200">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
@@ -1937,25 +1647,25 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* --- CATEGORIES & QUICK LINKS (Base Code 1) --- */}
       <section className="py-20 px-6 bg-white border-b border-slate-100">
         <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-6">
-          {
-            [
-              { title: 'Builders', body: 'Explore developer-backed launches and compare price bands.', to: '/buy', icon: Building2 },
-              { title: 'Agents', body: 'Connect with ANK experts for guided tours and negotiation support.', to: '/contact', icon: Users },
-              { title: 'Corporate Leasing', body: 'Find office, retail, and relocation solutions for your team.', to: '/corporate-leasing', icon: Briefcase },
-            ].map((item) => (
-              <Link key={item.title} to={item.to} className="p-8 rounded-[2rem] bg-slate-50 border border-slate-200 hover:border-red-200 hover:bg-red-50 transition-all">
-                <item.icon className="w-8 h-8 text-red-600 mb-5" />
-                <h3 className="text-2xl font-black text-slate-900 mb-3">{item.title}</h3>
-                <p className="text-slate-500 mb-4">{item.body}</p>
-                <span className="font-bold text-red-600 flex items-center">Open <ArrowRight className="w-4 h-4 ml-2" /></span>
-              </Link>
-            ))
-          }
+          {[
+            { title: 'Builders', body: 'Explore developer-backed launches and compare price bands.', to: '/buy', icon: Building2 },
+            { title: 'Agents', body: 'Connect with ANK experts for guided tours and negotiation support.', to: '/contact', icon: Users },
+            { title: 'Corporate Leasing', body: 'Find office, retail, and relocation solutions for your team.', to: '/corporate-leasing', icon: Briefcase },
+          ].map((item) => (
+            <Link key={item.title} to={item.to} className="p-8 rounded-[2rem] bg-slate-50 border border-slate-200 hover:border-red-200 hover:bg-red-50 transition-all">
+              <item.icon className="w-8 h-8 text-red-600 mb-5" />
+              <h3 className="text-2xl font-black text-slate-900 mb-3">{item.title}</h3>
+              <p className="text-slate-500 mb-4">{item.body}</p>
+              <span className="font-bold text-red-600 flex items-center">Open <ArrowRight className="w-4 h-4 ml-2" /></span>
+            </Link>
+          ))}
         </div>
       </section>
 
+      {/* --- NEWSLETTER CTA (Base Code 1) --- */}
       <section className="py-20 px-6 bg-slate-900 text-white">
         <div className="max-w-4xl mx-auto text-center">
           <Bell className="w-14 h-14 text-red-500 mx-auto mb-6" />
@@ -1969,6 +1679,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* --- FOOTER (Base Code 1) --- */}
       <footer className="bg-[#0A0A0A] text-white pt-20 pb-10 px-6 border-t-[8px] border-red-600">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
