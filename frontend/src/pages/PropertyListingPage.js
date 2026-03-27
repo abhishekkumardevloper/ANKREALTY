@@ -4,7 +4,7 @@ import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
   MapPin, Heart, Filter, Search, CheckCircle, 
-  BedDouble, Bath, Layers, Building, Phone, Mail, Loader2
+  BedDouble, Bath, Layers, Phone, Mail, Loader2
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { Button } from '@/components/ui/button';
@@ -19,23 +19,10 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
 
-// Import our rich local data
+// Import our rich local data with explicitly hardcoded 4 images
 import resaleListings from '../lib/resaleListings'; 
 
 const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000/api";
-
-const getPlaceholderImage = (id, type) => {
-  const images = {
-    apartment: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80", "https://images.unsplash.com/photo-1502672260266-1c1e5240980c?w=800&q=80"],
-    villa: ["https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80", "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80"],
-    plot: ["https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&q=80"],
-    default: ["https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80"]
-  };
-  const safeType = type ? type.toLowerCase() : 'default';
-  const list = images[safeType] || images.default;
-  const index = id ? String(id).charCodeAt(0) % list.length : 0;
-  return list[index];
-};
 
 export default function PropertyListingPage() {
   const navigate = useNavigate();
@@ -303,16 +290,17 @@ export default function PropertyListingPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {properties.map((property) => {
                 
-                // Uses assigned real image, backend image, or placeholder
+                // Uses assigned real image from explicit array
                 const coverImage = property.images && property.images.length > 0 
                   ? property.images[0] 
-                  : property.imageUrl || getPlaceholderImage(property.id, property.category || property.property_type);
+                  : "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80";
 
                 return (
                   <div 
                     key={property.id} 
                     className="bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl hover:border-red-100 transition-all duration-300 group cursor-pointer flex flex-col"
-                    onClick={() => navigate(`/property/${property.id}`)}
+                    // Pass the whole property object through state so PropertyDetails gets all 4 images!
+                    onClick={() => navigate(`/property/${property.id}`, { state: { property } })}
                   >
                     {/* Image Area */}
                     <div className="h-56 relative overflow-hidden p-2 pb-0">
@@ -388,7 +376,7 @@ export default function PropertyListingPage() {
                             className="h-9 px-4 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-600 text-xs font-bold rounded-lg"
                             onClick={(event) => {
                               event.stopPropagation();
-                              navigate(`/property/${property.id}`);
+                              navigate(`/property/${property.id}`, { state: { property } }); // Ensure state is passed here too
                             }}
                           >
                             View Details
