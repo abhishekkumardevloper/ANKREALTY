@@ -291,6 +291,49 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+   {/* --- FEATURED INVENTORY --- */}
+      <section className="py-24 px-6 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUp} className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+            <div>
+              <p className="text-[#8B0000] font-bold uppercase tracking-[0.25em] text-xs mb-3 flex items-center gap-2"><Award className="w-4 h-4"/> Featured inventory</p>
+              <h2 className="text-3xl md:text-5xl font-black text-slate-900">Verified properties tailored for you</h2>
+            </div>
+            <Link to="/properties">
+              <Button variant="outline" className="border-slate-300 font-bold hover:bg-[#8B0000] hover:text-white transition-colors h-12 px-6 rounded-xl text-base">View all properties <ChevronRight className="w-4 h-4 ml-2" /></Button>
+            </Link>
+          </motion.div>
+
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {featuredProperties.map((property) => (
+              <motion.div variants={fadeUp} key={property.id} onClick={() => navigate(`/property/${property.id}`, { state: { property } })} className="bg-slate-50 rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-2xl hover:border-[#D4AF37]/50 hover:-translate-y-2 transition-all duration-300 cursor-pointer relative group flex flex-col">
+                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-black text-slate-900 shadow-lg z-10 flex items-center gap-1.5">
+                  <TrendingUp className="w-3.5 h-3.5 text-[#D4AF37]"/> {property.tag}
+                </div>
+                
+                <div className="relative h-56 overflow-hidden">
+                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                   <img src={property.image} alt={property.title} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                </div>
+                
+                <div className="p-6 flex-1 flex flex-col relative z-20 bg-white">
+                  <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#8B0000] mb-2">{property.category} • {property.propertyType}</p>
+                  <h3 className="text-xl font-black text-slate-900 mb-2 group-hover:text-[#8B0000] transition-colors line-clamp-1 md:text-2xl">{property.title}</h3>
+                  <p className="text-slate-500 text-sm mb-6 flex items-center font-medium md:text-base"><MapPin className="w-4 h-4 mr-1.5 text-slate-400"/> {property.location}, {property.city}</p>
+                  
+                  <div className="mt-auto flex items-center justify-between pt-5 border-t border-slate-100">
+                    <span className="font-black text-slate-900 text-xl md:text-2xl">{property.price}</span>
+                    <span className="bg-slate-50 group-hover:bg-[#8B0000] text-slate-400 group-hover:text-[#D4AF37] w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+                      <ArrowRight className="w-5 h-5" />
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
       {/* --- PREMIUM SERVICES SECTION --- */}
       <section className="py-24 px-6 bg-white">
         <div className="max-w-7xl mx-auto">
@@ -403,49 +446,6 @@ export default function HomePage() {
               <Button className="w-full h-11 text-sm bg-[#8B0000] hover:bg-[#600000] text-white rounded-xl font-bold shadow-md shadow-[#8B0000]/30 transition-all hover:-translate-y-0.5">Contact Our Plot Experts</Button>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* --- FEATURED INVENTORY --- */}
-      <section className="py-24 px-6 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUp} className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
-            <div>
-              <p className="text-[#8B0000] font-bold uppercase tracking-[0.25em] text-xs mb-3 flex items-center gap-2"><Award className="w-4 h-4"/> Featured inventory</p>
-              <h2 className="text-3xl md:text-5xl font-black text-slate-900">Verified properties tailored for you</h2>
-            </div>
-            <Link to="/properties">
-              <Button variant="outline" className="border-slate-300 font-bold hover:bg-[#8B0000] hover:text-white transition-colors h-12 px-6 rounded-xl text-base">View all properties <ChevronRight className="w-4 h-4 ml-2" /></Button>
-            </Link>
-          </motion.div>
-
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {featuredProperties.map((property) => (
-              <motion.div variants={fadeUp} key={property.id} onClick={() => navigate(`/property/${property.id}`, { state: { property } })} className="bg-slate-50 rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-2xl hover:border-[#D4AF37]/50 hover:-translate-y-2 transition-all duration-300 cursor-pointer relative group flex flex-col">
-                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-black text-slate-900 shadow-lg z-10 flex items-center gap-1.5">
-                  <TrendingUp className="w-3.5 h-3.5 text-[#D4AF37]"/> {property.tag}
-                </div>
-                
-                <div className="relative h-56 overflow-hidden">
-                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                   <img src={property.image} alt={property.title} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                </div>
-                
-                <div className="p-6 flex-1 flex flex-col relative z-20 bg-white">
-                  <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#8B0000] mb-2">{property.category} • {property.propertyType}</p>
-                  <h3 className="text-xl font-black text-slate-900 mb-2 group-hover:text-[#8B0000] transition-colors line-clamp-1 md:text-2xl">{property.title}</h3>
-                  <p className="text-slate-500 text-sm mb-6 flex items-center font-medium md:text-base"><MapPin className="w-4 h-4 mr-1.5 text-slate-400"/> {property.location}, {property.city}</p>
-                  
-                  <div className="mt-auto flex items-center justify-between pt-5 border-t border-slate-100">
-                    <span className="font-black text-slate-900 text-xl md:text-2xl">{property.price}</span>
-                    <span className="bg-slate-50 group-hover:bg-[#8B0000] text-slate-400 group-hover:text-[#D4AF37] w-10 h-10 rounded-full flex items-center justify-center transition-colors">
-                      <ArrowRight className="w-5 h-5" />
-                    </span>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
         </div>
       </section>
 
