@@ -1455,31 +1455,31 @@ const socialIconMap = {
 
 const fallbackPropertyImages = {
   apartment: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',
-  plot: 'https://files.propertywala.com/photos/f5/J919024391.plot-view.17863669l.jpg',
+  plot: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1200&q=80',
   commercial: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80',
   villa: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80',
 };
 
 const localityImageMap = {
-  'sector 137': 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1200&q=80',
-  'sector 151': 'https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&w=1200&q=80',
+  'sector 137': 'https://images.unsplash.com/photo-1582407947304-fd86f028f716?auto=format&fit=crop&w=1200&q=80',
+  'sector 151': 'https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=1200&q=80',
   'noida extension': 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=80',
-  'greater noida': 'https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=1200&q=80',
+  'greater noida': 'https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&w=1200&q=80',
   'sector 72': 'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80',
-  'sector 128': 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80',
+  'sector 128': 'https://images.unsplash.com/photo-1572120360610-d971b9d7767c?auto=format&fit=crop&w=1200&q=80',
 };
 
 const interestCards = [
   {
     title: 'Luxury Apartments',
     body: 'Large 2/3/4 BHK resale homes with strong demand.',
-    image: 'https://images.unsplash.com/photo-1572120360610-d971b9d7767c?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',
     to: '/properties?property_type=apartment',
   },
   {
     title: 'Residential Plots',
     body: 'Open land options for long-term appreciation.',
-    image: 'https://files.propertywala.com/photos/9c/J919024391.front-view.15880604l.jpg',
+    image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1200&q=80',
     to: '/properties?property_type=plot',
   },
   {
@@ -1491,10 +1491,68 @@ const interestCards = [
   {
     title: 'Prime Localities',
     body: 'Sector-led clusters where buyers keep searching.',
-    image: 'https://files.propertywala.com/photos/8c/J919024391.location-map.17863052l.jpg',
+    image: 'https://images.unsplash.com/photo-1582407947304-fd86f028f716?auto=format&fit=crop&w=1200&q=80',
     to: '/properties',
   },
 ];
+
+const resaleProjectImagePool = [
+  'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1572120360610-d971b9d7767c?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1582407947304-fd86f028f716?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1523217582562-09d0def993a6?auto=format&fit=crop&w=1200&q=80',
+  'https://picsum.photos/id/10/1200/800',
+  'https://picsum.photos/id/11/1200/800',
+  'https://picsum.photos/id/12/1200/800',
+  'https://picsum.photos/id/13/1200/800',
+  'https://picsum.photos/id/14/1200/800',
+  'https://picsum.photos/id/15/1200/800',
+  'https://picsum.photos/id/16/1200/800',
+  'https://picsum.photos/id/17/1200/800',
+  'https://picsum.photos/id/18/1200/800',
+  'https://picsum.photos/id/19/1200/800',
+  'https://picsum.photos/id/20/1200/800',
+  'https://picsum.photos/id/21/1200/800',
+  'https://picsum.photos/id/22/1200/800',
+  'https://picsum.photos/id/23/1200/800',
+  'https://picsum.photos/id/24/1200/800',
+  'https://picsum.photos/id/25/1200/800',
+  'https://picsum.photos/id/26/1200/800',
+  'https://picsum.photos/id/27/1200/800',
+  'https://picsum.photos/id/28/1200/800',
+  'https://picsum.photos/id/29/1200/800',
+  'https://picsum.photos/id/30/1200/800',
+  'https://picsum.photos/id/31/1200/800',
+  'https://picsum.photos/id/32/1200/800',
+  'https://picsum.photos/id/33/1200/800',
+  'https://picsum.photos/id/34/1200/800',
+  'https://picsum.photos/id/35/1200/800',
+  'https://picsum.photos/id/36/1200/800',
+  'https://picsum.photos/id/37/1200/800',
+  'https://picsum.photos/id/38/1200/800',
+];
+
+const resaleProjectImageMap = (() => {
+  const uniqueProjects = Array.from(
+    new Set(
+      resaleUnits
+        .map((unit) => String(unit.project ?? '').replace(/\s+/g, ' ').trim().toLowerCase())
+        .filter(Boolean),
+    ),
+  );
+
+  return Object.fromEntries(
+    uniqueProjects.map((project, index) => [project, resaleProjectImagePool[index % resaleProjectImagePool.length]]),
+  );
+})();
 
 function normalizeText(value) {
   return String(value ?? '').replace(/\s+/g, ' ').trim();
@@ -1503,18 +1561,23 @@ function normalizeText(value) {
 function formatPriceLabel(value) {
   const text = normalizeText(value);
   if (!text) return 'Price on request';
-  return text.startsWith('₹') ? text : `₹ {text}`;
+  return text.startsWith('₹') ? text : `₹ ${text}`;
 }
 
 function formatSector(sector) {
   const text = normalizeText(sector);
   if (!text) return '';
-  return /sector/i.test(text) ? text : `Sector {text}`;
+  return /sector/i.test(text) ? text : `Sector ${text}`;
 }
 
 function getImageFromLocality(item) {
   const key = normalizeText(item.name || item.badge || item.city).toLowerCase();
   return localityImageMap[key] || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1200&q=80';
+}
+
+function getResaleImage(item) {
+  const key = String(item?.project ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
+  return resaleProjectImageMap[key] || fallbackPropertyImages[item?.propertyType] || fallbackPropertyImages.apartment;
 }
 
 export default function HomePage() {
@@ -1759,7 +1822,7 @@ export default function HomePage() {
                 </div>
 
                 <div className="relative h-48 overflow-hidden">
-                  <img src={property.image || fallbackPropertyImages[property.propertyType]} alt={property.project} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                  <img src={getResaleImage(property)} alt={property.project} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" />
                 </div>
 
                 <div className="p-5">
