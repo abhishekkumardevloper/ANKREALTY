@@ -19,9 +19,11 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
 
+// Import our rich local data
+import resaleListings from '../lib/resaleListings'; 
+
 const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000/api";
 
-// Helper for consistent premium images
 const getPlaceholderImage = (id, type) => {
   const images = {
     apartment: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80", "https://images.unsplash.com/photo-1502672260266-1c1e5240980c?w=800&q=80"],
@@ -31,7 +33,6 @@ const getPlaceholderImage = (id, type) => {
   };
   const safeType = type ? type.toLowerCase() : 'default';
   const list = images[safeType] || images.default;
-  // Use a string hash fallback if id isn't purely numeric
   const index = id ? String(id).charCodeAt(0) % list.length : 0;
   return list[index];
 };
@@ -57,20 +58,75 @@ export default function PropertyListingPage() {
   const fetchProperties = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
+      let apiProps = [];
+      
+      // 1. Try to fetch from backend API
+      try {
+        const params = new URLSearchParams();
+        Object.keys(filters).forEach(key => {
+          if (filters[key]) params.append(key, filters[key]);
+        });
+        const response = await axios.get(`${API_BASE}/properties?${params.toString()}`);
+        apiProps = Array.isArray(response.data) 
+          ? response.data.filter(p => p.status?.toLowerCase() === 'active' || p.status?.toLowerCase() === 'approved') 
+          : [];
+      } catch (apiError) {
+        console.warn("Backend API not reachable. Using local data fallback.");
+      }
 
-      Object.keys(filters).forEach(key => {
-        if (filters[key]) params.append(key, filters[key]);
+      // 2. Combine API Data with Local Data
+      const combinedData = [...resaleListings, ...apiProps];
+
+      // 3. Apply local frontend filtering to ensure the static data reacts to the UI
+      const filteredData = combinedData.filter(p => {
+        let match = true;
+        
+        // Category Match (treat 'resale' as 'sell' for filtering purposes)
+        if (filters.category && filters.category !== 'all') {
+          const pCat = p.category?.toLowerCase() || '';
+          if (filters.category === 'sell') {
+            match = match && (pCat === 'sell' || pCat === 'resale');
+          } else {
+            match = match && pCat === filters.category.toLowerCase();
+          }
+        }
+
+        // Type Match
+        if (filters.property_type && filters.property_type !== 'all') {
+          match = match && p.property_type?.toLowerCase() === filters.property_type.toLowerCase();
+        }
+
+        // City Match
+        if (filters.city) {
+          const searchCity = filters.city.toLowerCase();
+          match = match && (
+            p.city?.toLowerCase().includes(searchCity) || 
+            p.location?.toLowerCase().includes(searchCity) ||
+            p.title?.toLowerCase().includes(searchCity)
+          );
+        }
+
+        // Price Match
+        if (filters.min_price) {
+          match = match && Number(p.price) >= Number(filters.min_price);
+        }
+        if (filters.max_price) {
+          match = match && Number(p.price) <= Number(filters.max_price);
+        }
+
+        // BHK Match
+        if (filters.bhk && filters.bhk !== 'all') {
+          if (filters.bhk === '4') {
+            match = match && Number(p.bedrooms) >= 4;
+          } else {
+            match = match && Number(p.bedrooms) === Number(filters.bhk);
+          }
+        }
+
+        return match;
       });
 
-      const response = await axios.get(`${API_BASE}/properties?${params.toString()}`);
-      
-      // Filter only active/approved properties for public viewing
-      const activeProps = Array.isArray(response.data) 
-        ? response.data.filter(p => p.status?.toLowerCase() === 'active' || p.status?.toLowerCase() === 'approved') 
-        : [];
-        
-      setProperties(activeProps);
+      setProperties(filteredData);
     } catch (error) {
       console.error('Error fetching properties:', error);
       toast.error('Failed to load properties');
@@ -92,7 +148,7 @@ export default function PropertyListingPage() {
   };
 
   const addToFavorites = async (propertyId, e) => {
-    e.stopPropagation(); // Prevent card click from firing
+    e.stopPropagation(); 
     if (!user) {
       toast.error('Please login to save favorites');
       navigate('/auth');
@@ -107,7 +163,7 @@ export default function PropertyListingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans selection:bg-red-200">
+    <div className="min-h-screen bg-slate-50 font-sans selection:bg-red-200 flex flex-col">
       <Navbar />
 
       {/* HEADER SECTION */}
@@ -122,7 +178,7 @@ export default function PropertyListingPage() {
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-6 py-12 flex flex-col lg:flex-row gap-8">
+      <div className="max-w-7xl mx-auto px-6 py-12 flex flex-col lg:flex-row gap-8 flex-1">
         
         {/* LEFT SIDEBAR: FILTERS */}
         <div className="lg:w-1/4">
@@ -168,7 +224,7 @@ export default function PropertyListingPage() {
               <div className="space-y-1.5">
                 <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest">City Location</Label>
                 <Input
-                  placeholder="e.g. Mumbai, Delhi"
+                  placeholder="e.g. Noida, Delhi"
                   value={filters.city}
                   onChange={(e) => handleFilterChange('city', e.target.value)}
                   className="h-12 bg-slate-50 rounded-xl border-slate-200 focus:border-red-500 focus:ring-red-500/20"
@@ -247,7 +303,7 @@ export default function PropertyListingPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {properties.map((property) => {
                 
-                // Real Image Logic
+                // Uses assigned real image, backend image, or placeholder
                 const coverImage = property.images && property.images.length > 0 
                   ? property.images[0] 
                   : property.imageUrl || getPlaceholderImage(property.id, property.category || property.property_type);
@@ -277,7 +333,7 @@ export default function PropertyListingPage() {
                            </span>
                          </div>
                          
-                         {/* Action Buttons overlay */}
+                         {/* Action Buttons */}
                          <button 
                            onClick={(e) => addToFavorites(property.id, e)} 
                            className="absolute top-3 right-3 p-2 bg-black/30 hover:bg-white backdrop-blur-md rounded-full text-white hover:text-red-500 transition-all z-10"
@@ -323,7 +379,9 @@ export default function PropertyListingPage() {
                        <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
                           <div>
                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Price</p>
-                            <span className="text-xl font-black text-slate-900">₹{Number(property.price).toLocaleString('en-IN')}</span>
+                            <span className="text-xl font-black text-slate-900">
+                              {property.price > 0 ? `₹${Number(property.price).toLocaleString('en-IN')}` : property.priceText || 'On Request'}
+                            </span>
                           </div>
                           <Button
                             variant="outline"
@@ -347,7 +405,7 @@ export default function PropertyListingPage() {
       </div>
 
       {/* FOOTER */}
-      <footer className="bg-[#0A0A0A] text-white pt-20 pb-10 px-6 border-t border-slate-800 mt-10">
+      <footer className="bg-[#0A0A0A] text-white pt-20 pb-10 px-6 border-t border-slate-800 mt-auto">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
             <div className="space-y-6">
