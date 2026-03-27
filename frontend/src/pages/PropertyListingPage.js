@@ -18,6 +18,8 @@ import {
 } from '@/components/ui/select';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
+import featuredPlotProperties from '../lib/featuredPlots';
+import resaleListings from '../lib/resaleListings';
 
 const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000/api";
 
@@ -60,20 +62,27 @@ export default function PropertyListingPage() {
       const params = new URLSearchParams();
 
       Object.keys(filters).forEach(key => {
-        if (filters[key]) params.append(key, filters[key]);
+        if (filters[key] && filters[key] !== 'all') params.append(key, filters[key]);
       });
 
       const response = await axios.get(`${API_BASE}/properties?${params.toString()}`);
       
       // Filter only active/approved properties for public viewing
-      const activeProps = Array.isArray(response.data) 
-        ? response.data.filter(p => p.status?.toLowerCase() === 'active' || p.status?.toLowerCase() === 'approved') 
+      const activeProps = Array.isArray(response.data)
+        ? response.data.filter(p => p.status?.toLowerCase() === 'active' || p.status?.toLowerCase() === 'approved')
         : [];
-        
-      setProperties(activeProps);
+
+      const localCatalog = [...featuredPlotProperties, ...resaleListings];
+      const dedupedById = new Map();
+      [...localCatalog, ...activeProps].forEach((item) => {
+        if (item?.id) dedupedById.set(String(item.id), item);
+      });
+      setProperties(Array.from(dedupedById.values()));
     } catch (error) {
       console.error('Error fetching properties:', error);
-      toast.error('Failed to load properties');
+      const localCatalog = [...featuredPlotProperties, ...resaleListings];
+      setProperties(localCatalog);
+      toast.error('Showing offline property catalog');
     } finally {
       setLoading(false);
     }
@@ -323,7 +332,7 @@ export default function PropertyListingPage() {
                        <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
                           <div>
                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Price</p>
-                            <span className="text-xl font-black text-slate-900">₹{Number(property.price).toLocaleString('en-IN')}</span>
+                            <span className="text-xl font-black text-slate-900">{property.price ? `₹${Number(property.price).toLocaleString('en-IN')}` : property.priceText || 'On Request'}</span>
                           </div>
                           <Button
                             variant="outline"

@@ -101,7 +101,7 @@ export default function UserDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {favorites.map(property => (
                     <div key={property.id} className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all" data-testid={`favorite-property-${property.id}`}>
-                      <Link to={`/properties/${property.id}`}>
+                      <Link to={`/property/${property.id}`}>
                         <div className="relative h-48">
                           <img
                             src={property.images[0] || 'https://images.unsplash.com/photo-1642976975710-1d8890dbf5ab?w=600'}
@@ -111,7 +111,7 @@ export default function UserDashboard() {
                         </div>
                       </Link>
                       <div className="p-4">
-                        <Link to={`/properties/${property.id}`}>
+                        <Link to={`/property/${property.id}`}>
                           <h3 className="font-bold text-lg mb-2 hover:text-[#C8102E] transition-colors">
                             {property.title}
                           </h3>

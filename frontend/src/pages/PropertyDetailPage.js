@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { 
   MapPin, Bed, Bath, Maximize, Phone, Mail, Calendar, Home,
@@ -14,69 +14,55 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
+import featuredPlotProperties from '../lib/featuredPlots';
+import resaleListings from '../lib/resaleListings';
 
 const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000/api";
-
-// --- MOCK DATA FOR NEW SECTIONS ---
-const mockPriceList = [
-  { type: "3 BHK", size: "1932 Sq.ft.", price: "₹ 1.72 CR*" },
-  { type: "3 BHK + Study", size: "2239 Sq.ft.", price: "₹ 1.99 CR*" },
-  { type: "4 BHK + Study", size: "2625 Sq.ft.", price: "₹ 2.33 CR*" },
-];
-
-const mockAmenities = [
-  { name: "Cafeteria/Food Court", icon: Coffee },
-  { name: "Power Backup", icon: Zap },
-  { name: "Lift", icon: ArrowUpDown },
-  { name: "Security", icon: Shield },
-  { name: "Service/Good Lift", icon: ArrowUpDown },
-  { name: "Visitor Parking", icon: Home },
-  { name: "Gymnasium", icon: Dumbbell },
-  { name: "Rain Water Harvesting", icon: Droplets },
-  { name: "Air Conditioned", icon: Wind },
-];
 
 export default function PropertyDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
   const { user } = useAuth();
 
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [notFound, setNotFound] = useState(false);
 
   // Form States
   const [leadForm, setLeadForm] = useState({ name: '', email: '', phone: '' });
   const [quickForm, setQuickForm] = useState({ name: '', phone: '' });
 
   const fetchProperty = useCallback(async () => {
+    setLoading(true);
+    setNotFound(false);
+
     try {
       const response = await axios.get(`${API_BASE}/properties/${id}`);
-      setProperty(response.data);
-    } catch (error) {
-      const fallbackProperty = location.state?.property;
-      if (fallbackProperty) {
-        setProperty({
-          ...fallbackProperty,
-          // Hydrate fallback with extra data to match new UI
-          builder: fallbackProperty.builder || "Yatharth Group and Great Value Realty",
-          possession: "June 2030",
-          configurations: "3 BHK Flats, 4 BHK Flats",
-          projectStatus: fallbackProperty.tag || "New Launch",
-          rera: fallbackProperty.rera || "Governed by the ASPIRE framework"
-        });
-      } else {
-        toast.error('Property not found');
-        navigate('/properties');
+      if (response?.data?.id) {
+        setProperty(response.data);
+        return;
       }
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      // fallback to local datasets below
     }
-  }, [id, location.state, navigate]);
+
+    const localCatalog = [...featuredPlotProperties, ...resaleListings];
+    const localMatch = localCatalog.find((item) => String(item.id) === String(id));
+
+    if (localMatch) {
+      setProperty(localMatch);
+    } else {
+      setProperty(null);
+      setNotFound(true);
+      toast.error('Property not found for this ID');
+    }
+
+    setLoading(false);
+  }, [id]);
 
   useEffect(() => {
-    fetchProperty();
+    fetchProperty().finally(() => setLoading(false));
   }, [fetchProperty]);
 
   const handleLeadSubmit = (e, formName) => {
@@ -105,7 +91,25 @@ export default function PropertyDetailPage() {
     );
   }
 
+  if (notFound) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Navbar />
+        <div className="pt-40 max-w-3xl mx-auto px-6 text-center">
+          <h1 className="text-3xl font-black text-slate-900 mb-3">Property Not Found</h1>
+          <p className="text-slate-600 mb-6">We could not find a listing for ID: {id}</p>
+          <Button onClick={() => navigate('/properties')} className="bg-red-600 hover:bg-red-700">Back to Listings</Button>
+        </div>
+      </div>
+    );
+  }
+
   if (!property) return null;
+
+
+  const mapQuery = encodeURIComponent(`${property.title}, ${property.location || property.area || ''}, ${property.city || ''}`);
+  const mapEmbedUrl = `https://www.google.com/maps?q=${mapQuery}&output=embed`;
+  const mapOpenUrl = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
 
   const images = property.images && property.images.length > 0 
     ? property.images 
@@ -148,7 +152,7 @@ export default function PropertyDetailPage() {
         <div className="mb-6 flex flex-col md:flex-row md:items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-2">
-              {property.title}: Ultra-Spacious, Low-Density Living
+              {property.title}
             </h1>
             <p className="text-slate-500 font-medium flex items-center text-sm md:text-base">
               <MapPin className="w-4 h-4 mr-1.5 text-slate-400"/> 
@@ -203,7 +207,7 @@ export default function PropertyDetailPage() {
                 <div className="flex items-center text-[#003B30]">
                   <TrendingUp className="w-7 h-7 mr-3" />
                   <span className="text-3xl md:text-4xl font-extrabold tracking-tight">
-                    {property.priceText || `₹ ${(property.price / 10000000).toFixed(2)} CR* Onwards*`}
+                    {property.priceText || (property.price ? `₹ ${Number(property.price).toLocaleString('en-IN')}` : 'On Request')}
                   </span>
                 </div>
               </div>
@@ -219,19 +223,19 @@ export default function PropertyDetailPage() {
                 
                 <div className="flex flex-col">
                   <div className="flex items-center text-slate-500 text-xs font-bold mb-1 uppercase tracking-wider"><Building className="w-4 h-4 mr-1.5"/> Configurations</div>
-                  <p className="font-bold text-slate-900 text-sm">{property.configurations}</p>
+                  <p className="font-bold text-slate-900 text-sm">{property.configurations || property.property_type || 'Residential'}</p>
                 </div>
                 <div className="flex flex-col">
                   <div className="flex items-center text-slate-500 text-xs font-bold mb-1 uppercase tracking-wider"><Star className="w-4 h-4 mr-1.5"/> Project Status</div>
-                  <p className="font-bold text-slate-900 text-sm">{property.projectStatus}</p>
+                  <p className="font-bold text-slate-900 text-sm">{property.projectStatus || 'Resale'}</p>
                 </div>
                 <div className="flex flex-col">
                   <div className="flex items-center text-slate-500 text-xs font-bold mb-1 uppercase tracking-wider"><Calendar className="w-4 h-4 mr-1.5"/> Possession</div>
-                  <p className="font-bold text-slate-900 text-sm">{property.possession}</p>
+                  <p className="font-bold text-slate-900 text-sm">{property.possession || 'Ready to move / As per seller'}</p>
                 </div>
                 <div className="flex flex-col">
                   <div className="flex items-center text-slate-500 text-xs font-bold mb-1 uppercase tracking-wider"><Building className="w-4 h-4 mr-1.5"/> Builder</div>
-                  <p className="font-bold text-slate-900 text-sm line-clamp-1">{property.builder}</p>
+                  <p className="font-bold text-slate-900 text-sm line-clamp-1">{property.builder || 'Independent Seller'}</p>
                 </div>
               </div>
 
@@ -267,7 +271,7 @@ export default function PropertyDetailPage() {
             <section id="price-list">
               <h2 className="text-2xl font-extrabold text-slate-900 mb-6">Price List</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                {mockPriceList.map((item, idx) => (
+                {[{ type: property.configurations || 'Unit', size: `${property.area || property.size || 'NA'} Sq.ft.`, price: property.priceText || (property.price ? `₹ ${Number(property.price).toLocaleString('en-IN')}` : 'On Request') }].map((item, idx) => (
                   <div key={idx} className="border border-slate-200 rounded-2xl p-5 hover:border-[#003B30]/30 hover:shadow-md transition-all flex flex-col">
                     <span className="bg-emerald-100 text-emerald-700 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded w-fit mb-3">Unit</span>
                     <h3 className="text-xl font-bold text-slate-900 mb-4">{item.type}</h3>
@@ -301,7 +305,7 @@ export default function PropertyDetailPage() {
             <section id="amenities">
               <h2 className="text-2xl font-extrabold text-slate-900 mb-6">{property.title} Amenities</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {mockAmenities.map((amenity, idx) => (
+                {(property.amenities?.length ? property.amenities.map((name) => ({ name, icon: CheckCircle })) : [{ name: 'Verified Listing', icon: ShieldCheck }, { name: 'Owner Assisted Visit', icon: Home }, { name: 'Documentation Support', icon: FileText }]).map((amenity, idx) => (
                   <div key={idx} className="border border-slate-200 rounded-2xl p-6 flex flex-col items-center justify-center text-center hover:shadow-sm hover:border-[#003B30]/20 transition-all">
                     <amenity.icon className="w-8 h-8 text-slate-700 mb-3 stroke-[1.5]" />
                     <span className="text-sm font-semibold text-slate-700">{amenity.name}</span>
@@ -318,24 +322,24 @@ export default function PropertyDetailPage() {
               <h2 className="text-2xl font-extrabold text-slate-900 mb-6">Overview of {property.title}</h2>
               <div className="prose prose-slate max-w-none text-slate-600 mb-8 leading-relaxed">
                 <p>
-                  {property.title} is a high quality, low-density residential project spread across 6 acres of land, located in Techzone 4, Greater Noida West. The project has 6 towers with G+30 floors. It has 3 BHK and 4 BHK apartments with Vastu-compliant layout, 80% open green space. It was developed under the supervision of the Supreme Court and NBCC, thus providing high accountability, elite features such as 25,000 sq. ft. clubhouse, and uninterrupted connectivity.
+                  {property.description || 'Detailed property description is available with the listing owner. Contact us for complete floor-plan and registry details.'}
                 </p>
               </div>
 
               <div className="space-y-6">
                 <div>
                   <span className="font-extrabold text-slate-900">Type of Property: </span>
-                  <span className="text-slate-600">{property.type || 'Residential'}</span>
+                  <span className="text-slate-600">{property.property_type || property.type || 'Residential'}</span>
                 </div>
                 <div>
                   <span className="font-extrabold text-slate-900">Property Units: </span>
-                  <span className="text-slate-600">108 units per acer (4 units on each floor)</span>
+                  <span className="text-slate-600">{property.area || property.size || 'NA'} sq.ft. listed area</span>
                 </div>
 
                 <div>
                   <h4 className="font-extrabold text-slate-900 mb-4 mt-2">Location Highlights:</h4>
                   <ul className="space-y-3">
-                    {['Centrally located in a non-congested area.', '100-meter completely developed green belt view.', 'Smooth access to major expressways.', 'Proximity to basic amenities like a top-class hospital, an international school and a marketplace.'].map((item, i) => (
+                    {[`Located in ${property.location || property.city}.`, `Configured as ${property.configurations || 'Residential Unit'}.`, `Budget marker: ${property.priceText || (property.price ? `₹${Number(property.price).toLocaleString('en-IN')}` : 'On Request')}.`, 'Nearby infrastructure and daily conveniences available.'].map((item, i) => (
                       <li key={i} className="flex items-start text-slate-600">
                         <ChevronRight className="w-5 h-5 text-[#003B30] mr-2 shrink-0 mt-0.5" /> {item}
                       </li>
@@ -345,13 +349,13 @@ export default function PropertyDetailPage() {
 
                 <div>
                   <span className="font-extrabold text-slate-900">Real Estate Developer: </span>
-                  <span className="text-slate-600">{property.builder}</span>
+                  <span className="text-slate-600">{property.builder || 'Independent Seller'}</span>
                 </div>
 
                 <div>
                   <h4 className="font-extrabold text-slate-900 mb-4 mt-2">Property Highlights:</h4>
                   <ul className="space-y-3">
-                    {['Double-height designer entrance lobbies in every tower.', 'Spacious balconies with panoramic views.'].map((item, i) => (
+                    {[property.description?.split('.').slice(0,2).join('. ') || 'Seller provided property details available on call.', `Listed area: ${property.area || property.size || 'NA'} sq.ft.`].map((item, i) => (
                       <li key={i} className="flex items-start text-slate-600">
                         <ChevronRight className="w-5 h-5 text-[#003B30] mr-2 shrink-0 mt-0.5" /> {item}
                       </li>
@@ -365,14 +369,18 @@ export default function PropertyDetailPage() {
             <section id="location">
               <h2 className="text-2xl font-extrabold text-slate-900 mb-6">{property.title} Location</h2>
               <div className="w-full h-[400px] bg-slate-100 rounded-2xl overflow-hidden relative border border-slate-200">
-                <Button variant="outline" className="absolute top-4 left-4 z-10 bg-white text-blue-600 font-bold border-slate-200 hover:bg-slate-50 shadow-sm">
-                  Open in Maps <Share2 className="w-4 h-4 ml-2" />
-                </Button>
-                {/* Simulated Map Background */}
-                <div className="w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cartographer.png')] bg-slate-200 flex flex-col items-center justify-center opacity-70">
-                   <MapPin className="w-12 h-12 text-[#003B30] drop-shadow-md mb-2" />
-                   <p className="font-bold text-slate-700">Map Integration View</p>
-                </div>
+                <a href={mapOpenUrl} target="_blank" rel="noopener noreferrer">
+                  <Button variant="outline" className="absolute top-4 left-4 z-10 bg-white text-blue-600 font-bold border-slate-200 hover:bg-slate-50 shadow-sm">
+                    Open in Maps <Share2 className="w-4 h-4 ml-2" />
+                  </Button>
+                </a>
+                <iframe
+                  title={`Map for ${property.title}`}
+                  src={mapEmbedUrl}
+                  className="w-full h-full border-0"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
               </div>
               <p className="flex items-center text-slate-500 font-medium mt-4">
                 <MapPin className="w-5 h-5 mr-2 text-slate-400" /> {property.location}, {property.city}
@@ -443,7 +451,7 @@ export default function PropertyDetailPage() {
                     <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0 text-blue-600"><Building className="w-5 h-5"/></div>
                     <div>
                       <h4 className="font-bold text-slate-900 text-sm">Trusted Developer</h4>
-                      <p className="text-xs text-slate-500 font-medium">{property.builder}</p>
+                      <p className="text-xs text-slate-500 font-medium">{property.builder || 'Independent Seller'}</p>
                     </div>
                   </div>
                   <div className="flex gap-4">

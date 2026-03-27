@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 
 // ---------- Page Imports ----------
@@ -15,7 +15,7 @@ import CrmDashboard from "./pages/CrmDashboard";
 import ContactPage from "./pages/contact";
 
 import BuyPage from "./pages/buy";
-import RentPage from "./pages/rent";
+import ResalePage from "./pages/rent";
 
 // 🔥 Premium Pages Imports
 import BlogPage from "./pages/blog";
@@ -59,6 +59,12 @@ function PortalRoute({ children }) {
   return children;
 }
 
+
+function LegacyPropertyRedirect() {
+  const { id } = useParams();
+  return <Navigate to={`/property/${id}`} replace />;
+}
+
 // ================= Main App Routing =================
 function AppRoutes() {
   return (
@@ -67,7 +73,8 @@ function AppRoutes() {
       {/* -------- PUBLIC ROUTES -------- */}
       <Route path="/" element={<HomePage />} />
       <Route path="/buy" element={<BuyPage />} />
-      <Route path="/rent" element={<RentPage />} />
+      <Route path="/resale" element={<ResalePage />} />
+      <Route path="/rent" element={<Navigate to="/resale" replace />} />
       
       {/* Point both /sell and /post-property directly to our premium PostPropertyPage */}
       <Route path="/sell" element={<PostPropertyPage />} /> 
@@ -89,7 +96,7 @@ function AppRoutes() {
       <Route path="/plots" element={<Navigate to="/properties?property_type=plot" replace />} />
       <Route path="/residential" element={<Navigate to="/buy" replace />} />
       <Route path="/commercial" element={<Navigate to="/properties?property_type=commercial" replace />} />
-      <Route path="/resale" element={<Navigate to="/buy" replace />} />
+      <Route path="/resale-old" element={<Navigate to="/resale" replace />} />
       <Route path="/advertise" element={<Navigate to="/contact" replace />} />
       <Route path="/agent-login" element={<Navigate to="/auth" replace />} />
       <Route path="/privacy" element={<LegalPage />} />
@@ -97,6 +104,7 @@ function AppRoutes() {
       
       {/* Dynamic Route for individual property details */}
       <Route path="/property/:id" element={<PropertyDetailPage />} /> 
+      <Route path="/properties/:id" element={<LegacyPropertyRedirect />} /> 
 
       <Route path="/auth" element={<AuthPage />} />
 

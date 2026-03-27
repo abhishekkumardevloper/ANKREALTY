@@ -146,7 +146,7 @@ export default function AgentDashboard() {
                   {dashboardData.properties.map(property => (
                     <div key={property.id} className="bg-white rounded-lg p-6 shadow-sm hover:shadow-md transition-all" data-testid={`property-${property.id}`}>
                       <div className="flex flex-col md:flex-row gap-6">
-                        <Link to={`/properties/${property.id}`} className="w-full md:w-48 h-32 flex-shrink-0">
+                        <Link to={`/property/${property.id}`} className="w-full md:w-48 h-32 flex-shrink-0">
                           <img
                             src={property.images[0] || 'https://images.unsplash.com/photo-1642976975710-1d8890dbf5ab?w=400'}
                             alt={property.title}
@@ -156,7 +156,7 @@ export default function AgentDashboard() {
                         <div className="flex-1">
                           <div className="flex items-start justify-between mb-2">
                             <div>
-                              <Link to={`/properties/${property.id}`}>
+                              <Link to={`/property/${property.id}`}>
                                 <h3 className="font-bold text-xl mb-1 hover:text-[#C8102E] transition-colors">
                                   {property.title}
                                 </h3>
@@ -185,7 +185,7 @@ export default function AgentDashboard() {
                             </span>
                           </div>
                           <div className="flex items-center space-x-3">
-                            <Link to={`/properties/${property.id}`}>
+                            <Link to={`/property/${property.id}`}>
                               <Button variant="outline" size="sm">
                                 View
                               </Button>
