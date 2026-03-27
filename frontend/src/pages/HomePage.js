@@ -43,7 +43,7 @@ const featuredProperties = [
     tag: 'Ultra Luxury'
   },
   { 
-    id: 'p1', title: 'Bajrang Vatika', city: 'Noida Extension', location: 'Sector 10', propertyType: 'Plot', 
+    id: 'p1', title: 'Paras Evanue', city: 'Noida Extension', location: 'Sector 10', propertyType: 'Plot', 
     category: 'buy', price: '₹ 45 L onwards', 
     image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80',
     tag: 'Premium Plots'
