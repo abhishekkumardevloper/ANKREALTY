@@ -172,9 +172,23 @@ class UserRegister(BaseModel):
     phone: str
     role: str = "client"
 
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: EmailStr) -> str:
+        return str(value).strip().lower()
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, value: str) -> str:
+        normalized = value.strip()
+        if len(normalized) < 2:
+            raise ValueError("Name must be at least 2 characters long")
+        return normalized
+
     @field_validator("password")
     @classmethod
     def validate_password(cls, value: str) -> str:
+        value = value.strip()
         if len(value) < 8:
             raise ValueError("Password must be at least 8 characters long")
         if not any(ch.isalpha() for ch in value) or not any(ch.isdigit() for ch in value):
@@ -184,10 +198,11 @@ class UserRegister(BaseModel):
     @field_validator("phone")
     @classmethod
     def validate_phone(cls, value: str) -> str:
+        value = value.strip()
         digits = ''.join(ch for ch in value if ch.isdigit())
         if len(digits) < 10:
             raise ValueError("Phone number must contain at least 10 digits")
-        return value.strip()
+        return digits
 
     @field_validator("role")
     @classmethod
@@ -199,33 +214,22 @@ class UserRegister(BaseModel):
             raise ValueError("Role must be one of client, agent, broker, or admin")
         return normalized
 
-    @field_validator("password")
-    @classmethod
-    def validate_password(cls, value: str) -> str:
-        if len(value) < 8:
-            raise ValueError("Password must be at least 8 characters long")
-        if not any(ch.isalpha() for ch in value) or not any(ch.isdigit() for ch in value):
-            raise ValueError("Password must include at least one letter and one number")
-        return value
-
-    @field_validator("phone")
-    @classmethod
-    def validate_phone(cls, value: str) -> str:
-        digits = ''.join(ch for ch in value if ch.isdigit())
-        if len(digits) < 10:
-            raise ValueError("Phone number must contain at least 10 digits")
-        return value.strip()
-
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: EmailStr) -> str:
+        return str(value).strip().lower()
+
     @field_validator("password")
     @classmethod
     def validate_password(cls, value: str) -> str:
-        if len(value.strip()) < 8:
-            raise ValueError("Password must be at least 8 characters long")
-        return value
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Password is required")
+        return normalized
 
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
