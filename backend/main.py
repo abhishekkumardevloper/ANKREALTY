@@ -7,7 +7,7 @@ from supabase import create_client, Client
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, EmailStr, ConfigDict, Field, field_validator
+from pydantic import BaseModel, EmailStr, ConfigDict, Field, field_validator, model_validator
 from typing import List, Optional, Any
 import uuid
 from datetime import datetime, timezone, timedelta
@@ -172,9 +172,18 @@ class UserRegister(BaseModel):
     phone: str
     role: str = "client"
 
+    @model_validator(mode="after")
+    def normalize_auth_fields(self):
+        self.email = str(self.email).strip().lower()
+        self.name = self.name.strip()
+        self.phone = self.phone.strip()
+        self.password = self.password.strip()
+        return self
+
     @field_validator("password")
     @classmethod
     def validate_password(cls, value: str) -> str:
+        value = value.strip()
         if len(value) < 8:
             raise ValueError("Password must be at least 8 characters long")
         if not any(ch.isalpha() for ch in value) or not any(ch.isdigit() for ch in value):
@@ -199,26 +208,15 @@ class UserRegister(BaseModel):
             raise ValueError("Role must be one of client, agent, broker, or admin")
         return normalized
 
-    @field_validator("password")
-    @classmethod
-    def validate_password(cls, value: str) -> str:
-        if len(value) < 8:
-            raise ValueError("Password must be at least 8 characters long")
-        if not any(ch.isalpha() for ch in value) or not any(ch.isdigit() for ch in value):
-            raise ValueError("Password must include at least one letter and one number")
-        return value
-
-    @field_validator("phone")
-    @classmethod
-    def validate_phone(cls, value: str) -> str:
-        digits = ''.join(ch for ch in value if ch.isdigit())
-        if len(digits) < 10:
-            raise ValueError("Phone number must contain at least 10 digits")
-        return value.strip()
-
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+    @model_validator(mode="after")
+    def normalize_login_fields(self):
+        self.email = str(self.email).strip().lower()
+        self.password = self.password.strip()
+        return self
 
     @field_validator("password")
     @classmethod
@@ -367,7 +365,7 @@ def login(credentials: UserLogin):
     if supabase is None:
         raise HTTPException(status_code=500, detail="Database not configured")
     try:
-        res = supabase.table("users").select("*").eq("email", credentials.email).limit(1).execute()
+        res = supabase.table("users").select("*").ilike("email", credentials.email).limit(1).execute()
         check_res_or_raise(res, "fetching user for login")
         user = res.data[0] if res.data else None
         if not user or not verify_password(credentials.password, user.get("password", "")):
