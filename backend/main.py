@@ -1,4 +1,23 @@
-# app.py
+# ==============================================================================
+# IMPORTANT SUPABASE SETUP INSTRUCTIONS
+# ==============================================================================
+# 1. You must use your Supabase **SERVICE_ROLE_KEY** in your .env file for 
+#    SUPABASE_KEY, not the Anon key. Otherwise, Row Level Security (RLS) 
+#    will block your API from registering new users.
+#
+# 2. Run this exact SQL in your Supabase SQL Editor to create the users table:
+#
+# CREATE TABLE public.users (
+#     id UUID PRIMARY KEY,
+#     email TEXT UNIQUE NOT NULL,
+#     password TEXT NOT NULL,
+#     name TEXT NOT NULL,
+#     phone TEXT NOT NULL,
+#     role TEXT DEFAULT 'client',
+#     created_at TIMESTAMPTZ DEFAULT NOW()
+# );
+# ==============================================================================
+
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
@@ -40,7 +59,7 @@ if not SUPABASE_URL or not SUPABASE_KEY:
     logger.warning("SUPABASE_URL or SUPABASE_KEY is missing. App will fail to connect until they are provided.")
 
 # --------------------------------
-# Create supabase client (may fail later if env missing)
+# Create supabase client
 # --------------------------------
 try:
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY else None
@@ -69,19 +88,23 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
         expire = datetime.now(timezone.utc) + expires_delta
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    # Use numeric timestamp for compatibility
     to_encode.update({"exp": int(expire.timestamp())})
     token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return token
 
 # --------------------------------
-# FastAPI init + CORS
+# FastAPI init + CORS (FIXED)
 # --------------------------------
 app = FastAPI(title="ANK Realty API")
-cors_origins = [o.strip() for o in os.environ.get("CORS_ORIGINS", "*").split(",")]
+
+# FIX: FastAPI crashes if allow_credentials=True AND allow_origins=["*"].
+# We default to typical local development ports if CORS_ORIGINS isn't set.
+cors_origins_str = os.environ.get("CORS_ORIGINS", "http://localhost:3000,http://localhost:3001")
+cors_origins = [o.strip() for o in cors_origins_str.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cors_origins if cors_origins != ["*"] else ["*"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -93,17 +116,11 @@ api_router = APIRouter(prefix="/api")
 # Helper: check supabase result for errors
 # --------------------------------
 def check_res_or_raise(res: Any, action: str = "database operation"):
-    """
-    Supabase responses often have .data and .error (and possibly .status_code).
-    Raise HTTPException if res.error is present.
-    """
     if res is None:
         raise HTTPException(status_code=500, detail=f"Supabase client not initialized for {action}")
-    # supabase-py returns an object with attributes .error and .data (or dict)
     err = getattr(res, "error", None)
     if err:
         logger.error("Supabase error during %s: %s", action, err)
-        # In debug mode, return the supabase error message - else a generic error.
         detail = str(err) if DEBUG else "Internal server error"
         raise HTTPException(status_code=500, detail=detail)
     return res
@@ -116,7 +133,7 @@ def root():
     return {"status": "online", "message": "ANK Realty Supabase API is running", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 # --------------------------------
-# Startup: validate DB connectivity (best-effort)
+# Startup: validate DB connectivity
 # --------------------------------
 @app.on_event("startup")
 def startup_event():
@@ -124,7 +141,6 @@ def startup_event():
         logger.error("Supabase client is not initialized. Check SUPABASE_URL and SUPABASE_KEY in env.")
         return
     try:
-        # Try a light query to ensure credentials are valid (select nothing heavy)
         res = supabase.table("users").select("id").limit(1).execute()
         if getattr(res, "error", None):
             logger.error("Supabase connectivity check failed: %s", res.error)
@@ -146,7 +162,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
     except JWTError as e:
         logger.warning("JWT decode error: %s", str(e))
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authentication token")
-    # fetch user
+    
     if supabase is None:
         raise HTTPException(status_code=500, detail="Database not configured")
     try:
@@ -329,6 +345,7 @@ def register(user_data: UserRegister):
         check_res_or_raise(res, "checking existing user")
         if res.data:
             raise HTTPException(status_code=400, detail="Email already registered")
+        
         # create
         user_id = str(uuid.uuid4())
         user_doc = {
@@ -342,6 +359,7 @@ def register(user_data: UserRegister):
         }
         insert_res = supabase.table("users").insert(user_doc).execute()
         check_res_or_raise(insert_res, "inserting user")
+        
         access_token = create_access_token(data={"sub": user_id})
         return {
             "token": access_token,
@@ -368,8 +386,10 @@ def login(credentials: UserLogin):
         res = supabase.table("users").select("*").ilike("email", credentials.email).limit(1).execute()
         check_res_or_raise(res, "fetching user for login")
         user = res.data[0] if res.data else None
+        
         if not user or not verify_password(credentials.password, user.get("password", "")):
             raise HTTPException(status_code=401, detail="Invalid email or password")
+            
         access_token = create_access_token(data={"sub": user["id"]})
         return {
             "token": access_token,
@@ -425,11 +445,11 @@ def create_property(property_data: PropertyCreate, current_user: dict = Depends(
         raise HTTPException(status_code=500, detail="Database not configured")
     try:
         property_id = str(uuid.uuid4())
-        # NOTE: model_dump() works with pydantic v2; if using v1 use .dict()
         try:
             payload = property_data.model_dump()
         except Exception:
             payload = property_data.dict()
+            
         property_doc = {
             "id": property_id,
             "owner_id": current_user["id"],
@@ -481,6 +501,7 @@ def get_properties(
             query = query.eq("bhk", bhk)
         if furnishing:
             query = query.eq("furnishing", furnishing)
+            
         res = query.order("created_at", desc=True).limit(limit).execute()
         check_res_or_raise(res, "fetching properties")
         return res.data or []
@@ -499,11 +520,13 @@ def get_featured_properties():
         res = supabase.table("properties").select("*").eq("status", "approved").eq("featured", True).limit(6).execute()
         check_res_or_raise(res, "fetching featured properties")
         properties = res.data or []
+        
         if len(properties) < 6:
             needed = 6 - len(properties)
             res_add = supabase.table("properties").select("*").eq("status", "approved").order("created_at", desc=True).limit(needed).execute()
             check_res_or_raise(res_add, "fetching additional properties")
             properties.extend(res_add.data or [])
+            
         return properties[:6]
     except HTTPException:
         raise
@@ -520,11 +543,14 @@ def get_property(property_id: str):
         res = supabase.table("properties").select("*").eq("id", property_id).limit(1).execute()
         check_res_or_raise(res, "fetching property")
         prop = res.data[0] if res.data else None
+        
         if not prop:
             raise HTTPException(status_code=404, detail="Property not found")
+            
         new_views = prop.get("views", 0) + 1
         update_res = supabase.table("properties").update({"views": new_views}).eq("id", property_id).execute()
         check_res_or_raise(update_res, "updating property views")
+        
         prop["views"] = new_views
         return Property(**prop)
     except HTTPException:
@@ -546,16 +572,20 @@ def update_property(
         res = supabase.table("properties").select("*").eq("id", property_id).limit(1).execute()
         check_res_or_raise(res, "fetching property for update")
         prop = res.data[0] if res.data else None
+        
         if not prop:
             raise HTTPException(status_code=404, detail="Property not found")
         if prop["owner_id"] != current_user["id"] and current_user.get("role") != "admin":
             raise HTTPException(status_code=403, detail="Not authorized")
+            
         try:
             update_data = property_data.model_dump()
         except Exception:
             update_data = property_data.dict()
+            
         update_res = supabase.table("properties").update(update_data).eq("id", property_id).execute()
         check_res_or_raise(update_res, "updating property")
+        
         updated_res = supabase.table("properties").select("*").eq("id", property_id).limit(1).execute()
         check_res_or_raise(updated_res, "fetching updated property")
         return Property(**updated_res.data[0])
@@ -574,10 +604,12 @@ def delete_property(property_id: str, current_user: dict = Depends(get_current_u
         res = supabase.table("properties").select("*").eq("id", property_id).limit(1).execute()
         check_res_or_raise(res, "fetching property for delete")
         prop = res.data[0] if res.data else None
+        
         if not prop:
             raise HTTPException(status_code=404, detail="Property not found")
         if prop["owner_id"] != current_user["id"] and current_user.get("role") != "admin":
             raise HTTPException(status_code=403, detail="Not authorized")
+            
         delete_res = supabase.table("properties").delete().eq("id", property_id).execute()
         check_res_or_raise(delete_res, "deleting property")
         return {"message": "Property deleted successfully"}
@@ -600,6 +632,7 @@ def add_favorite(favorite_data: FavoriteCreate, current_user: dict = Depends(get
         check_res_or_raise(existing, "checking favorite")
         if existing.data:
             return {"message": "Already in favorites"}
+            
         favorite_id = str(uuid.uuid4())
         favorite_doc = {
             "id": favorite_id,
@@ -625,8 +658,10 @@ def get_favorites(current_user: dict = Depends(get_current_user)):
         fav_res = supabase.table("favorites").select("*").eq("user_id", current_user["id"]).execute()
         check_res_or_raise(fav_res, "fetching favorites")
         property_ids = [fav["property_id"] for fav in (fav_res.data or [])]
+        
         if not property_ids:
             return []
+            
         prop_res = supabase.table("properties").select("*").in_("id", property_ids).execute()
         check_res_or_raise(prop_res, "fetching favorite properties")
         return prop_res.data or []
@@ -667,6 +702,7 @@ def create_inquiry(inquiry_data: InquiryCreate, current_user: dict = Depends(get
         prop = res.data[0] if res.data else None
         if not prop:
             raise HTTPException(status_code=404, detail="Property not found")
+            
         inquiry_id = str(uuid.uuid4())
         inquiry_doc = {
             "id": inquiry_id,
@@ -693,7 +729,6 @@ def get_inquiries(current_user: dict = Depends(get_current_user)):
     if supabase is None:
         raise HTTPException(status_code=500, detail="Database not configured")
     try:
-        # supabase or_ usage: .or_("from_user_id.eq.{id},to_user_id.eq.{id}")
         expr = f"from_user_id.eq.{current_user['id']},to_user_id.eq.{current_user['id']}"
         res = supabase.table("inquiries").select("*").or_(expr).order("created_at", desc=True).limit(100).execute()
         check_res_or_raise(res, "fetching inquiries")
@@ -718,6 +753,7 @@ def create_appointment(appointment_data: AppointmentCreate, current_user: dict =
         prop = res.data[0] if res.data else None
         if not prop:
             raise HTTPException(status_code=404, detail="Property not found")
+            
         appointment_id = str(uuid.uuid4())
         appointment_doc = {
             "id": appointment_id,
@@ -767,10 +803,13 @@ def get_user_dashboard(current_user: dict = Depends(get_current_user)):
     try:
         fav_res = supabase.table("favorites").select("*", count="exact").eq("user_id", current_user["id"]).execute()
         check_res_or_raise(fav_res, "fetching favorites count")
+        
         app_res = supabase.table("appointments").select("*").eq("user_id", current_user["id"]).order("created_at", desc=True).limit(10).execute()
         check_res_or_raise(app_res, "fetching appointments")
+        
         inq_res = supabase.table("inquiries").select("*").eq("from_user_id", current_user["id"]).order("created_at", desc=True).limit(10).execute()
         check_res_or_raise(inq_res, "fetching inquiries")
+        
         return {
             "favorites_count": fav_res.count or 0,
             "appointments": app_res.data or [],
@@ -793,8 +832,10 @@ def get_agent_dashboard(current_user: dict = Depends(get_current_user)):
         prop_res = supabase.table("properties").select("*").eq("owner_id", current_user["id"]).execute()
         check_res_or_raise(prop_res, "fetching agent properties")
         my_properties = prop_res.data or []
+        
         inq_res = supabase.table("inquiries").select("*").eq("to_user_id", current_user["id"]).order("created_at", desc=True).limit(100).execute()
         check_res_or_raise(inq_res, "fetching agent inquiries")
+        
         total_views = sum(prop.get("views", 0) for prop in my_properties)
         return {
             "total_listings": len(my_properties),
@@ -819,12 +860,16 @@ def get_admin_dashboard(current_user: dict = Depends(get_current_user)):
     try:
         total_props = supabase.table("properties").select("*", count="exact").execute()
         check_res_or_raise(total_props, "counting properties")
+        
         pending_props = supabase.table("properties").select("*", count="exact").eq("status", "pending").execute()
         check_res_or_raise(pending_props, "counting pending properties")
+        
         total_users = supabase.table("users").select("*", count="exact").execute()
         check_res_or_raise(total_users, "counting users")
+        
         pending_list = supabase.table("properties").select("*").eq("status", "pending").order("created_at", desc=True).limit(50).execute()
         check_res_or_raise(pending_list, "fetching pending properties")
+        
         return {
             "total_properties": total_props.count or 0,
             "pending_properties": pending_props.count or 0,
