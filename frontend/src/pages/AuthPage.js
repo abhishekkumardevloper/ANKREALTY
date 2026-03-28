@@ -36,11 +36,18 @@ export default function AuthPage() {
     return ['Weak', 'Weak', 'Good', 'Strong'][score] || 'Weak';
   }, [registerData.password]);
 
+  // FIX: Clear errors when switching tabs
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setErrors({}); 
+  };
+
+  // FIX: Do not enforce password rules on login, just check if empty
   const validateLogin = () => {
     const next = {};
-    if (!emailRegex.test(loginData.email.trim())) next.loginEmail = 'Enter a valid email address.';
-    const passwordError = validatePassword(loginData.password.trim());
-    if (passwordError) next.loginPassword = passwordError;
+    if (!loginData.email.trim()) next.loginEmail = 'Email is required.';
+    if (!loginData.password.trim()) next.loginPassword = 'Password is required.';
+    
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -140,13 +147,13 @@ export default function AuthPage() {
           {/* Custom Tabs Toggle */}
           <div className="flex p-1 bg-slate-100 rounded-xl mb-8">
             <button
-              onClick={() => setActiveTab('login')}
+              onClick={() => handleTabChange('login')}
               className={`flex-1 py-2.5 text-sm font-black uppercase tracking-wider rounded-lg transition-all ${activeTab === 'login' ? 'bg-white text-[#8B0000] shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
             >
               Login
             </button>
             <button
-              onClick={() => setActiveTab('register')}
+              onClick={() => handleTabChange('register')}
               className={`flex-1 py-2.5 text-sm font-black uppercase tracking-wider rounded-lg transition-all ${activeTab === 'register' ? 'bg-white text-[#8B0000] shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
             >
               Register
@@ -177,7 +184,7 @@ export default function AuthPage() {
                   type="password" 
                   value={loginData.password} 
                   onChange={(e) => setLoginData({ ...loginData, password: e.target.value })} 
-                  placeholder="Minimum 8 characters" 
+                  placeholder="Enter your password" 
                   required 
                   className="h-12 bg-white shadow-sm border-slate-200 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] rounded-xl font-medium"
                 />
@@ -263,9 +270,12 @@ export default function AuthPage() {
                   required 
                   className="h-11 bg-white shadow-sm border-slate-200 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] rounded-xl font-medium text-sm"
                 />
-                <p className="mt-1 ml-1 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                  Strength: <span className={passwordStrength === 'Strong' ? 'text-green-500' : passwordStrength === 'Good' ? 'text-[#D4AF37]' : 'text-red-500'}>{passwordStrength}</span>
-                </p>
+                {/* FIX: Only show strength text if password has been typed */}
+                {registerData.password.length > 0 && (
+                  <p className="mt-1 ml-1 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                    Strength: <span className={passwordStrength === 'Strong' ? 'text-green-500' : passwordStrength === 'Good' ? 'text-[#D4AF37]' : 'text-red-500'}>{passwordStrength}</span>
+                  </p>
+                )}
                 <FieldError message={errors.registerPassword} />
               </div>
               <div>
