@@ -20,7 +20,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
 
 // FIXED: Using Vite environment variable to match the rest of your app
-const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
+const API_BASE = import.meta.env.VITE_API_URL || "https://ankrealty.onrender.com/api";
 
 export default function PropertyListingPage() {
   const navigate = useNavigate();
