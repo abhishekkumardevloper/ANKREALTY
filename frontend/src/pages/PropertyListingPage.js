@@ -27,8 +27,8 @@ export default function PropertyListingPage() {
   const [searchParams] = useSearchParams();
   
   // Safe fallback if useAuth is not perfectly configured yet
-  const authContext = useAuth ? useAuth() : null;
-  const user = authContext ? authContext.user : null;
+ const authContext = useAuth ? useAuth() : null;
+const user = authContext ? authContext.user : null;
 
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
