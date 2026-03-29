@@ -7,7 +7,7 @@ import {
   Heart, ShieldCheck, Share2, CheckCircle, Info, ChevronRight, 
   Image as ImageIcon, Download, FileText, Check, Building,
   TrendingUp, Coffee, Zap, ArrowUpDown, Shield, Dumbbell, Droplets, Wind,
-  Star, Lock, Zap as ZapIcon, MessageSquare, Map, DollarSign // <-- ADDED DollarSign HERE
+  Star, Lock, Zap as ZapIcon, MessageSquare, Map, DollarSign, Sparkles // <-- FIXED: Added Sparkles here!
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
 
-// FIXED: Using Vite environment variable to match your HomePage
+// Using Vite environment variable to match your HomePage
 const API_BASE = import.meta.env.VITE_API_URL || "https://ankrealty.onrender.com/api";
 
 // --- MOCK DATA FOR NEW SECTIONS ---
@@ -111,7 +111,7 @@ export default function PropertyDetailPage() {
 
   if (!property) return null;
 
-  // FIXED: Proper string interpolation and valid Google Maps URLs
+  // FIXED: Proper string interpolation (added the missing $) and valid Google Maps URLs
   const mapQuery = encodeURIComponent(`${property.title}, ${property.location || property.area || ''}, ${property.city || ''}`);
   const mapEmbedUrl = `https://maps.google.com/maps?q=${mapQuery}&output=embed`;
   const mapOpenUrl = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
