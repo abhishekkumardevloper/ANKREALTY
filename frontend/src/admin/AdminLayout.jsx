@@ -39,14 +39,24 @@ export default function AdminLayout({ children, page = "dashboard", setPage = ()
     { key: "buy", label: "Buy Properties", adminOnly: false, icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-6 9 6v10a1 1 0 0 1-1 1h-4v-6H8v6H4a1 1 0 0 1-1-1V9z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
     )},
-    { key: "sell", label: "Sell Properties", adminOnly: false, icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 10V7a2 2 0 0 0-2-2h-5l-2-3-2 3H5a2 2 0 0 0-2 2v3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 13h18v7a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-7z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+    // Added Resale Properties
+    { key: "resale", label: "Resale Properties", adminOnly: false, icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><line x1="7" y1="7" x2="7.01" y2="7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
     )},
-    { key: "rent", label: "Rent Properties", adminOnly: false, icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 11l9-6 9 6v7a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-7z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M9 22V12h6v10" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+    // Added Client Projects
+    { key: "client-project", label: "Client Projects", adminOnly: false, icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><circle cx="9" cy="7" r="4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M23 21v-2a4 4 0 0 0-3-3.87" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M16 3.13a4 4 0 0 1 0 7.75" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
     )},
     { key: "add-property", label: "Add Property", adminOnly: false, icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+    )},
+    // Added Blogs (Admin Only)
+    { key: "blogs", label: "Manage Blogs", adminOnly: true, icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><polyline points="14 2 14 8 20 8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><line x1="16" y1="13" x2="8" y2="13" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><line x1="16" y1="17" x2="8" y2="17" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><polyline points="10 9 9 9 8 9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+    )},
+    // Added YouTube Videos (Admin Only)
+    { key: "youtube", label: "YouTube Promos", adminOnly: true, icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33 2.78 2.78 0 0 0 1.94 2c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
     )},
   ];
 
