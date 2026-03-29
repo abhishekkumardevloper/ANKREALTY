@@ -219,16 +219,18 @@ def get_agent_dashboard(current_user: dict = Depends(get_current_user)):
 # --------------------------------
 # ROUTES: Properties
 # --------------------------------
+# Replace your current POST /properties and PUT /properties/{property_id} with these:
+
 @api_router.post("/properties")
 async def create_property(
     title: str = Form(...),
-    description: str = Form(...),
-    price: str = Form(default="0"),
     location: str = Form(...),
     city: str = Form(...),
+    description: str = Form(default=""),
+    price: str = Form(default="0"),
     state: str = Form(default=""),
-    property_type: str = Form(...),
-    category: str = Form(...),
+    property_type: str = Form(default="apartment"),
+    category: str = Form(default="buy"),
     area: str = Form(default="0"),
     bhk: str = Form(default="0"),
     bathrooms: str = Form(default="0"),
@@ -238,9 +240,10 @@ async def create_property(
     rera: str = Form(default=""),
     projectStatus: str = Form(default="New Launch"),
     possession: str = Form(default=""),
-    new_images: List[UploadFile] = File(default=[]),
-    new_videos: List[UploadFile] = File(default=[]),
-    brochure: Optional[UploadFile] = File(default=None),
+    # FIXED: Made File uploads strictly Optional so missing files don't trigger 422
+    new_images: Optional[List[UploadFile]] = File(None),
+    new_videos: Optional[List[UploadFile]] = File(None),
+    brochure: Optional[UploadFile] = File(None),
     current_user: dict = Depends(get_current_user)
 ):
     try:
@@ -254,18 +257,20 @@ async def create_property(
         except:
             parsed_amenities = []
 
-        # Process Media Uploads
+        # Process Media Uploads safely
         image_urls = []
-        for img in new_images:
-            if img.filename:
-                url = await upload_file_to_supabase(img, "properties/images")
-                if url: image_urls.append(url)
+        if new_images:
+            for img in new_images:
+                if img.filename:
+                    url = await upload_file_to_supabase(img, "properties/images")
+                    if url: image_urls.append(url)
                 
         video_urls = []
-        for vid in new_videos:
-            if vid.filename:
-                url = await upload_file_to_supabase(vid, "properties/videos")
-                if url: video_urls.append(url)
+        if new_videos:
+            for vid in new_videos:
+                if vid.filename:
+                    url = await upload_file_to_supabase(vid, "properties/videos")
+                    if url: video_urls.append(url)
                 
         brochure_url = None
         if brochure and brochure.filename:
@@ -311,27 +316,27 @@ async def create_property(
 @api_router.put("/properties/{property_id}")
 async def update_property(
     property_id: str,
-    title: str = Form(None),
-    description: str = Form(None),
-    price: str = Form(None),
-    location: str = Form(None),
-    city: str = Form(None),
-    state: str = Form(None),
-    property_type: str = Form(None),
-    category: str = Form(None),
-    area: str = Form(None),
-    bhk: str = Form(None),
-    bathrooms: str = Form(None),
-    furnishing: str = Form(None),
-    amenities: str = Form(None),
-    builder: str = Form(None),
-    rera: str = Form(None),
-    projectStatus: str = Form(None),
-    possession: str = Form(None),
-    existing_images: str = Form(default="[]"),
-    new_images: List[UploadFile] = File(default=[]),
-    new_videos: List[UploadFile] = File(default=[]),
-    brochure: Optional[UploadFile] = File(default=None),
+    title: Optional[str] = Form(None),
+    description: Optional[str] = Form(None),
+    price: Optional[str] = Form(None),
+    location: Optional[str] = Form(None),
+    city: Optional[str] = Form(None),
+    state: Optional[str] = Form(None),
+    property_type: Optional[str] = Form(None),
+    category: Optional[str] = Form(None),
+    area: Optional[str] = Form(None),
+    bhk: Optional[str] = Form(None),
+    bathrooms: Optional[str] = Form(None),
+    furnishing: Optional[str] = Form(None),
+    amenities: Optional[str] = Form(None),
+    builder: Optional[str] = Form(None),
+    rera: Optional[str] = Form(None),
+    projectStatus: Optional[str] = Form(None),
+    possession: Optional[str] = Form(None),
+    existing_images: Optional[str] = Form(default="[]"),
+    new_images: Optional[List[UploadFile]] = File(None),
+    new_videos: Optional[List[UploadFile]] = File(None),
+    brochure: Optional[UploadFile] = File(None),
     current_user: dict = Depends(get_current_user)
 ):
     res = supabase.table("properties").select("*").eq("id", property_id).limit(1).execute()
@@ -373,22 +378,24 @@ async def update_property(
     except:
         image_urls = existing_prop.get("images", [])
         
-    for img in new_images:
-        if img.filename:
-            url = await upload_file_to_supabase(img, "properties/images")
-            if url: image_urls.append(url)
+    if new_images:
+        for img in new_images:
+            if img.filename:
+                url = await upload_file_to_supabase(img, "properties/images")
+                if url: image_urls.append(url)
     update_data["images"] = image_urls
     
     # Handle Videos (Append to existing if any)
     video_urls = existing_prop.get("videos", [])
-    for vid in new_videos:
-        if vid.filename:
-            url = await upload_file_to_supabase(vid, "properties/videos")
-            if url: video_urls.append(url)
+    if new_videos:
+        for vid in new_videos:
+            if vid.filename:
+                url = await upload_file_to_supabase(vid, "properties/videos")
+                if url: video_urls.append(url)
     if video_urls:
         update_data["videos"] = video_urls
         
-    # Handle PDF Brochure (Override if new one is provided)
+    # Handle PDF Brochure
     if brochure and brochure.filename:
         brochure_url = await upload_file_to_supabase(brochure, "properties/brochures")
         if brochure_url:
@@ -396,7 +403,6 @@ async def update_property(
     
     updated_res = supabase.table("properties").update(update_data).eq("id", property_id).execute()
     return updated_res.data[0]
-
 @api_router.get("/properties")
 def get_properties(category: Optional[str] = None, property_type: Optional[str] = None, limit: int = 100):
     query = supabase.table("properties").select("*").order("created_at", desc=True).limit(limit)
