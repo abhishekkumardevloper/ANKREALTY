@@ -1,5 +1,5 @@
 // src/admin/CrmDashboard.jsx
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { 
   Calendar, Home, MessageSquare, Phone, Search, TrendingUp, Users, 
   Plus, X, MapPin, Building, Mail, Clock, ArrowRight, ShieldCheck, CheckCircle
@@ -11,14 +11,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 export default function CrmDashboard() {
- const auth = useAuth(); // Hook ko directly call karein
-const api = auth?.api;
-const user = auth?.user;
+  const auth = useAuth(); 
+  const api = auth?.api;
+  const user = auth?.user;
+  
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [searchTerm, setSearchTerm] = useState('');
   
-  // Data State
+  // Live Data State
   const [data, setData] = useState({ 
     total_listings: 0, 
     total_views: 0, 
@@ -36,38 +37,35 @@ const user = auth?.user;
     message: ''
   });
 
-  // Fetch Data from Backend
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        // Assuming your backend has an axios instance or use standard fetch
-        // const response = await api.get('/dashboard/agent');
-        
-        // --- SIMULATED DATA FOR NOW IF API FAILS ---
-        // Replace this block with actual API response when backend is fully connected
-        const simulatedData = {
-          total_listings: 12,
-          total_views: 3450,
-          total_inquiries: 28,
-          properties: [
-            { id: '1', title: 'Experion Saatori', city: 'Noida', location: 'Sec 151', price: 18500000, status: 'approved' },
-            { id: '2', title: 'M3M Jacob & Co', city: 'Noida', location: 'Sec 97', price: 35000000, status: 'pending' },
-          ],
-          inquiries: [
-            { id: '101', from_user_name: 'Rahul Sharma', phone: '+91 9876543210', property_id: '1', message: 'I want to schedule a site visit for this weekend.', created_at: new Date().toISOString() },
-            { id: '102', from_user_name: 'Priya Singh', phone: '+91 9123456789', property_id: '2', message: 'What is the final negotiable price?', created_at: new Date(Date.now() - 86400000).toISOString() },
-          ]
-        };
-        setData(simulatedData);
-      } catch (error) {
-        toast.error('Failed to load CRM dashboard.');
-      } finally {
-        setLoading(false);
+  // FETCH LIVE DATA FROM BACKEND
+  const fetchDashboardData = useCallback(async () => {
+    if (!api) return;
+    
+    setLoading(true);
+    try {
+      // FIXED: Removed simulated data and connected to the live backend route!
+      const response = await api.get('/dashboard/agent');
+      
+      if (response.data) {
+        setData({
+          total_listings: response.data.total_listings || 0,
+          total_views: response.data.total_views || 0,
+          total_inquiries: response.data.total_inquiries || 0,
+          properties: response.data.properties || [],
+          inquiries: response.data.inquiries || []
+        });
       }
-    };
-    fetchData();
+    } catch (error) {
+      console.error("Dashboard Fetch Error:", error);
+      toast.error('Failed to load live CRM data.');
+    } finally {
+      setLoading(false);
+    }
   }, [api]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   // Filtering Logic
   const filteredProperties = useMemo(() => 
@@ -90,7 +88,7 @@ const user = auth?.user;
       return;
     }
 
-    // Create a new mock lead object
+    // Create a new mock lead object for the UI
     const createdLead = {
       id: `manual_${Date.now()}`,
       from_user_name: newLead.clientName,
@@ -101,7 +99,7 @@ const user = auth?.user;
       isManual: true
     };
 
-    // Update state to show immediately
+    // Update state to show the manually added lead immediately in the pipeline
     setData(prev => ({
       ...prev,
       total_inquiries: prev.total_inquiries + 1,
@@ -242,7 +240,7 @@ const user = auth?.user;
                           </a>
                         </div>
                       ))}
-                      {!filteredInquiries.length && (
+                      {!filteredInquiries.length && !loading && (
                         <div className="text-center py-10 text-slate-500 font-medium">No recent inquiries available.</div>
                       )}
                     </div>
@@ -263,11 +261,11 @@ const user = auth?.user;
                     <Button onClick={() => setIsAddLeadOpen(true)} className="w-full h-12 bg-[#D4AF37] hover:bg-[#c09b2e] text-slate-900 font-black rounded-xl shadow-lg shadow-[#D4AF37]/20 flex justify-between items-center px-5">
                       Log New Lead <ArrowRight className="w-4 h-4" />
                     </Button>
-                    <Link to="/post-property">
+                    <a href="/post-property" className="block">
                       <Button variant="outline" className="w-full h-12 mt-3 border-white/20 text-white hover:bg-white/10 hover:text-white font-bold rounded-xl flex justify-between items-center px-5 bg-transparent">
                         Add Property <Home className="w-4 h-4" />
                       </Button>
-                    </Link>
+                    </a>
                   </div>
                 </div>
               </div>
@@ -279,11 +277,11 @@ const user = auth?.user;
             <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4">
               <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                 <h3 className="text-xl font-black text-slate-900">Managed Inventory</h3>
-                <Link to="/post-property">
+                <a href="/post-property">
                   <Button className="bg-[#8B0000] hover:bg-[#600000] text-white font-bold rounded-xl shadow-md h-10 px-5">
                     <Plus className="w-4 h-4 mr-1.5" /> Post Listing
                   </Button>
-                </Link>
+                </a>
               </div>
               <div className="divide-y divide-slate-100">
                 {filteredProperties.map((item) => (
@@ -309,7 +307,7 @@ const user = auth?.user;
                     </div>
                   </div>
                 ))}
-                {!filteredProperties.length && (
+                {!filteredProperties.length && !loading && (
                   <div className="p-16 text-center">
                     <Building className="w-12 h-12 text-slate-200 mx-auto mb-4" />
                     <p className="text-lg font-bold text-slate-600 mb-1">No properties found</p>
@@ -349,7 +347,7 @@ const user = auth?.user;
                           <p className="text-sm font-medium text-slate-700 leading-relaxed pl-7">{item.message}</p>
                         </div>
                         <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-slate-500">
-                          <span className="flex items-center bg-slate-100 px-2.5 py-1 rounded-md"><Building className="w-3.5 h-3.5 mr-1.5 text-[#D4AF37]"/> Ref: {item.property_id}</span>
+                          {item.property_id && <span className="flex items-center bg-slate-100 px-2.5 py-1 rounded-md"><Building className="w-3.5 h-3.5 mr-1.5 text-[#D4AF37]"/> Ref: {item.property_id}</span>}
                           <span className="flex items-center"><Calendar className="w-3.5 h-3.5 mr-1.5 text-slate-400"/> {new Date(item.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</span>
                         </div>
                       </div>
@@ -368,7 +366,7 @@ const user = auth?.user;
                     </div>
                   </div>
                 ))}
-                {!filteredInquiries.length && (
+                {!filteredInquiries.length && !loading && (
                   <div className="p-16 text-center">
                     <Users className="w-12 h-12 text-slate-200 mx-auto mb-4" />
                     <p className="text-lg font-bold text-slate-600 mb-1">No leads found</p>
