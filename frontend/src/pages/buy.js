@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 // FIXED: Using Vite environment variable so it works on Vercel
-const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
+const API_BASE = import.meta.env.VITE_API_URL;
 
 export default function BuyPage() {
   const navigate = useNavigate();
