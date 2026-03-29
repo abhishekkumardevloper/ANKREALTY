@@ -42,8 +42,8 @@ export default function PropertyDetailPage() {
   const navigate = useNavigate();
   const location = useLocation();
   // Safe fallback if useAuth isn't perfectly configured
-  const authContext = useAuth ? useAuth() : null;
-  const user = authContext ? authContext.user : null;
+const auth = useAuth();
+const user = auth?.user;
 
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
