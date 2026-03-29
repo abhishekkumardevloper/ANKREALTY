@@ -7,7 +7,7 @@ import {
   Heart, ShieldCheck, Share2, CheckCircle, Info, ChevronRight, 
   Image as ImageIcon, Download, FileText, Check, Building,
   TrendingUp, Coffee, Zap, ArrowUpDown, Shield, Dumbbell, Droplets, Wind,
-  Star, Lock, Zap as ZapIcon, MessageSquare, Map
+  Star, Lock, Zap as ZapIcon, MessageSquare, Map, DollarSign // <-- ADDED DollarSign HERE
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,8 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
 
-const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000/api";
+// FIXED: Using Vite environment variable to match your HomePage
+const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
 
 // --- MOCK DATA FOR NEW SECTIONS ---
 const mockPriceList = [
@@ -42,8 +43,8 @@ export default function PropertyDetailPage() {
   const navigate = useNavigate();
   const location = useLocation();
   // Safe fallback if useAuth isn't perfectly configured
-const auth = useAuth();
-const user = auth?.user;
+  const auth = useAuth();
+  const user = auth?.user;
 
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -110,8 +111,9 @@ const user = auth?.user;
 
   if (!property) return null;
 
+  // FIXED: Proper string interpolation and valid Google Maps URLs
   const mapQuery = encodeURIComponent(`${property.title}, ${property.location || property.area || ''}, ${property.city || ''}`);
-  const mapEmbedUrl = `https://www.google.com/maps?q=${mapQuery}&output=embed`;
+  const mapEmbedUrl = `https://maps.google.com/maps?q=${mapQuery}&output=embed`;
   const mapOpenUrl = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
 
   const images = property.images && property.images.length > 0 
@@ -543,7 +545,7 @@ const user = auth?.user;
           </div>
           
           <div className="border-t border-slate-800/80 pt-6 flex flex-col md:flex-row justify-between items-center text-xs text-slate-500 font-medium">
-            <p>&copy; {new Date().getFullYear()} ANK Realty. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} ANK Realty. All rights reserved.</p>
             <div className="flex space-x-6 mt-4 md:mt-0">
                 <Link to="/privacy" className="hover:text-[#D4AF37] transition-colors">Privacy Policy</Link>
                 <Link to="/terms" className="hover:text-[#D4AF37] transition-colors">Terms of Service</Link>
