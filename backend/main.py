@@ -10,6 +10,7 @@ from pathlib import Path
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional, Any
 import uuid
+import json
 from datetime import datetime, timezone, timedelta
 from passlib.context import CryptContext
 from jose import JWTError, jwt
@@ -196,14 +197,11 @@ def get_admin_dashboard(current_user: dict = Depends(get_current_user)):
         "pending_list": pending_list.data or []
     }
 
-# NEW: Agent Dashboard Route (Fixes the empty dashboard issue)
 @api_router.get("/dashboard/agent")
 def get_agent_dashboard(current_user: dict = Depends(get_current_user)):
-    # Properties listed by this agent
     prop_res = supabase.table("properties").select("*").eq("owner_id", current_user["id"]).execute()
     properties = prop_res.data or []
     
-    # Inquiries related to this agent
     expr = f"from_user_id.eq.{current_user['id']},to_user_id.eq.{current_user['id']}"
     inq_res = supabase.table("inquiries").select("*").or_(expr).execute()
     inquiries = inq_res.data or []
@@ -228,24 +226,50 @@ async def create_property(
     price: str = Form(default="0"),
     location: str = Form(...),
     city: str = Form(...),
+    state: str = Form(default=""),
     property_type: str = Form(...),
     category: str = Form(...),
     area: str = Form(default="0"),
     bhk: str = Form(default="0"),
+    bathrooms: str = Form(default="0"),
     furnishing: str = Form(default="unfurnished"),
+    amenities: str = Form(default="[]"),
+    builder: str = Form(default=""),
+    rera: str = Form(default=""),
+    projectStatus: str = Form(default="New Launch"),
+    possession: str = Form(default=""),
     new_images: List[UploadFile] = File(default=[]),
+    new_videos: List[UploadFile] = File(default=[]),
+    brochure: Optional[UploadFile] = File(default=None),
     current_user: dict = Depends(get_current_user)
 ):
     try:
         parsed_price = float(price) if price.strip() else 0.0
         parsed_area = float(area) if area.strip() else 0.0
         parsed_bhk = int(bhk) if bhk.strip() else 0
+        parsed_bathrooms = int(bathrooms) if bathrooms.strip() else 0
+        
+        try:
+            parsed_amenities = json.loads(amenities)
+        except:
+            parsed_amenities = []
 
+        # Process Media Uploads
         image_urls = []
         for img in new_images:
             if img.filename:
-                url = await upload_file_to_supabase(img, "properties")
+                url = await upload_file_to_supabase(img, "properties/images")
                 if url: image_urls.append(url)
+                
+        video_urls = []
+        for vid in new_videos:
+            if vid.filename:
+                url = await upload_file_to_supabase(vid, "properties/videos")
+                if url: video_urls.append(url)
+                
+        brochure_url = None
+        if brochure and brochure.filename:
+            brochure_url = await upload_file_to_supabase(brochure, "properties/brochures")
 
         property_doc = {
             "id": str(uuid.uuid4()),
@@ -257,12 +281,21 @@ async def create_property(
             "price": parsed_price,
             "location": location,
             "city": city,
+            "state": state,
             "property_type": property_type,
             "category": category,
             "area": parsed_area,
             "bhk": parsed_bhk,
+            "bathrooms": parsed_bathrooms,
             "furnishing": furnishing,
+            "amenities": parsed_amenities,
+            "builder": builder,
+            "rera": rera,
+            "project_status": projectStatus,
+            "possession": possession,
             "images": image_urls,
+            "videos": video_urls,
+            "brochure": brochure_url,
             "status": "approved" if current_user.get("role") == "admin" else "pending",
             "verified": current_user.get("role") == "admin",
             "created_at": datetime.now(timezone.utc).isoformat()
@@ -274,7 +307,7 @@ async def create_property(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# NEW: Property Update Route (Fixes the White Screen Crash on Submit)
+
 @api_router.put("/properties/{property_id}")
 async def update_property(
     property_id: str,
@@ -283,45 +316,83 @@ async def update_property(
     price: str = Form(None),
     location: str = Form(None),
     city: str = Form(None),
+    state: str = Form(None),
     property_type: str = Form(None),
     category: str = Form(None),
     area: str = Form(None),
     bhk: str = Form(None),
+    bathrooms: str = Form(None),
     furnishing: str = Form(None),
+    amenities: str = Form(None),
+    builder: str = Form(None),
+    rera: str = Form(None),
+    projectStatus: str = Form(None),
+    possession: str = Form(None),
+    existing_images: str = Form(default="[]"),
     new_images: List[UploadFile] = File(default=[]),
+    new_videos: List[UploadFile] = File(default=[]),
+    brochure: Optional[UploadFile] = File(default=None),
     current_user: dict = Depends(get_current_user)
 ):
-    # Verify property exists
     res = supabase.table("properties").select("*").eq("id", property_id).limit(1).execute()
     if not res.data: 
         raise HTTPException(status_code=404, detail="Property not found")
     
     existing_prop = res.data[0]
     
-    # Verify owner or admin
     if existing_prop["owner_id"] != current_user["id"] and current_user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Not authorized to edit this property")
         
     update_data = {}
-    if title: update_data["title"] = title
-    if description: update_data["description"] = description
+    if title is not None: update_data["title"] = title
+    if description is not None: update_data["description"] = description
     if price is not None: update_data["price"] = float(price) if str(price).strip() else 0.0
-    if location: update_data["location"] = location
-    if city: update_data["city"] = city
-    if property_type: update_data["property_type"] = property_type
-    if category: update_data["category"] = category
+    if location is not None: update_data["location"] = location
+    if city is not None: update_data["city"] = city
+    if state is not None: update_data["state"] = state
+    if property_type is not None: update_data["property_type"] = property_type
+    if category is not None: update_data["category"] = category
     if area is not None: update_data["area"] = float(area) if str(area).strip() else 0.0
     if bhk is not None: update_data["bhk"] = int(bhk) if str(bhk).strip() else 0
-    if furnishing: update_data["furnishing"] = furnishing
+    if bathrooms is not None: update_data["bathrooms"] = int(bathrooms) if str(bathrooms).strip() else 0
+    if furnishing is not None: update_data["furnishing"] = furnishing
+    if builder is not None: update_data["builder"] = builder
+    if rera is not None: update_data["rera"] = rera
+    if projectStatus is not None: update_data["project_status"] = projectStatus
+    if possession is not None: update_data["possession"] = possession
     
-    # Handle new images (append to existing)
-    image_urls = existing_prop.get("images", [])
+    if amenities is not None:
+        try:
+            update_data["amenities"] = json.loads(amenities)
+        except:
+            pass
+
+    # Handle Images
+    try:
+        image_urls = json.loads(existing_images)
+    except:
+        image_urls = existing_prop.get("images", [])
+        
     for img in new_images:
         if img.filename:
-            url = await upload_file_to_supabase(img, "properties")
+            url = await upload_file_to_supabase(img, "properties/images")
             if url: image_urls.append(url)
-            
     update_data["images"] = image_urls
+    
+    # Handle Videos (Append to existing if any)
+    video_urls = existing_prop.get("videos", [])
+    for vid in new_videos:
+        if vid.filename:
+            url = await upload_file_to_supabase(vid, "properties/videos")
+            if url: video_urls.append(url)
+    if video_urls:
+        update_data["videos"] = video_urls
+        
+    # Handle PDF Brochure (Override if new one is provided)
+    if brochure and brochure.filename:
+        brochure_url = await upload_file_to_supabase(brochure, "properties/brochures")
+        if brochure_url:
+            update_data["brochure"] = brochure_url
     
     updated_res = supabase.table("properties").update(update_data).eq("id", property_id).execute()
     return updated_res.data[0]
@@ -339,7 +410,6 @@ def get_property(property_id: str):
     res = supabase.table("properties").select("*").eq("id", property_id).limit(1).execute()
     if not res.data: raise HTTPException(status_code=404, detail="Property not found")
     
-    # Increment views
     views = res.data[0].get("views", 0) + 1
     supabase.table("properties").update({"views": views}).eq("id", property_id).execute()
     res.data[0]["views"] = views
