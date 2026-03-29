@@ -17,7 +17,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
 
 // FIXED: Using Vite environment variable to match your HomePage
-const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
+const API_BASE = import.meta.env.VITE_API_URL || "https://ankrealty.onrender.com/api";
 
 // --- MOCK DATA FOR NEW SECTIONS ---
 const mockPriceList = [
