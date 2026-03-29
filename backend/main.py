@@ -1,5 +1,5 @@
 # app.py
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, File, Form, UploadFile
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, File, Form, UploadFile, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -219,85 +219,85 @@ def get_agent_dashboard(current_user: dict = Depends(get_current_user)):
 # --------------------------------
 # ROUTES: Properties
 # --------------------------------
-# Replace your current POST /properties and PUT /properties/{property_id} with these:
-
 @api_router.post("/properties")
 async def create_property(
-    title: str = Form(...),
-    location: str = Form(...),
-    city: str = Form(...),
-    description: str = Form(default=""),
-    price: str = Form(default="0"),
-    state: str = Form(default=""),
-    property_type: str = Form(default="apartment"),
-    category: str = Form(default="buy"),
-    area: str = Form(default="0"),
-    bhk: str = Form(default="0"),
-    bathrooms: str = Form(default="0"),
-    furnishing: str = Form(default="unfurnished"),
-    amenities: str = Form(default="[]"),
-    builder: str = Form(default=""),
-    rera: str = Form(default=""),
-    projectStatus: str = Form(default="New Launch"),
-    possession: str = Form(default=""),
-    # FIXED: Made File uploads strictly Optional so missing files don't trigger 422
-    new_images: Optional[List[UploadFile]] = File(None),
-    new_videos: Optional[List[UploadFile]] = File(None),
-    brochure: Optional[UploadFile] = File(None),
+    request: Request,
     current_user: dict = Depends(get_current_user)
 ):
     try:
-        parsed_price = float(price) if price.strip() else 0.0
-        parsed_area = float(area) if area.strip() else 0.0
-        parsed_bhk = int(bhk) if bhk.strip() else 0
-        parsed_bathrooms = int(bathrooms) if bathrooms.strip() else 0
+        form_data = await request.form()
+        
+        # Safely extract all text fields (defaults to empty string or 0 if missing)
+        title = form_data.get("title", "")
+        description = form_data.get("description", "")
+        price = form_data.get("price", "0")
+        location = form_data.get("location", "")
+        city = form_data.get("city", "")
+        state = form_data.get("state", "")
+        property_type = form_data.get("property_type", "apartment")
+        category = form_data.get("category", "buy")
+        area = form_data.get("area", "0")
+        bhk = form_data.get("bhk", "0")
+        bathrooms = form_data.get("bathrooms", "0")
+        furnishing = form_data.get("furnishing", "unfurnished")
+        amenities = form_data.get("amenities", "[]")
+        builder = form_data.get("builder", "")
+        rera = form_data.get("rera", "")
+        project_status = form_data.get("projectStatus", "New Launch")
+        possession = form_data.get("possession", "")
+
+        # Safely convert number fields
+        parsed_price = float(price) if isinstance(price, str) and price.strip() else 0.0
+        parsed_area = float(area) if isinstance(area, str) and area.strip() else 0.0
+        parsed_bhk = int(bhk) if isinstance(bhk, str) and bhk.strip() else 0
+        parsed_bathrooms = int(bathrooms) if isinstance(bathrooms, str) and bathrooms.strip() else 0
         
         try:
             parsed_amenities = json.loads(amenities)
         except:
             parsed_amenities = []
 
-        # Process Media Uploads safely
+        # Process Media Uploads SAFELY
         image_urls = []
-        if new_images:
-            for img in new_images:
-                if img.filename:
-                    url = await upload_file_to_supabase(img, "properties/images")
-                    if url: image_urls.append(url)
+        for img in form_data.getlist("new_images"):
+            if hasattr(img, "filename") and img.filename:
+                url = await upload_file_to_supabase(img, "properties/images")
+                if url: image_urls.append(url)
                 
         video_urls = []
-        if new_videos:
-            for vid in new_videos:
-                if vid.filename:
-                    url = await upload_file_to_supabase(vid, "properties/videos")
-                    if url: video_urls.append(url)
+        for vid in form_data.getlist("new_videos"):
+            if hasattr(vid, "filename") and vid.filename:
+                url = await upload_file_to_supabase(vid, "properties/videos")
+                if url: video_urls.append(url)
                 
+        brochure = form_data.get("brochure")
         brochure_url = None
-        if brochure and brochure.filename:
+        if brochure and hasattr(brochure, "filename") and brochure.filename:
             brochure_url = await upload_file_to_supabase(brochure, "properties/brochures")
 
+        # Assemble Document
         property_doc = {
             "id": str(uuid.uuid4()),
             "owner_id": current_user["id"],
             "owner_name": current_user.get("name"),
             "owner_phone": current_user.get("phone"),
-            "title": title,
-            "description": description,
+            "title": str(title),
+            "description": str(description),
             "price": parsed_price,
-            "location": location,
-            "city": city,
-            "state": state,
-            "property_type": property_type,
-            "category": category,
+            "location": str(location),
+            "city": str(city),
+            "state": str(state),
+            "property_type": str(property_type),
+            "category": str(category),
             "area": parsed_area,
             "bhk": parsed_bhk,
             "bathrooms": parsed_bathrooms,
-            "furnishing": furnishing,
+            "furnishing": str(furnishing),
             "amenities": parsed_amenities,
-            "builder": builder,
-            "rera": rera,
-            "project_status": projectStatus,
-            "possession": possession,
+            "builder": str(builder),
+            "rera": str(rera),
+            "project_status": str(project_status),
+            "possession": str(possession),
             "images": image_urls,
             "videos": video_urls,
             "brochure": brochure_url,
@@ -310,33 +310,13 @@ async def create_property(
         check_res_or_raise(res, "inserting property")
         return property_doc
     except Exception as e:
+        logger.exception("Error creating property:")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @api_router.put("/properties/{property_id}")
 async def update_property(
     property_id: str,
-    title: Optional[str] = Form(None),
-    description: Optional[str] = Form(None),
-    price: Optional[str] = Form(None),
-    location: Optional[str] = Form(None),
-    city: Optional[str] = Form(None),
-    state: Optional[str] = Form(None),
-    property_type: Optional[str] = Form(None),
-    category: Optional[str] = Form(None),
-    area: Optional[str] = Form(None),
-    bhk: Optional[str] = Form(None),
-    bathrooms: Optional[str] = Form(None),
-    furnishing: Optional[str] = Form(None),
-    amenities: Optional[str] = Form(None),
-    builder: Optional[str] = Form(None),
-    rera: Optional[str] = Form(None),
-    projectStatus: Optional[str] = Form(None),
-    possession: Optional[str] = Form(None),
-    existing_images: Optional[str] = Form(default="[]"),
-    new_images: Optional[List[UploadFile]] = File(None),
-    new_videos: Optional[List[UploadFile]] = File(None),
-    brochure: Optional[UploadFile] = File(None),
+    request: Request,
     current_user: dict = Depends(get_current_user)
 ):
     res = supabase.table("properties").select("*").eq("id", property_id).limit(1).execute()
@@ -348,61 +328,77 @@ async def update_property(
     if existing_prop["owner_id"] != current_user["id"] and current_user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Not authorized to edit this property")
         
+    form_data = await request.form()
     update_data = {}
-    if title is not None: update_data["title"] = title
-    if description is not None: update_data["description"] = description
-    if price is not None: update_data["price"] = float(price) if str(price).strip() else 0.0
-    if location is not None: update_data["location"] = location
-    if city is not None: update_data["city"] = city
-    if state is not None: update_data["state"] = state
-    if property_type is not None: update_data["property_type"] = property_type
-    if category is not None: update_data["category"] = category
-    if area is not None: update_data["area"] = float(area) if str(area).strip() else 0.0
-    if bhk is not None: update_data["bhk"] = int(bhk) if str(bhk).strip() else 0
-    if bathrooms is not None: update_data["bathrooms"] = int(bathrooms) if str(bathrooms).strip() else 0
-    if furnishing is not None: update_data["furnishing"] = furnishing
-    if builder is not None: update_data["builder"] = builder
-    if rera is not None: update_data["rera"] = rera
-    if projectStatus is not None: update_data["project_status"] = projectStatus
-    if possession is not None: update_data["possession"] = possession
     
-    if amenities is not None:
+    # Safely extract incoming fields to update
+    if "title" in form_data: update_data["title"] = str(form_data.get("title", ""))
+    if "description" in form_data: update_data["description"] = str(form_data.get("description", ""))
+    if "location" in form_data: update_data["location"] = str(form_data.get("location", ""))
+    if "city" in form_data: update_data["city"] = str(form_data.get("city", ""))
+    if "state" in form_data: update_data["state"] = str(form_data.get("state", ""))
+    if "property_type" in form_data: update_data["property_type"] = str(form_data.get("property_type", ""))
+    if "category" in form_data: update_data["category"] = str(form_data.get("category", ""))
+    if "furnishing" in form_data: update_data["furnishing"] = str(form_data.get("furnishing", ""))
+    if "builder" in form_data: update_data["builder"] = str(form_data.get("builder", ""))
+    if "rera" in form_data: update_data["rera"] = str(form_data.get("rera", ""))
+    if "projectStatus" in form_data: update_data["project_status"] = str(form_data.get("projectStatus", ""))
+    if "possession" in form_data: update_data["possession"] = str(form_data.get("possession", ""))
+
+    if "price" in form_data:
+        p = form_data.get("price")
+        update_data["price"] = float(p) if isinstance(p, str) and p.strip() else 0.0
+        
+    if "area" in form_data:
+        a = form_data.get("area")
+        update_data["area"] = float(a) if isinstance(a, str) and a.strip() else 0.0
+        
+    if "bhk" in form_data:
+        b = form_data.get("bhk")
+        update_data["bhk"] = int(b) if isinstance(b, str) and b.strip() else 0
+        
+    if "bathrooms" in form_data:
+        bth = form_data.get("bathrooms")
+        update_data["bathrooms"] = int(bth) if isinstance(bth, str) and bth.strip() else 0
+    
+    if "amenities" in form_data:
         try:
-            update_data["amenities"] = json.loads(amenities)
+            update_data["amenities"] = json.loads(form_data.get("amenities"))
         except:
             pass
 
     # Handle Images
+    ex_img = form_data.get("existing_images")
     try:
-        image_urls = json.loads(existing_images)
+        image_urls = json.loads(ex_img) if ex_img else existing_prop.get("images", [])
     except:
         image_urls = existing_prop.get("images", [])
         
-    if new_images:
-        for img in new_images:
-            if img.filename:
-                url = await upload_file_to_supabase(img, "properties/images")
-                if url: image_urls.append(url)
+    for img in form_data.getlist("new_images"):
+        if hasattr(img, "filename") and img.filename:
+            url = await upload_file_to_supabase(img, "properties/images")
+            if url: image_urls.append(url)
     update_data["images"] = image_urls
     
-    # Handle Videos (Append to existing if any)
+    # Handle Videos
     video_urls = existing_prop.get("videos", [])
-    if new_videos:
-        for vid in new_videos:
-            if vid.filename:
-                url = await upload_file_to_supabase(vid, "properties/videos")
-                if url: video_urls.append(url)
+    for vid in form_data.getlist("new_videos"):
+        if hasattr(vid, "filename") and vid.filename:
+            url = await upload_file_to_supabase(vid, "properties/videos")
+            if url: video_urls.append(url)
     if video_urls:
         update_data["videos"] = video_urls
         
     # Handle PDF Brochure
-    if brochure and brochure.filename:
+    brochure = form_data.get("brochure")
+    if brochure and hasattr(brochure, "filename") and brochure.filename:
         brochure_url = await upload_file_to_supabase(brochure, "properties/brochures")
         if brochure_url:
             update_data["brochure"] = brochure_url
     
     updated_res = supabase.table("properties").update(update_data).eq("id", property_id).execute()
     return updated_res.data[0]
+
 @api_router.get("/properties")
 def get_properties(category: Optional[str] = None, property_type: Optional[str] = None, limit: int = 100):
     query = supabase.table("properties").select("*").order("created_at", desc=True).limit(limit)
