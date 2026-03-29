@@ -11,12 +11,13 @@ import { useAuth } from '@/contexts/AuthContext';
 
 // Helper function to safely extract FastAPI error messages
 const getErrorMessage = (error) => {
-  if (error.response?.data?.detail) {
+  // Added optional chaining (?.) to prevent React white-screen crashes if error object is malformed
+  if (error?.response?.data?.detail) {
     const detail = error.response.data.detail;
     if (typeof detail === 'string') return detail;
     if (Array.isArray(detail) && detail.length > 0) return `Error: ${detail[0].msg}`;
   }
-  return error.message || 'An unexpected error occurred.';
+  return error?.message || 'An unexpected error occurred.';
 };
 
 export default function AdminPanel() {
@@ -43,14 +44,14 @@ export default function AdminPanel() {
         let blogData = [];
         let videoData = [];
 
-        try { const res = await api.get('/dashboard/admin'); adminDashData = res.data; } catch(e) {}
-        try { const res = await api.get('/properties?limit=100'); propsData = res.data; } catch(e) {}
-        try { const res = await api.get('/inquiries'); inqData = res.data; } catch(e) {}
-        try { const res = await api.get('/blogs'); blogData = res.data; } catch(e) {}
-        try { const res = await api.get('/youtube-videos'); videoData = res.data; } catch(e) {}
+        try { const res = await api.get('/dashboard/admin'); adminDashData = res.data || {}; } catch(e) { console.error(e); }
+        try { const res = await api.get('/properties?limit=100'); propsData = res.data || []; } catch(e) { console.error(e); }
+        try { const res = await api.get('/inquiries'); inqData = res.data || []; } catch(e) { console.error(e); }
+        try { const res = await api.get('/blogs'); blogData = res.data || []; } catch(e) { console.error(e); }
+        try { const res = await api.get('/youtube-videos'); videoData = res.data || []; } catch(e) { console.error(e); }
         
-        const pendingList = adminDashData.pending_list || [];
-        const merged = [...pendingList, ...(propsData || []).filter((item) => !pendingList.some((pending) => pending.id === item.id))];
+        const pendingList = adminDashData?.pending_list || [];
+        const merged = [...pendingList, ...(propsData || []).filter((item) => !pendingList.some((pending) => pending?.id === item?.id))];
         
         setProperties(merged);
         setInquiries(inqData || []);
@@ -59,8 +60,8 @@ export default function AdminPanel() {
 
       } else {
         const agentDash = await api.get('/dashboard/agent');
-        setProperties(agentDash.data.properties || []);
-        setInquiries(agentDash.data.inquiries || []);
+        setProperties(agentDash?.data?.properties || []);
+        setInquiries(agentDash?.data?.inquiries || []);
       }
     } catch (error) {
       console.error(error);
@@ -75,23 +76,22 @@ export default function AdminPanel() {
   }, [fetchAllData]);
 
   const filteredByPage = useMemo(() => {
-    if (!['buy', 'resale', 'client-project'].includes(page)) return properties;
-    return properties.filter((item) => item.category === page);
+    const safeProperties = properties || [];
+    if (!['buy', 'resale', 'client-project'].includes(page)) return safeProperties;
+    return safeProperties.filter((item) => item?.category === page);
   }, [page, properties]);
 
-  // --- FIX IS HERE ---
-  // Ensure the headers are set to multipart/form-data for file uploads
+  // --- THE FIX ---
+  // DO NOT set 'Content-Type': 'multipart/form-data' manually.
+  // Axios automatically sets it WITH the required boundary string when you pass a FormData object.
   const saveProperty = async (payload) => {
     try {
-      const config = {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      };
-
       if (editing) {
-        await api.put(`/properties/${editing.id}`, payload, config);
+        // Just pass the payload. Axios handles the headers perfectly.
+        await api.put(`/properties/${editing.id}`, payload);
         toast.success('Property updated successfully.');
       } else {
-        await api.post('/properties', payload, config);
+        await api.post('/properties', payload);
         toast.success('Property created successfully.');
       }
       setEditing(null);
