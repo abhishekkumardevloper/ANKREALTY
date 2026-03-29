@@ -16,7 +16,7 @@ import { bankOffers, exploreLocalities, socialLinks } from '@/lib/siteData';
 import { WHATSAPP_URL, createPropertySearch } from '@/lib/api';
 
 // Strictly using the environment variable without the localhost fallback
-const API_BASE = import.meta.env.VITE_API_URL;
+const API_BASE = import.meta.env.VITE_API_URL || "https://ankrealty.onrender.com/api";
 
 const topRowLogos = [
   "/images (3).png",
