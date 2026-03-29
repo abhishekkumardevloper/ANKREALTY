@@ -7,10 +7,11 @@ import {
   Search, MapPin, X, Bed, Bath, 
   Maximize, CheckCircle, ArrowRight, Calculator,
   Home, DollarSign, Loader2, SlidersHorizontal, ChevronDown, 
-  Phone, ShieldCheck, MessageSquare, Send, Mail
+  Phone, ShieldCheck, MessageSquare, Send, Mail, ChevronRight
 } from "lucide-react";
 
-const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000/api";
+// FIXED: Using Vite environment variable so it works on Vercel
+const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
 
 export default function BuyPage() {
   const navigate = useNavigate();
@@ -49,7 +50,9 @@ export default function BuyPage() {
         const response = await fetch(`${API_BASE}/properties?category=buy&limit=100`);
         if (response.ok) {
           const data = await response.json();
-          setProperties(data);
+          // Ensure we only show approved properties
+          const approvedProperties = data.filter(p => (p.status || 'pending').toLowerCase() === 'approved');
+          setProperties(approvedProperties);
         }
       } catch (error) {
         console.error("Failed to fetch properties:", error);
@@ -99,7 +102,7 @@ export default function BuyPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans relative selection:bg-[#D4AF37]/30 pb-10">
+    <div className="min-h-screen bg-slate-50 font-sans relative selection:bg-[#D4AF37]/30 pb-0">
       <Navbar />
 
       {/* HERO & ADVANCED SEARCH SECTION */}
@@ -376,6 +379,69 @@ export default function BuyPage() {
         )}
       </div>
 
+      {/* --- ADDED FOOTER --- */}
+      <footer className="bg-[#050505] text-white pt-24 pb-12 px-6 border-t-[8px] border-[#8B0000]">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+            <div className="space-y-6 pr-4">
+              <h3 className="text-4xl font-black tracking-tight text-[#D4AF37]">ANK <span className="text-white">REALTY</span></h3>
+              <p className="text-slate-400 text-base leading-relaxed font-medium">
+                Premium property discovery, verified advisory, corporate leasing help, and owner-first listing support across major hubs. Your Trusted Partner.
+              </p>
+              <div className="flex space-x-3 pt-2">
+                <div className="w-10 h-10 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all cursor-pointer">
+                  <Mail className="w-4 h-4"/>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all cursor-pointer">
+                  <Phone className="w-4 h-4"/>
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="font-bold text-lg mb-8 text-white uppercase tracking-widest text-sm">Quick Links</h4>
+              <ul className="space-y-5 text-slate-400 font-medium text-base">
+                <li><Link to="/properties" className="hover:text-[#D4AF37] transition-colors flex items-center"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> All Properties</Link></li>
+                <li><Link to="/about" className="hover:text-[#D4AF37] transition-colors flex items-center"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> About Us</Link></li>
+                <li><Link to="/careers" className="hover:text-[#D4AF37] transition-colors flex items-center"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Careers</Link></li>
+                <li><Link to="/contact" className="hover:text-[#D4AF37] transition-colors flex items-center"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Contact Support</Link></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-bold text-lg mb-8 text-white uppercase tracking-widest text-sm">Categories</h4>
+              <ul className="space-y-5 text-slate-400 font-medium text-base">
+                <li><Link to="/properties?property_type=plot" className="hover:text-[#D4AF37] transition-colors flex items-center"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Premium Plots</Link></li>
+                <li><Link to="/buy" className="hover:text-[#D4AF37] transition-colors flex items-center"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Residential Homes</Link></li>
+                <li><Link to="/properties?property_type=commercial" className="hover:text-[#D4AF37] transition-colors flex items-center"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Commercial Spaces</Link></li>
+                <li><Link to="/rent" className="hover:text-[#D4AF37] transition-colors flex items-center"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Rental Homes</Link></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-bold text-lg mb-8 text-white uppercase tracking-widest text-sm">Contact Us</h4>
+              <div className="space-y-5 text-slate-400 font-medium text-base">
+                <div className="flex items-start bg-slate-900/50 p-4 rounded-xl border border-slate-800 hover:border-[#D4AF37]/50 transition-colors">
+                  <MapPin className="w-6 h-6 mr-4 text-[#D4AF37] shrink-0" /> 
+                  <p className="text-sm">Tapasya Corp Heights, Sector 126, Noida, UP 201301</p>
+                </div>
+                <div className="flex items-center bg-slate-900/50 p-4 rounded-xl border border-slate-800 hover:border-[#D4AF37]/50 transition-colors">
+                  <Mail className="w-6 h-6 mr-4 text-[#D4AF37] shrink-0" /> 
+                  <p className="text-sm">info@ankrealty.com</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="border-t border-slate-800/80 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-slate-500 font-medium">
+            <p>© {new Date().getFullYear()} ANK Realty. All rights reserved.</p>
+            <div className="flex space-x-8 mt-4 md:mt-0">
+              <Link to="/privacy" className="hover:text-[#D4AF37] transition-colors">Privacy Policy</Link>
+              <Link to="/terms" className="hover:text-[#D4AF37] transition-colors">Terms of Service</Link>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
