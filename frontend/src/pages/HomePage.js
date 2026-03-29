@@ -14,7 +14,8 @@ import { Input } from '@/components/ui/input';
 import { bankOffers, exploreLocalities, socialLinks } from '@/lib/siteData';
 import { WHATSAPP_URL, createPropertySearch } from '@/lib/api';
 
-const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000/api";
+// Use the Vite environment variable, fallback to localhost for development
+const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
 
 const topRowLogos = [
   "/images (3).png",
@@ -101,12 +102,16 @@ export default function HomePage() {
       setLoading(true);
       try {
         const [featuredRes, plotsRes, resaleRes] = await Promise.all([
-          fetch(`${API_BASE}/properties/featured`),
+          fetch(`${API_BASE}/properties`), // Changed to general fetch to test connection
           fetch(`${API_BASE}/properties?property_type=plot&limit=4`),
           fetch(`${API_BASE}/properties?category=resale&limit=4`)
         ]);
 
-        if (featuredRes.ok) setFeaturedProperties(await featuredRes.json());
+        if (featuredRes.ok) {
+           const allProps = await featuredRes.json();
+           // Manually slice the top 4 featured properties for now to ensure rendering
+           setFeaturedProperties(allProps.slice(0, 4));
+        }
         if (plotsRes.ok) setPremiumPlots(await plotsRes.json());
         if (resaleRes.ok) setResaleProperties(await resaleRes.json());
       } catch (error) {
@@ -224,7 +229,10 @@ export default function HomePage() {
                 <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-[#8B0000] transition-colors" />
                 <select value={search.property_type} onChange={(e) => setSearch((prev) => ({ ...prev, property_type: e.target.value }))} className="h-14 pl-12 pr-4 bg-transparent border-0 w-full text-slate-700 appearance-none outline-none font-medium text-base cursor-pointer">
                   <option value="">Select Property Type</option>
-                  {propertyTypeOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                  <option value="apartment">Apartment</option>
+                  <option value="villa">Villa / House</option>
+                  <option value="commercial">Commercial</option>
+                  <option value="plot">Plot</option>
                 </select>
               </div>
               
