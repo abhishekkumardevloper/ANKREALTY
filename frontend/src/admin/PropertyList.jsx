@@ -1,7 +1,7 @@
 // src/admin/PropertyList.jsx
 import React, { useMemo, useState } from 'react';
 import { CheckCircle, Edit2, Search, Trash2, XCircle, MapPin } from 'lucide-react';
-import { Button } from '@/components/ui/button'; // Ensure this path is correct for your setup
+import { Button } from '@/components/ui/button';
 
 export default function PropertyList({ 
   title = 'Property Management', 
@@ -16,7 +16,7 @@ export default function PropertyList({
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  // Search and Filter Logic
+  // Search and Filter Logic (Made Bulletproof)
   const filteredListings = useMemo(() => {
     return listings.filter((item) => {
       const term = search.toLowerCase();
@@ -26,7 +26,9 @@ export default function PropertyList({
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(term));
       
-      const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
+      // Ensure we safely handle missing statuses and casing
+      const itemStatus = (item.status || 'pending').toLowerCase();
+      const matchesStatus = statusFilter === 'all' || itemStatus === statusFilter.toLowerCase();
       
       return matchesSearch && matchesStatus;
     });
@@ -34,7 +36,7 @@ export default function PropertyList({
 
   // Status Badge Styling Helper
   const getStatusBadge = (status) => {
-    switch(status?.toLowerCase()) {
+    switch((status || 'pending').toLowerCase()) {
       case 'approved': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
       case 'rejected': return 'bg-red-100 text-red-700 border-red-200';
       default: return 'bg-amber-100 text-amber-700 border-amber-200'; // Pending
@@ -126,7 +128,7 @@ export default function PropertyList({
                     <div className="flex items-center justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                       
                       {/* Moderation Actions (Admin Only & Pending Status) */}
-                      {showModeration && item.status === 'pending' && (
+                      {showModeration && (item.status || 'pending').toLowerCase() === 'pending' && (
                         <>
                           <Button size="sm" onClick={() => onApprove(item.id)} className="bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white border border-emerald-200 h-8 px-2 shadow-none">
                             <CheckCircle className="w-4 h-4" />
