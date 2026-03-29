@@ -1,3 +1,4 @@
+// src/pages/PostPropertyPage.jsx
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
@@ -7,15 +8,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext'; // Ensure you have this or standard token retrieval
 import { 
   Building, MapPin, IndianRupee, Layers, Bed, Bath, 
   ImagePlus, CheckCircle, ArrowRight, ArrowLeft, Loader2, X, Phone, Mail, Home, ChevronRight
 } from 'lucide-react';
 
-const API_BASE = "http://127.0.0.1:8000/api";
+const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000/api";
 
 export default function PostPropertyPage() {
   const navigate = useNavigate();
+  // Using custom auth context if available, otherwise fallback to localStorage
+  const { user } = useAuth ? useAuth() : { user: null }; 
+  
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   
@@ -31,7 +36,6 @@ export default function PostPropertyPage() {
     bathrooms: '',
     area: '',
     furnishing: 'unfurnished',
-    status: 'pending', // Always pending when user posts from frontend
   });
 
   const [imageFiles, setImageFiles] = useState([]);
@@ -70,41 +74,49 @@ export default function PostPropertyPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Check Authentication
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast.error("You must be logged in to post a property.");
+      navigate('/auth');
+      return;
+    }
+
     setLoading(true);
     
     try {
       const submitData = new FormData();
       
-      // Append text fields
+      // Append text fields (Matching Backend FastAPI Form fields exactly)
       submitData.append("title", formData.title);
       submitData.append("description", formData.description);
       submitData.append("price", Number(formData.price));
-      submitData.append("type", formData.category); // Backend expects 'type' instead of category
+      submitData.append("category", formData.category); 
       submitData.append("property_type", formData.property_type);
-      submitData.append("status", formData.status);
       submitData.append("city", formData.city);
       submitData.append("location", formData.location);
-      submitData.append("area", formData.location); // Fallback for backend
-      submitData.append("size", Number(formData.area)); 
-      submitData.append("bedrooms", Number(formData.bhk) || 0);
-      submitData.append("bathrooms", Number(formData.bathrooms) || 0);
+      submitData.append("area", Number(formData.area)); 
+      submitData.append("bhk", Number(formData.bhk) || 0);
       submitData.append("furnishing", formData.furnishing);
 
-      // Append images
+      // Append new images
       imageFiles.forEach((file) => {
-        submitData.append("images[]", file);
+        submitData.append("new_images", file);
       });
 
-      // We post this without a token, so the backend should allow public POSTs for properties (or create a guest/owner concept)
-      const response = await axios.post(`${API_BASE}/properties`, submitData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+      // Send to protected API route
+      await axios.post(`${API_BASE}/properties`, submitData, {
+        headers: { 
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`
+        }
       });
       
       toast.success('Property submitted successfully! Pending admin approval.');
-      // After submission, redirect to home or a success page
-      navigate(`/`); 
+      navigate(`/dashboard`); // Or wherever you want them to go after posting
     } catch (error) {
-      toast.error('Failed to post property. Please check the fields.');
+      toast.error(error.response?.data?.detail || 'Failed to post property. Please check the fields.');
       console.error(error);
     } finally {
       setLoading(false);
@@ -112,7 +124,6 @@ export default function PostPropertyPage() {
   };
 
   const nextStep = () => {
-    // Basic validation before moving next
     if (step === 1 && (!formData.title || !formData.price || !formData.area)) {
       toast.error("Please fill all required fields marked with *");
       return;
@@ -201,6 +212,7 @@ export default function PostPropertyPage() {
                       className="w-full h-14 px-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 appearance-none font-medium text-slate-900"
                     >
                       <option value="sell">Sell this property</option>
+                      <option value="resale">Resale this property</option>
                       <option value="rent">Rent this property out</option>
                     </select>
                   </div>
