@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from "../components/Navbar";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { 
   Search, MapPin, X, Bed, Bath, 
   Maximize, CheckCircle, ArrowRight, Calculator,
@@ -10,8 +11,9 @@ import {
   Phone, ShieldCheck, MessageSquare, Send, Mail, ChevronRight
 } from "lucide-react";
 
-// FIXED: Using Vite environment variable so it works on Vercel
-const API_BASE = import.meta.env.VITE_API_URL;
+// FIXED: Added your specific Render URL as the ultimate fallback. 
+// If Vercel fails to read the environment variable, it will safely use your live backend.
+const API_BASE = import.meta.env.VITE_API_URL || "https://ankrealty.onrender.com/api";
 
 export default function BuyPage() {
   const navigate = useNavigate();
@@ -46,13 +48,20 @@ export default function BuyPage() {
     const fetchProperties = async () => {
       setLoading(true);
       try {
-        // Fetch properties strictly in the 'buy' category
         const response = await fetch(`${API_BASE}/properties?category=buy&limit=100`);
-        if (response.ok) {
+        
+        // FIXED: Safety Net to ensure we actually received JSON before parsing
+        const contentType = response.headers.get("content-type");
+        if (response.ok && contentType && contentType.includes("application/json")) {
           const data = await response.json();
           // Ensure we only show approved properties
           const approvedProperties = data.filter(p => (p.status || 'pending').toLowerCase() === 'approved');
           setProperties(approvedProperties);
+        } else if (response.ok) {
+          console.error("Received HTML instead of JSON. Check your API_BASE URL.");
+          toast.error("System configuration error. Please contact support.");
+        } else {
+          console.error("API returned an error:", response.statusText);
         }
       } catch (error) {
         console.error("Failed to fetch properties:", error);
@@ -79,7 +88,6 @@ export default function BuyPage() {
     // Sorting
     if (sortBy === "price_low") result.sort((a, b) => Number(a.price) - Number(b.price));
     else if (sortBy === "price_high") result.sort((a, b) => Number(b.price) - Number(a.price));
-    // Default 'newest' is handled by the backend's descending created_at sort
     
     return result;
   }, [properties, searchCity, maxPrice, propertyType, sortBy]);
@@ -88,14 +96,18 @@ export default function BuyPage() {
   const calculateEMI = () => {
     const p = loanAmt;
     const r = intRate / 12 / 100;
-    const n = tenure * 12;
+    const n = loanTenure * 12;
     if (p > 0 && r > 0 && n > 0) {
       return Math.round((p * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1));
     }
     return 0;
   };
 
-  // Helper to safely get the main image
+  const formatCurrency = (amount) => {
+    if (!amount) return 'Price on Request';
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
+  };
+
   const getMainImage = (property) => {
     if (property.images && property.images.length > 0) return property.images[0];
     return 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80'; // Fallback
