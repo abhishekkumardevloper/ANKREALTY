@@ -84,11 +84,9 @@ export default function AdminPanel() {
     return safeProperties.filter((item) => item?.category === page);
   }, [page, properties]);
 
-  // --- THE FIX ---
+  // --- SAVE PROPERTY ---
   const saveProperty = async (payload) => {
     try {
-      // Explicitly tell Axios to send this as a multipart form
-      // so it doesn't accidentally flatten your payload into an empty JSON object.
       const config = {
         headers: {
           'Content-Type': 'multipart/form-data'
@@ -111,20 +109,64 @@ export default function AdminPanel() {
     }
   };
 
-  const renderPage = () => {
-    if (page === 'dashboard') return <Dashboard properties={properties} inquiries={inquiries} role={userRole} loading={loading} />;
+  // --- DELETE PROPERTY ---
+  const deleteProperty = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this property? This action cannot be undone.")) return;
     
-    if (page === 'add-property') return <AddProperty onSave={saveProperty} editing={editing} onCancel={() => { setEditing(null); setPage('dashboard'); }} />;
+    try {
+      await api.delete(`/properties/${id}`);
+      toast.success("Property deleted successfully.");
+      fetchAllData(); // Refresh UI to remove the item instantly
+    } catch (error) {
+      console.error("Delete Error:", error);
+      toast.error(getErrorMessage(error));
+    }
+  };
+
+  // --- APPROVE/REJECT PROPERTY ---
+  const updatePropertyStatus = async (id, status) => {
+    if (!window.confirm(`Are you sure you want to mark this property as ${status}?`)) return;
+
+    try {
+      // FastAPI expects 'status' as a query parameter for this specific route
+      await api.put(`/admin/properties/${id}/status?status=${status}`);
+      toast.success(`Property marked as ${status}.`);
+      fetchAllData();
+    } catch (error) {
+      console.error("Status Update Error:", error);
+      toast.error(getErrorMessage(error));
+    }
+  };
+
+  const renderPage = () => {
+    if (page === 'dashboard') {
+      return <Dashboard properties={properties} inquiries={inquiries} role={userRole} loading={loading} onDelete={deleteProperty} />;
+    }
+    
+    if (page === 'add-property') {
+      return <AddProperty onSave={saveProperty} editing={editing} onCancel={() => { setEditing(null); setPage('dashboard'); }} />;
+    }
     
     if (['buy', 'resale', 'client-project'].includes(page)) {
       const titleMap = { 'buy': 'Buy Properties', 'resale': 'Resale Properties', 'client-project': 'Client Projects' };
-      return <PropertyList title={titleMap[page]} listings={filteredByPage} loading={loading} onEdit={(item) => { setEditing(item); setPage('add-property'); }} showModeration={isAdmin} />;
+      return (
+        <PropertyList 
+          title={titleMap[page]} 
+          listings={filteredByPage} 
+          loading={loading} 
+          onEdit={(item) => { setEditing(item); setPage('add-property'); }} 
+          onDelete={deleteProperty}
+          onApprove={(id) => updatePropertyStatus(id, 'approved')}
+          onReject={(id) => updatePropertyStatus(id, 'rejected')}
+          showModeration={isAdmin} 
+        />
+      );
     }
 
     if (page === 'blogs' && isAdmin) return <BlogList blogs={blogs} refreshData={fetchAllData} loading={loading} />;
     if (page === 'youtube' && isAdmin) return <YoutubeList videos={youtubeVideos} refreshData={fetchAllData} loading={loading} />;
 
-    return <Dashboard properties={properties} inquiries={inquiries} role={userRole} loading={loading} />;
+    return <Dashboard properties={properties} inquiries={inquiries} role={userRole} loading={loading} onDelete={deleteProperty} />;
   };
 
   return (
