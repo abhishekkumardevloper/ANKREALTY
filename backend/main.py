@@ -7,13 +7,12 @@ from supabase import create_client, Client
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, EmailStr, ConfigDict
+from pydantic import BaseModel, EmailStr
 from typing import List, Optional, Any
 import uuid
 from datetime import datetime, timezone, timedelta
 from passlib.context import CryptContext
 from jose import JWTError, jwt
-import json
 
 # --------------------------------
 # 1. Logging & Environment
@@ -112,7 +111,7 @@ async def upload_file_to_supabase(file: UploadFile, folder: str) -> str:
 app = FastAPI(title="ANK Realty API")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, restrict this to your frontend domain
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -181,11 +180,49 @@ def get_me(current_user: dict = Depends(get_current_user)):
     return current_user
 
 # --------------------------------
+# ROUTES: Dashboard (Admin & Agent)
+# --------------------------------
+@api_router.get("/dashboard/admin")
+def get_admin_dashboard(current_user: dict = Depends(get_current_user)):
+    if current_user.get("role") != "admin": raise HTTPException(status_code=403, detail="Admin only")
+    
+    total_props = supabase.table("properties").select("id", count="exact").execute()
+    pending_props = supabase.table("properties").select("id", count="exact").eq("status", "pending").execute()
+    pending_list = supabase.table("properties").select("*").eq("status", "pending").order("created_at", desc=True).limit(50).execute()
+    
+    return {
+        "total_properties": total_props.count or 0,
+        "pending_properties": pending_props.count or 0,
+        "pending_list": pending_list.data or []
+    }
+
+# NEW: Agent Dashboard Route (Fixes the empty dashboard issue)
+@api_router.get("/dashboard/agent")
+def get_agent_dashboard(current_user: dict = Depends(get_current_user)):
+    # Properties listed by this agent
+    prop_res = supabase.table("properties").select("*").eq("owner_id", current_user["id"]).execute()
+    properties = prop_res.data or []
+    
+    # Inquiries related to this agent
+    expr = f"from_user_id.eq.{current_user['id']},to_user_id.eq.{current_user['id']}"
+    inq_res = supabase.table("inquiries").select("*").or_(expr).execute()
+    inquiries = inq_res.data or []
+    
+    total_views = sum(p.get("views", 0) for p in properties)
+    
+    return {
+        "total_listings": len(properties),
+        "total_views": total_views,
+        "total_inquiries": len(inquiries),
+        "properties": properties,
+        "inquiries": inquiries
+    }
+
+# --------------------------------
 # ROUTES: Properties
 # --------------------------------
 @api_router.post("/properties")
 async def create_property(
-    # Using string for all Form fields to avoid 422 Type mismatch crashes
     title: str = Form(...),
     description: str = Form(...),
     price: str = Form(default="0"),
@@ -197,10 +234,9 @@ async def create_property(
     bhk: str = Form(default="0"),
     furnishing: str = Form(default="unfurnished"),
     new_images: List[UploadFile] = File(default=[]),
-    current_user: dict = Depends(get_current_user) # AUTH IS WORKING HERE
+    current_user: dict = Depends(get_current_user)
 ):
     try:
-        # Safe Parsing
         parsed_price = float(price) if price.strip() else 0.0
         parsed_area = float(area) if area.strip() else 0.0
         parsed_bhk = int(bhk) if bhk.strip() else 0
@@ -238,6 +274,58 @@ async def create_property(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# NEW: Property Update Route (Fixes the White Screen Crash on Submit)
+@api_router.put("/properties/{property_id}")
+async def update_property(
+    property_id: str,
+    title: str = Form(None),
+    description: str = Form(None),
+    price: str = Form(None),
+    location: str = Form(None),
+    city: str = Form(None),
+    property_type: str = Form(None),
+    category: str = Form(None),
+    area: str = Form(None),
+    bhk: str = Form(None),
+    furnishing: str = Form(None),
+    new_images: List[UploadFile] = File(default=[]),
+    current_user: dict = Depends(get_current_user)
+):
+    # Verify property exists
+    res = supabase.table("properties").select("*").eq("id", property_id).limit(1).execute()
+    if not res.data: 
+        raise HTTPException(status_code=404, detail="Property not found")
+    
+    existing_prop = res.data[0]
+    
+    # Verify owner or admin
+    if existing_prop["owner_id"] != current_user["id"] and current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized to edit this property")
+        
+    update_data = {}
+    if title: update_data["title"] = title
+    if description: update_data["description"] = description
+    if price is not None: update_data["price"] = float(price) if str(price).strip() else 0.0
+    if location: update_data["location"] = location
+    if city: update_data["city"] = city
+    if property_type: update_data["property_type"] = property_type
+    if category: update_data["category"] = category
+    if area is not None: update_data["area"] = float(area) if str(area).strip() else 0.0
+    if bhk is not None: update_data["bhk"] = int(bhk) if str(bhk).strip() else 0
+    if furnishing: update_data["furnishing"] = furnishing
+    
+    # Handle new images (append to existing)
+    image_urls = existing_prop.get("images", [])
+    for img in new_images:
+        if img.filename:
+            url = await upload_file_to_supabase(img, "properties")
+            if url: image_urls.append(url)
+            
+    update_data["images"] = image_urls
+    
+    updated_res = supabase.table("properties").update(update_data).eq("id", property_id).execute()
+    return updated_res.data[0]
+
 @api_router.get("/properties")
 def get_properties(category: Optional[str] = None, property_type: Optional[str] = None, limit: int = 100):
     query = supabase.table("properties").select("*").order("created_at", desc=True).limit(limit)
@@ -266,6 +354,12 @@ def delete_property(property_id: str, current_user: dict = Depends(get_current_u
     
     supabase.table("properties").delete().eq("id", property_id).execute()
     return {"message": "Deleted"}
+
+@api_router.put("/admin/properties/{property_id}/status")
+def update_property_status(property_id: str, status: str, current_user: dict = Depends(get_current_user)):
+    if current_user.get("role") != "admin": raise HTTPException(status_code=403)
+    supabase.table("properties").update({"status": status, "verified": status == "approved"}).eq("id", property_id).execute()
+    return {"message": f"Property {status}"}
 
 # --------------------------------
 # ROUTES: Blogs
@@ -334,29 +428,6 @@ def delete_youtube_video(video_id: str, current_user: dict = Depends(get_current
     return {"message": "Deleted"}
 
 # --------------------------------
-# ROUTES: Dashboard & Admin Tools
-# --------------------------------
-@api_router.get("/dashboard/admin")
-def get_admin_dashboard(current_user: dict = Depends(get_current_user)):
-    if current_user.get("role") != "admin": raise HTTPException(status_code=403, detail="Admin only")
-    
-    total_props = supabase.table("properties").select("id", count="exact").execute()
-    pending_props = supabase.table("properties").select("id", count="exact").eq("status", "pending").execute()
-    pending_list = supabase.table("properties").select("*").eq("status", "pending").order("created_at", desc=True).limit(50).execute()
-    
-    return {
-        "total_properties": total_props.count or 0,
-        "pending_properties": pending_props.count or 0,
-        "pending_list": pending_list.data or []
-    }
-
-@api_router.put("/admin/properties/{property_id}/status")
-def update_property_status(property_id: str, status: str, current_user: dict = Depends(get_current_user)):
-    if current_user.get("role") != "admin": raise HTTPException(status_code=403)
-    supabase.table("properties").update({"status": status, "verified": status == "approved"}).eq("id", property_id).execute()
-    return {"message": f"Property {status}"}
-
-# --------------------------------
 # ROUTES: Inquiries / Leads
 # --------------------------------
 @api_router.post("/inquiries")
@@ -379,7 +450,6 @@ def create_inquiry(inq: InquiryCreate, current_user: dict = Depends(get_current_
 
 @api_router.get("/inquiries")
 def get_inquiries(current_user: dict = Depends(get_current_user)):
-    # Fetch where user is either sender or receiver
     expr = f"from_user_id.eq.{current_user['id']},to_user_id.eq.{current_user['id']}"
     res = supabase.table("inquiries").select("*").or_(expr).order("created_at", desc=True).execute()
     return res.data or []
@@ -389,7 +459,6 @@ def get_inquiries(current_user: dict = Depends(get_current_user)):
 # --------------------------------
 @api_router.post("/favorites")
 def add_favorite(fav: FavoriteCreate, current_user: dict = Depends(get_current_user)):
-    # Check if already exists
     exist = supabase.table("favorites").select("id").eq("user_id", current_user["id"]).eq("property_id", fav.property_id).execute()
     if exist.data: return {"message": "Already favorited"}
     
