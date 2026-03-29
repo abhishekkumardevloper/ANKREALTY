@@ -6,8 +6,6 @@ import Dashboard from './Dashboard';
 import PropertyList from './PropertyList';
 import AddProperty from './AddProperty';
 
-// YAHAN CHANGES KIYE HAIN: 
-// Hum aapki existing files (Addblog aur Addvideo) ko hi list ki tarah use karenge
 import BlogList from './AddBlog'; 
 import YoutubeList from './AddVideo';
 
@@ -15,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function AdminPanel() {
   const { user, api } = useAuth();
+
   const userRole = user?.role || localStorage.getItem('role') || 'agent';
   const isAdmin = userRole === 'admin';
   
@@ -27,33 +26,53 @@ export default function AdminPanel() {
   const [blogs, setBlogs] = useState([]);
   const [youtubeVideos, setYoutubeVideos] = useState([]);
 
+  // ✅ FETCH DATA FIXED
   const fetchAllData = useCallback(async () => {
     setLoading(true);
     try {
       if (isAdmin) {
-        const [adminDash, allProperties, allInquiries, allBlogs, allVideos] = await Promise.all([
+        const [adminDash, allProperties, allInquiries] = await Promise.all([
           api.get('/dashboard/admin'),
           api.get('/properties?limit=100'),
           api.get('/inquiries'),
-          api.get('/blogs').catch(() => ({ data: [] })),
-          api.get('/youtube-videos').catch(() => ({ data: [] })),
         ]);
-        
+
         const pendingList = adminDash.data.pending_list || [];
-        const merged = [...pendingList, ...(allProperties.data || []).filter((item) => !pendingList.some((pending) => pending.id === item.id))];
-        
+
+        const merged = [
+          ...pendingList,
+          ...(allProperties.data || []).filter(
+            (item) => !pendingList.some((p) => p.id === item.id)
+          ),
+        ];
+
         setProperties(merged);
         setInquiries(allInquiries.data || []);
-        setBlogs(allBlogs.data || []);
-        setYoutubeVideos(allVideos.data || []);
+
+        // ✅ Optional APIs (safe)
+        try {
+          const blogRes = await api.get('/blogs');
+          setBlogs(blogRes.data || []);
+        } catch {
+          setBlogs([]);
+        }
+
+        try {
+          const videoRes = await api.get('/youtube-videos');
+          setYoutubeVideos(videoRes.data || []);
+        } catch {
+          setYoutubeVideos([]);
+        }
+
       } else {
-        const [agentDash] = await Promise.all([api.get('/dashboard/agent')]);
+        const agentDash = await api.get('/dashboard/agent');
+
         setProperties(agentDash.data.properties || []);
         setInquiries(agentDash.data.inquiries || []);
       }
     } catch (error) {
       console.error(error);
-      toast.error('Failed to load admin panel data.');
+      toast.error(error.response?.data?.detail || 'Failed to load admin panel data.');
     } finally {
       setLoading(false);
     }
@@ -63,11 +82,13 @@ export default function AdminPanel() {
     fetchAllData(); 
   }, [fetchAllData]);
 
+  // ✅ FILTER FIX
   const filteredByPage = useMemo(() => {
     if (!['buy', 'resale', 'client-project'].includes(page)) return properties;
     return properties.filter((item) => item.category === page);
   }, [page, properties]);
 
+  // ✅ SAVE PROPERTY FIX
   const saveProperty = async (payload) => {
     try {
       if (editing) {
@@ -77,33 +98,102 @@ export default function AdminPanel() {
         await api.post('/properties', payload);
         toast.success('Property created successfully.');
       }
+
       setEditing(null);
       setPage('dashboard');
       fetchAllData();
+
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Unable to save property.');
     }
   };
 
+  // ✅ PAGE RENDER
   const renderPage = () => {
-    if (page === 'dashboard') return <Dashboard properties={properties} inquiries={inquiries} role={userRole} loading={loading} />;
+    if (page === 'dashboard') {
+      return (
+        <Dashboard
+          properties={properties}
+          inquiries={inquiries}
+          role={userRole}
+          loading={loading}
+        />
+      );
+    }
     
-    if (page === 'add-property') return <AddProperty onSave={saveProperty} editing={editing} onCancel={() => { setEditing(null); setPage('dashboard'); }} />;
+    if (page === 'add-property') {
+      return (
+        <AddProperty
+          onSave={saveProperty}
+          editing={editing}
+          onCancel={() => {
+            setEditing(null);
+            setPage('dashboard');
+          }}
+        />
+      );
+    }
     
     if (['buy', 'resale', 'client-project'].includes(page)) {
-      const titleMap = { 'buy': 'Buy Properties', 'resale': 'Resale Properties', 'client-project': 'Client Projects' };
-      return <PropertyList title={titleMap[page]} listings={filteredByPage} loading={loading} onEdit={(item) => { setEditing(item); setPage('add-property'); }} showModeration={isAdmin} />;
+      const titleMap = {
+        buy: 'Buy Properties',
+        resale: 'Resale Properties',
+        'client-project': 'Client Projects',
+      };
+
+      return (
+        <PropertyList
+          title={titleMap[page]}
+          listings={filteredByPage}
+          loading={loading}
+          onEdit={(item) => {
+            setEditing(item);
+            setPage('add-property');
+          }}
+          showModeration={isAdmin}
+        />
+      );
     }
 
-    // Yahan hum aapki files ko render kar rahe hain
-    if (page === 'blogs' && isAdmin) return <BlogList blogs={blogs} refreshData={fetchAllData} loading={loading} />;
-    if (page === 'youtube' && isAdmin) return <YoutubeList videos={youtubeVideos} refreshData={fetchAllData} loading={loading} />;
+    if (page === 'blogs' && isAdmin) {
+      return (
+        <BlogList
+          blogs={blogs}
+          refreshData={fetchAllData}
+          loading={loading}
+        />
+      );
+    }
 
-    return <Dashboard properties={properties} inquiries={inquiries} role={userRole} loading={loading} />;
+    if (page === 'youtube' && isAdmin) {
+      return (
+        <YoutubeList
+          videos={youtubeVideos}
+          refreshData={fetchAllData}
+          loading={loading}
+        />
+      );
+    }
+
+    return (
+      <Dashboard
+        properties={properties}
+        inquiries={inquiries}
+        role={userRole}
+        loading={loading}
+      />
+    );
   };
 
   return (
-    <AdminLayout page={page} setPage={(next) => { setEditing(null); setPage(next); }} role={userRole}>
+    <AdminLayout
+      page={page}
+      setPage={(next) => {
+        setEditing(null);
+        setPage(next);
+      }}
+      role={userRole}
+    >
       {renderPage()}
     </AdminLayout>
   );
