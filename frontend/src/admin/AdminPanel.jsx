@@ -8,8 +8,8 @@ import AddProperty from './AddProperty';
 
 // YAHAN CHANGES KIYE HAIN: 
 // Hum aapki existing files (Addblog aur Addvideo) ko hi list ki tarah use karenge
-import BlogList from './Addblog'; 
-import YoutubeList from './Addvideo';
+import BlogList from './AddBlog'; 
+import YoutubeList from './AddVideo';
 
 import { useAuth } from '@/contexts/AuthContext';
 
