@@ -1,10 +1,11 @@
-import React, { useMemo, useState } from 'react';
+// src/pages/HomePage.jsx
+import React, { useMemo, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   ArrowRight, Banknote, Bell, Briefcase, Building2, Calculator, ChevronRight, 
   Handshake, Instagram, Linkedin, Mail, MapPin, MessageCircle, Search, Users, Youtube,
-  TrendingUp, Award, ShieldCheck, Home, Key, PieChart, Map, Sparkles, Building, FileSignature, Zap, LandPlot
+  TrendingUp, Award, ShieldCheck, Home, Key, PieChart, Map, Sparkles, Building, FileSignature, Zap, LandPlot, RefreshCw
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import RegisterPopup from './RegisterPopup';
@@ -12,6 +13,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { bankOffers, exploreLocalities, socialLinks } from '@/lib/siteData';
 import { WHATSAPP_URL, createPropertySearch } from '@/lib/api';
+
+const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000/api";
 
 const topRowLogos = [
   "/images (3).png",
@@ -28,35 +31,7 @@ const bottomRowLogos = [
   "/M3M-Jacob-and-Co-logo.png",
 ];
 
-// --- RICH CONTENT ---
-const featuredProperties = [
-  { 
-    id: 'f1', title: 'Experion Saatori', city: 'Noida', location: 'Sector 151', propertyType: 'Apartment', 
-    category: 'buy', price: '₹ 1.85 Cr onwards', 
-    image: '/experion-saatori-banner.jpg',
-    tag: 'New Launch'
-  },
-  { 
-    id: 'f3', title: 'M3M Jacob & Co', city: 'Noida', location: 'Sector 97', propertyType: 'Villa', 
-    category: 'buy', price: '₹ 3.50 Cr onwards', 
-    image: '/m3m-jacob-and-co-residences.webp',
-    tag: 'Ultra Luxury'
-  },
-  { 
-    id: 'p1', title: 'Paras Evanue', city: 'Noida Extension', location: 'Sector 10', propertyType: 'Plot', 
-    category: 'buy', price: '₹ 45 L onwards', 
-    image: '/smartworldlecourtyard1-gallery.webp',
-    tag: 'Premium Plots'
-  },
-  { 
-    id: 'u1', title: 'Himalayan View Estate', city: 'Dehradun', location: 'Rajpur Road', propertyType: 'Villa', 
-    category: 'buy', price: '₹ 2.10 Cr onwards', 
-    image: '/himalaya_pride-amrapali_dream_valley-noida-himalaya_residency.avif',
-    tag: 'Mountain View'
-  },
-];
-
-// DATA for New Sections
+// DATA for Static Content Sections
 const localityHighlights = [
   { name: 'Noida Sector 150', avgPrice: '₹8,500/sqft onwards', connectivity: 'Metro & Expressway', landmark: '9-hole golf course', tags: ['Residential Hub', 'Greenest Sector'] },
   { name: 'Noida Extension', avgPrice: '₹4,200/sqft onwards', connectivity: 'Upcoming Metro', landmark: 'Gaur City Mall', tags: ['Affordable Housing', 'Rapid Development'] },
@@ -81,7 +56,7 @@ const dummyMapPins = [
 ];
 
 const categoryOptions = [
-  { label: 'Buy', value: 'buy' }, { label: 'Sell', value: 'sell' }, { label: 'Rent', value: 'rent' },
+  { label: 'Buy', value: 'buy' }, { label: 'Resale', value: 'resale' }, { label: 'Rent', value: 'rent' },
 ];
 
 const propertyTypeOptions = [
@@ -109,10 +84,39 @@ export default function HomePage() {
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [loanLead, setLoanLead] = useState({ name: '', phone: '' });
 
+  // Dynamic Data States
+  const [featuredProperties, setFeaturedProperties] = useState([]);
+  const [premiumPlots, setPremiumPlots] = useState([]);
+  const [resaleProperties, setResaleProperties] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   // EMI Calculator State
   const [loanAmount, setLoanAmount] = useState(7500000); 
   const [interestRate, setInterestRate] = useState(8.5);
   const [loanTenure, setLoanTenure] = useState(20);
+
+  // Fetch Data from Backend
+  useEffect(() => {
+    const fetchProperties = async () => {
+      setLoading(true);
+      try {
+        const [featuredRes, plotsRes, resaleRes] = await Promise.all([
+          fetch(`${API_BASE}/properties/featured`),
+          fetch(`${API_BASE}/properties?property_type=plot&limit=4`),
+          fetch(`${API_BASE}/properties?category=resale&limit=4`)
+        ]);
+
+        if (featuredRes.ok) setFeaturedProperties(await featuredRes.json());
+        if (plotsRes.ok) setPremiumPlots(await plotsRes.json());
+        if (resaleRes.ok) setResaleProperties(await resaleRes.json());
+      } catch (error) {
+        console.error("Failed to fetch property data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProperties();
+  }, []);
 
   const suggestions = useMemo(() => {
     const query = search.city.trim().toLowerCase();
@@ -145,7 +149,14 @@ export default function HomePage() {
   };
 
   const formatCurrency = (amount) => {
+    if (!amount) return 'Price on Request';
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
+  };
+
+  // Helper to safely get the main image
+  const getMainImage = (property) => {
+    if (property.images && property.images.length > 0) return property.images[0];
+    return 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=800&auto=format&fit=crop'; // Fallback
   };
 
   return (
@@ -253,14 +264,14 @@ export default function HomePage() {
           ))}
         </div>
       </section>
-      {/* --- TRUSTED BRANDS INFINITE SLIDER (FIXED) --- */}
+
+      {/* --- TRUSTED BRANDS INFINITE SLIDER --- */}
       <section className="py-12 sm:py-16 relative w-full overflow-hidden bg-white -mt-10 z-20 rounded-t-[3rem] shadow-[0_-10px_40px_rgba(0,0,0,0.05)] border-b border-slate-100">
         <div className="w-full">
           <h2 className="text-xs sm:text-sm font-bold uppercase tracking-widest text-slate-400 mb-8 sm:mb-12 text-center">
             Trusted by leading brands across India
           </h2>
           <div className="relative flex flex-col gap-8 sm:gap-12 overflow-hidden w-full">
-            {/* Top Row: Left Animation */}
             <motion.div
               animate={{ x: ["0%", "-50%"] }}
               transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
@@ -272,8 +283,6 @@ export default function HomePage() {
                 </div>
               ))}
             </motion.div>
-
-            {/* Bottom Row: Right Animation */}
             <motion.div
               animate={{ x: ["-50%", "0%"] }}
               transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
@@ -285,14 +294,14 @@ export default function HomePage() {
                 </div>
               ))}
             </motion.div>
-
             <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
             <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
           </div>
         </div>
       </section>
-   {/* --- FEATURED INVENTORY --- */}
-      <section className="py-24 px-6 bg-white">
+
+      {/* --- FEATURED INVENTORY (DYNAMIC) --- */}
+      <section className="py-24 px-6 bg-slate-50">
         <div className="max-w-7xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUp} className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
             <div>
@@ -304,38 +313,142 @@ export default function HomePage() {
             </Link>
           </motion.div>
 
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {featuredProperties.map((property) => (
-              <motion.div variants={fadeUp} key={property.id} onClick={() => navigate(`/property/${property.id}`, { state: { property } })} className="bg-slate-50 rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-2xl hover:border-[#D4AF37]/50 hover:-translate-y-2 transition-all duration-300 cursor-pointer relative group flex flex-col">
-                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-black text-slate-900 shadow-lg z-10 flex items-center gap-1.5">
-                  <TrendingUp className="w-3.5 h-3.5 text-[#D4AF37]"/> {property.tag}
-                </div>
-                
-                <div className="relative h-56 overflow-hidden">
-                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                   <img src={property.image} alt={property.title} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                </div>
-                
-                <div className="p-6 flex-1 flex flex-col relative z-20 bg-white">
-                  <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#8B0000] mb-2">{property.category} • {property.propertyType}</p>
-                  <h3 className="text-xl font-black text-slate-900 mb-2 group-hover:text-[#8B0000] transition-colors line-clamp-1 md:text-2xl">{property.title}</h3>
-                  <p className="text-slate-500 text-sm mb-6 flex items-center font-medium md:text-base"><MapPin className="w-4 h-4 mr-1.5 text-slate-400"/> {property.location}, {property.city}</p>
-                  
-                  <div className="mt-auto flex items-center justify-between pt-5 border-t border-slate-100">
-                    <span className="font-black text-slate-900 text-xl md:text-2xl">{property.price}</span>
-                    <span className="bg-slate-50 group-hover:bg-[#8B0000] text-slate-400 group-hover:text-[#D4AF37] w-10 h-10 rounded-full flex items-center justify-center transition-colors">
-                      <ArrowRight className="w-5 h-5" />
-                    </span>
+          {loading ? (
+             <div className="text-center py-10 text-slate-500 font-medium">Loading featured properties...</div>
+          ) : featuredProperties.length > 0 ? (
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {featuredProperties.map((property) => (
+                <motion.div variants={fadeUp} key={property.id} onClick={() => navigate(`/property/${property.id}`, { state: { property } })} className="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-2xl hover:border-[#D4AF37]/50 hover:-translate-y-2 transition-all duration-300 cursor-pointer relative group flex flex-col">
+                  <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-black text-slate-900 shadow-lg z-10 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]"/> {property.projectStatus || 'Featured'}
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                  
+                  <div className="relative h-56 overflow-hidden">
+                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                     <img src={getMainImage(property)} alt={property.title} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                  </div>
+                  
+                  <div className="p-6 flex-1 flex flex-col relative z-20 bg-white">
+                    <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#8B0000] mb-2">{property.category} • {property.property_type}</p>
+                    <h3 className="text-xl font-black text-slate-900 mb-2 group-hover:text-[#8B0000] transition-colors line-clamp-1 md:text-2xl">{property.title}</h3>
+                    <p className="text-slate-500 text-sm mb-6 flex items-center font-medium md:text-base"><MapPin className="w-4 h-4 mr-1.5 text-slate-400"/> {property.location}, {property.city}</p>
+                    
+                    <div className="mt-auto flex items-center justify-between pt-5 border-t border-slate-100">
+                      <span className="font-black text-slate-900 text-xl md:text-2xl">{formatCurrency(property.price)}</span>
+                      <span className="bg-slate-50 group-hover:bg-[#8B0000] text-slate-400 group-hover:text-[#D4AF37] w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+                        <ArrowRight className="w-5 h-5" />
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          ) : (
+            <div className="text-center py-10 text-slate-500 font-medium">No featured properties available at the moment.</div>
+          )}
+        </div>
+      </section>
+
+      {/* --- PREMIUM PLOTS SECTION (DYNAMIC) --- */}
+      <section className="py-24 px-6 bg-white border-t border-slate-100">
+        <div className="max-w-7xl mx-auto">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUp} className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+            <div>
+              <p className="text-[#D4AF37] font-bold uppercase tracking-[0.25em] text-xs mb-3 flex items-center gap-2"><LandPlot className="w-4 h-4"/> Build Your Vision</p>
+              <h2 className="text-3xl md:text-5xl font-black text-slate-900">Exclusive Premium Plots</h2>
+            </div>
+            <Link to="/properties?property_type=plot">
+              <Button variant="outline" className="border-slate-300 font-bold hover:bg-[#D4AF37] hover:text-white transition-colors h-12 px-6 rounded-xl text-base">View all plots <ChevronRight className="w-4 h-4 ml-2" /></Button>
+            </Link>
           </motion.div>
+
+          {loading ? (
+             <div className="text-center py-10 text-slate-500 font-medium">Loading plots...</div>
+          ) : premiumPlots.length > 0 ? (
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {premiumPlots.map((property) => (
+                <motion.div variants={fadeUp} key={property.id} onClick={() => navigate(`/property/${property.id}`, { state: { property } })} className="bg-slate-50 rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-2xl hover:border-[#D4AF37]/50 hover:-translate-y-2 transition-all duration-300 cursor-pointer relative group flex flex-col">
+                  <div className="absolute top-4 left-4 bg-[#D4AF37]/90 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-black text-white shadow-lg z-10 flex items-center gap-1.5">
+                    <TrendingUp className="w-3.5 h-3.5"/> {property.projectStatus || 'Premium'}
+                  </div>
+                  
+                  <div className="relative h-56 overflow-hidden">
+                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                     <img src={getMainImage(property)} alt={property.title} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                  </div>
+                  
+                  <div className="p-6 flex-1 flex flex-col relative z-20 bg-white">
+                    <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#D4AF37] mb-2">{property.category} • {property.property_type}</p>
+                    <h3 className="text-xl font-black text-slate-900 mb-2 group-hover:text-[#D4AF37] transition-colors line-clamp-1 md:text-2xl">{property.title}</h3>
+                    <p className="text-slate-500 text-sm mb-6 flex items-center font-medium md:text-base"><MapPin className="w-4 h-4 mr-1.5 text-slate-400"/> {property.location}, {property.city}</p>
+                    
+                    <div className="mt-auto flex items-center justify-between pt-5 border-t border-slate-100">
+                      <span className="font-black text-slate-900 text-xl md:text-2xl">{formatCurrency(property.price)}</span>
+                      <span className="bg-slate-50 group-hover:bg-[#D4AF37] text-slate-400 group-hover:text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+                        <ArrowRight className="w-5 h-5" />
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          ) : (
+            <div className="text-center py-10 text-slate-500 font-medium">No plots available at the moment.</div>
+          )}
+        </div>
+      </section>
+
+      {/* --- RESALE PROPERTIES SECTION (DYNAMIC) --- */}
+      <section className="py-24 px-6 bg-slate-50 border-t border-slate-100">
+        <div className="max-w-7xl mx-auto">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUp} className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+            <div>
+              <p className="text-[#8B0000] font-bold uppercase tracking-[0.25em] text-xs mb-3 flex items-center gap-2"><RefreshCw className="w-4 h-4"/> Ready to Move-In</p>
+              <h2 className="text-3xl md:text-5xl font-black text-slate-900">Top Resale Properties</h2>
+            </div>
+            <Link to="/properties?category=resale">
+              <Button variant="outline" className="border-slate-300 font-bold hover:bg-[#8B0000] hover:text-white transition-colors h-12 px-6 rounded-xl text-base">View all resale <ChevronRight className="w-4 h-4 ml-2" /></Button>
+            </Link>
+          </motion.div>
+
+          {loading ? (
+             <div className="text-center py-10 text-slate-500 font-medium">Loading resale properties...</div>
+          ) : resaleProperties.length > 0 ? (
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {resaleProperties.map((property) => (
+                <motion.div variants={fadeUp} key={property.id} onClick={() => navigate(`/property/${property.id}`, { state: { property } })} className="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-2xl hover:border-[#8B0000]/50 hover:-translate-y-2 transition-all duration-300 cursor-pointer relative group flex flex-col">
+                  <div className="absolute top-4 left-4 bg-[#8B0000]/90 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-black text-white shadow-lg z-10 flex items-center gap-1.5">
+                    <Key className="w-3.5 h-3.5"/> {property.projectStatus || 'Ready to Move'}
+                  </div>
+                  
+                  <div className="relative h-56 overflow-hidden">
+                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                     <img src={getMainImage(property)} alt={property.title} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                  </div>
+                  
+                  <div className="p-6 flex-1 flex flex-col relative z-20 bg-white">
+                    <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#8B0000] mb-2">{property.category} • {property.property_type}</p>
+                    <h3 className="text-xl font-black text-slate-900 mb-2 group-hover:text-[#8B0000] transition-colors line-clamp-1 md:text-2xl">{property.title}</h3>
+                    <p className="text-slate-500 text-sm mb-6 flex items-center font-medium md:text-base"><MapPin className="w-4 h-4 mr-1.5 text-slate-400"/> {property.location}, {property.city}</p>
+                    
+                    <div className="mt-auto flex items-center justify-between pt-5 border-t border-slate-100">
+                      <span className="font-black text-slate-900 text-xl md:text-2xl">{formatCurrency(property.price)}</span>
+                      <span className="bg-slate-50 group-hover:bg-[#8B0000] text-slate-400 group-hover:text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+                        <ArrowRight className="w-5 h-5" />
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          ) : (
+            <div className="text-center py-10 text-slate-500 font-medium">No resale properties currently available.</div>
+          )}
         </div>
       </section>
 
       {/* --- PREMIUM SERVICES SECTION --- */}
-      <section className="py-24 px-6 bg-white">
+      <section className="py-24 px-6 bg-white border-t border-slate-100">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <p className="text-[#8B0000] font-bold uppercase tracking-[0.25em] text-xs mb-3">Our Expert Offerings</p>
@@ -692,7 +805,7 @@ export default function HomePage() {
           </div>
           
           <div className="border-t border-slate-800/80 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-slate-500 font-medium">
-            <p>&copy; {new Date().getFullYear()} ANK Realty. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} ANK Realty. All rights reserved.</p>
             <div className="flex space-x-8 mt-4 md:mt-0">
               <Link to="/privacy" className="hover:text-[#D4AF37] transition-colors">Privacy Policy</Link>
               <Link to="/terms" className="hover:text-[#D4AF37] transition-colors">Terms of Service</Link>
