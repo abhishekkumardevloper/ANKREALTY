@@ -1,202 +1,146 @@
-// src/admin/AddBlog.jsx
-import React, { useState, useEffect } from "react";
-import { ArrowLeft, Save, Image as ImageIcon, X } from 'lucide-react';
+// src/admin/BlogList.jsx
+import React, { useState } from 'react';
+import { Edit2, Search, Trash2, Plus, Image as ImageIcon, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import AddBlog from './AddBlog';
+import { useAuth } from '@/contexts/AuthContext';
 
-export default function AddBlog({ onSave, editing, onCancel }) {
-  const [title, setTitle] = useState("");
-  const [excerpt, setExcerpt] = useState(""); // Added for card previews
-  const [content, setContent] = useState("");
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
+export default function BlogList({ blogs = [], refreshData, loading }) {
+  const { api } = useAuth();
+  const [search, setSearch] = useState('');
+  
+  // States to toggle between Table view and Form view
+  const [isAdding, setIsAdding] = useState(false);
+  const [editingBlog, setEditingBlog] = useState(null);
 
-  useEffect(() => {
-    if (editing) {
-      setTitle(editing.title || "");
-      setExcerpt(editing.excerpt || "");
-      setContent(editing.content || "");
-      
-      // If editing, use existing image URL if available
-      if (editing.imageUrl) {
-        setImagePreview(editing.imageUrl);
+  const filteredBlogs = blogs.filter((b) => 
+    b.title?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleSave = async (formData) => {
+    try {
+      if (editingBlog) {
+        // Assume PUT /blogs/{id} exists for updating
+        await api.put(`/blogs/${editingBlog.id}`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        toast.success("Blog updated successfully!");
+      } else {
+        await api.post('/blogs', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        toast.success("Blog published successfully!");
       }
-    } else {
-      // Reset form on new entry
-      setTitle("");
-      setExcerpt("");
-      setContent("");
-      setImageFile(null);
-      setImagePreview(null);
-    }
-  }, [editing]);
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // Validate file size (optional, here set to 5MB max as an example)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error("Image size should be less than 5MB");
-        return;
-      }
-      setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
+      setIsAdding(false);
+      setEditingBlog(null);
+      refreshData();
+    } catch (error) {
+      toast.error("Failed to save blog.");
     }
   };
 
-  const removeImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this blog?')) return;
+    try {
+      await api.delete(`/blogs/${id}`);
+      toast.success('Blog deleted successfully.');
+      refreshData();
+    } catch (error) {
+      toast.error('Failed to delete blog.');
+    }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    // Basic Validation
-    if (!title.trim()) {
-      toast.error("Blog title is required.");
-      return;
-    }
-    if (!content.trim()) {
-      toast.error("Blog content is required.");
-      return;
-    }
-    if (!editing && !imageFile && !imagePreview) {
-      toast.warning("A cover image is highly recommended.");
-    }
-
-    // Prepare FormData for the backend
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("excerpt", excerpt);
-    formData.append("content", content);
-    
-    if (imageFile) {
-      formData.append("image", imageFile);
-    } else if (editing && imagePreview) {
-      // Tell backend to keep existing image if no new file is uploaded
-      formData.append("existingImageUrl", imagePreview);
-    }
-
-    onSave(formData);
-  };
+  // If adding or editing, render the AddBlog form component instead of the table
+  if (isAdding || editingBlog) {
+    return (
+      <AddBlog 
+        editing={editingBlog} 
+        onSave={handleSave} 
+        onCancel={() => { setIsAdding(false); setEditingBlog(null); }} 
+      />
+    );
+  }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto pb-12">
-      
-      {/* Header Area */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+    <div className="space-y-6">
+      <div className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col md:flex-row gap-4 md:items-center md:justify-between shadow-sm">
         <div>
-          <button onClick={onCancel} className="text-slate-500 hover:text-[#003B30] mb-2 flex items-center text-sm font-bold transition-colors">
-            <ArrowLeft className="w-4 h-4 mr-1" /> Back to Blogs
-          </button>
-          <h1 className="text-2xl font-black text-slate-900">
-            {editing ? "Edit Blog Article" : "Create New Article"}
-          </h1>
-          <p className="text-slate-500 text-sm mt-1">Publish news, insights, and updates to the frontend.</p>
+          <h2 className="text-2xl font-black text-slate-900">Blog Management</h2>
+          <p className="text-slate-500 text-sm mt-1">Manage news, articles, and insights.</p>
         </div>
-        <Button onClick={handleSubmit} className="bg-[#003B30] hover:bg-[#00261c] text-white font-bold h-11 px-6 rounded-xl shadow-md">
-          <Save className="w-4 h-4 mr-2" /> {editing ? "Update Article" : "Publish Article"}
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input 
+              value={search} 
+              onChange={(e) => setSearch(e.target.value)} 
+              placeholder="Search blogs..." 
+              className="pl-10 pr-4 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-sm min-w-[240px] focus:outline-none focus:border-slate-400" 
+            />
+          </div>
+          <Button onClick={() => setIsAdding(true)} className="bg-[#003B30] hover:bg-[#00261c] text-white font-bold rounded-xl h-11 px-5 shadow-sm">
+            <Plus className="w-4 h-4 mr-2" /> Add New Blog
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        {/* Main Content Form */}
-        <div className="md:col-span-2 space-y-6">
-          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-5">
-            <div>
-              <label className="text-xs font-bold text-slate-700 mb-1 block">Article Title *</label>
-              <Input
-                type="text"
-                placeholder="e.g., Top Real Estate Trends in 2026"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="text-base font-medium"
-              />
-            </div>
-
-            <div>
-              <label className="text-xs font-bold text-slate-700 mb-1 block">Short Excerpt (Optional)</label>
-              <Textarea
-                rows={2}
-                placeholder="A brief summary shown on the blog cards..."
-                value={excerpt}
-                onChange={(e) => setExcerpt(e.target.value)}
-                className="resize-none"
-              />
-            </div>
-
-            <div>
-              <label className="text-xs font-bold text-slate-700 mb-1 block">Full Content *</label>
-              <Textarea
-                rows={15}
-                placeholder="Write your article content here..."
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                className="leading-relaxed font-medium text-slate-700"
-              />
-              <p className="text-[11px] text-slate-400 mt-2 font-medium">Supports plain text. Markdown or HTML rendering depends on your frontend setup.</p>
-            </div>
-          </div>
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <div className="overflow-x-auto custom-scrollbar">
+          <table className="w-full text-left">
+            <thead className="bg-slate-50 text-xs uppercase tracking-wider text-slate-500 font-bold border-b border-slate-200">
+              <tr>
+                <th className="p-4 pl-6">Cover</th>
+                <th className="p-4">Article Details</th>
+                <th className="p-4">Published Date</th>
+                <th className="p-4 pr-6 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filteredBlogs.map((blog) => (
+                <tr key={blog.id} className="hover:bg-slate-50/80 transition-colors group">
+                  <td className="p-4 pl-6 w-24">
+                    {blog.imageUrl ? (
+                      <div className="w-16 h-12 rounded-lg overflow-hidden border border-slate-200">
+                        <img src={blog.imageUrl} alt="cover" className="w-full h-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className="w-16 h-12 rounded-lg bg-slate-100 flex items-center justify-center border border-slate-200 text-slate-400">
+                        <ImageIcon className="w-5 h-5" />
+                      </div>
+                    )}
+                  </td>
+                  <td className="p-4">
+                    <div className="font-bold text-slate-900 text-base line-clamp-1">{blog.title}</div>
+                    <div className="text-xs text-slate-500 mt-1 line-clamp-1 flex items-center">
+                      <FileText className="w-3 h-3 mr-1" /> {blog.excerpt || 'No excerpt provided'}
+                    </div>
+                  </td>
+                  <td className="p-4 text-sm font-medium text-slate-600">
+                    {new Date(blog.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </td>
+                  <td className="p-4 pr-6">
+                    <div className="flex justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                      <Button size="sm" variant="outline" onClick={() => setEditingBlog(blog)} className="h-8 px-3 text-slate-600 font-bold shadow-none">
+                        <Edit2 className="w-3.5 h-3.5 mr-1.5" /> Edit
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => handleDelete(blog.id)} className="h-8 px-2 text-red-500 hover:bg-red-50 hover:text-red-600 shadow-none border-red-100">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {!filteredBlogs.length && (
+                <tr>
+                  <td colSpan="4" className="p-12 text-center text-slate-500 font-medium">
+                    {loading ? 'Loading blogs...' : 'No blog posts found.'}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
-
-        {/* Sidebar: Media & Settings */}
-        <div className="space-y-6">
-          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm sticky top-24">
-            <h2 className="text-lg font-extrabold text-slate-900 border-b border-slate-100 pb-3 mb-4">Cover Image</h2>
-            
-            {!imagePreview ? (
-              <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-slate-300 rounded-2xl cursor-pointer hover:bg-slate-50 transition-colors bg-slate-50/50">
-                <ImageIcon className="w-8 h-8 text-slate-400 mb-3" />
-                <span className="text-sm text-slate-600 font-bold mb-1">Upload Cover Image</span>
-                <span className="text-xs text-slate-400 font-medium px-4 text-center">Recommended size: 1200x630px</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleImageChange}
-                />
-              </label>
-            ) : (
-              <div className="space-y-3">
-                <div className="relative w-full aspect-video bg-slate-100 rounded-xl overflow-hidden border border-slate-200 shadow-sm group">
-                  <img 
-                    src={imagePreview} 
-                    alt="Cover preview" 
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                    <button 
-                      type="button" 
-                      onClick={removeImage}
-                      className="bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center shadow-lg hover:bg-red-600"
-                    >
-                      <X className="w-3 h-3 mr-1" /> Remove Image
-                    </button>
-                  </div>
-                </div>
-                <label className="block w-full text-center text-xs font-bold text-[#003B30] bg-emerald-50 hover:bg-emerald-100 py-2.5 rounded-lg cursor-pointer transition-colors border border-emerald-100">
-                  Change Image
-                  <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
-                </label>
-              </div>
-            )}
-            
-            <div className="mt-6 pt-5 border-t border-slate-100">
-              <div className="bg-amber-50 border border-amber-100 rounded-xl p-4">
-                <h4 className="text-xs font-extrabold text-amber-800 uppercase tracking-wider mb-1">Visibility Note</h4>
-                <p className="text-xs text-amber-700 font-medium leading-relaxed">
-                  Once published, this article will be immediately visible on the public ANK Realty blog section.
-                </p>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
       </div>
     </div>
   );
