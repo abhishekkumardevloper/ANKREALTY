@@ -1,3 +1,4 @@
+// src/pages/PropertyDetailPage.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
@@ -6,7 +7,7 @@ import {
   Heart, ShieldCheck, Share2, CheckCircle, Info, ChevronRight, 
   Image as ImageIcon, Download, FileText, Check, Building,
   TrendingUp, Coffee, Zap, ArrowUpDown, Shield, Dumbbell, Droplets, Wind,
-  Star, Lock, Zap as ZapIcon, MessageSquare
+  Star, Lock, Zap as ZapIcon, MessageSquare, Map
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { Button } from '@/components/ui/button';
@@ -40,7 +41,9 @@ export default function PropertyDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  // Safe fallback if useAuth isn't perfectly configured
+  const authContext = useAuth ? useAuth() : null;
+  const user = authContext ? authContext.user : null;
 
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -55,16 +58,16 @@ export default function PropertyDetailPage() {
       const response = await axios.get(`${API_BASE}/properties/${id}`);
       setProperty(response.data);
     } catch (error) {
+      // If API fails, try to use state passed from previous page
       const fallbackProperty = location.state?.property;
       if (fallbackProperty) {
         setProperty({
           ...fallbackProperty,
-          // Hydrate fallback with extra data to match new UI
-          builder: fallbackProperty.builder || "Yatharth Group and Great Value Realty",
-          possession: "June 2030",
-          configurations: "3 BHK Flats, 4 BHK Flats",
-          projectStatus: fallbackProperty.tag || "New Launch",
-          rera: fallbackProperty.rera || "Governed by the ASPIRE framework"
+          builder: fallbackProperty.builder || "Premium Developer",
+          possession: fallbackProperty.possession || "Ready to Move",
+          configurations: fallbackProperty.bhk ? `${fallbackProperty.bhk} BHK` : "Various",
+          projectStatus: fallbackProperty.projectStatus || fallbackProperty.tag || "New Launch",
+          rera: fallbackProperty.rera || "Approved"
         });
       } else {
         toast.error('Property not found');
@@ -81,7 +84,6 @@ export default function PropertyDetailPage() {
 
   const handleLeadSubmit = (e, formName) => {
     e.preventDefault();
-    // Reset forms after submission
     if(formName === 'Quick Form') setQuickForm({ name: '', phone: '' });
     else setLeadForm({ name: '', email: '', phone: '' });
     
@@ -99,14 +101,14 @@ export default function PropertyDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex justify-center items-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#003B30]"></div>
+      <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-[#8B0000]"></div>
+        <p className="mt-4 text-slate-500 font-bold tracking-widest uppercase text-sm">Loading details...</p>
       </div>
     );
   }
 
   if (!property) return null;
-
 
   const mapQuery = encodeURIComponent(`${property.title}, ${property.location || property.area || ''}, ${property.city || ''}`);
   const mapEmbedUrl = `https://www.google.com/maps?q=${mapQuery}&output=embed`;
@@ -129,16 +131,23 @@ export default function PropertyDetailPage() {
     }
   };
 
+  // Safe currency format
+  const formattedPrice = property.price 
+    ? property.price >= 10000000 
+      ? `₹ ${(property.price / 10000000).toFixed(2)} Cr` 
+      : `₹ ${(property.price / 100000).toFixed(2)} Lac`
+    : 'Price on Request';
+
   return (
-    <div className="min-h-screen bg-white font-sans selection:bg-[#003B30]/20 text-slate-800 pb-0 relative">
+    <div className="min-h-screen bg-slate-50 font-sans selection:bg-[#D4AF37]/30 text-slate-800 pb-0 relative">
       <Navbar />
 
       {/* SUB NAVIGATION - STICKY */}
-      <div className="sticky top-16 md:top-20 z-40 bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-[1400px] mx-auto px-4 md:px-8">
-          <ul className="flex overflow-x-auto hide-scrollbar space-x-8 text-sm font-bold text-slate-600">
+      <div className="sticky top-16 md:top-20 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6">
+          <ul className="flex overflow-x-auto hide-scrollbar space-x-8 text-sm font-bold text-slate-500 uppercase tracking-widest">
             {['Overview', 'Price List', 'Amenities', 'Location', 'About'].map((item) => (
-              <li key={item} className="whitespace-nowrap pt-4 pb-3 cursor-pointer hover:text-[#003B30] border-b-2 border-transparent hover:border-[#003B30] transition-colors"
+              <li key={item} className="whitespace-nowrap pt-5 pb-4 cursor-pointer hover:text-[#8B0000] border-b-[3px] border-transparent hover:border-[#8B0000] transition-all"
                   onClick={() => scrollToSection(item.toLowerCase().replace(' ', '-'))}>
                 {item}
               </li>
@@ -147,49 +156,57 @@ export default function PropertyDetailPage() {
         </div>
       </div>
 
-      <div className="pt-8 px-4 md:px-8 max-w-[1400px] mx-auto pb-16">
+      <div className="pt-10 px-6 max-w-7xl mx-auto pb-24">
         
         {/* TITLE & LOCATION */}
-        <div className="mb-6 flex flex-col md:flex-row md:items-start justify-between gap-4">
+        <div className="mb-8 flex flex-col md:flex-row md:items-start justify-between gap-6">
           <div>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-2">
-              {property.title}: Ultra-Spacious, Low-Density Living
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#D4AF37]/10 text-[#8B0000] text-[10px] font-black uppercase tracking-widest mb-3 border border-[#D4AF37]/20">
+               {property.property_type || 'Property'} • {property.category || 'Sale'}
+            </div>
+            <h1 className="text-3xl md:text-5xl font-black text-slate-900 mb-3 tracking-tight">
+              {property.title}
             </h1>
-            <p className="text-slate-500 font-medium flex items-center text-sm md:text-base">
-              <MapPin className="w-4 h-4 mr-1.5 text-slate-400"/> 
-              {property.location || property.area}, {property.city}
+            <p className="text-slate-500 font-medium flex items-center text-base">
+              <MapPin className="w-5 h-5 mr-2 text-slate-400"/> 
+              {property.location}, {property.city} {property.state ? `, ${property.state}` : ''}
             </p>
           </div>
-          <Button variant="outline" onClick={addToFavorites} className="shrink-0 h-10 border-slate-200 text-slate-700 hover:bg-slate-50 font-bold">
-            <Heart className="w-4 h-4 mr-2 text-red-500" /> Save Property
-          </Button>
+          <div className="flex gap-3">
+            <Button variant="outline" className="shrink-0 h-12 border-slate-200 text-slate-700 hover:bg-slate-100 font-bold rounded-xl shadow-sm">
+              <Share2 className="w-4 h-4 mr-2" /> Share
+            </Button>
+            <Button variant="outline" onClick={addToFavorites} className="shrink-0 h-12 border-slate-200 text-[#8B0000] hover:bg-red-50 hover:border-red-200 font-bold rounded-xl shadow-sm">
+              <Heart className="w-4 h-4 mr-2" /> Save
+            </Button>
+          </div>
         </div>
 
         {/* --- TOP SECTION: IMAGE + QUICK STATS --- */}
-        <div className="flex flex-col lg:flex-row gap-6 mb-12" id="overview">
+        <div className="flex flex-col lg:flex-row gap-8 mb-16" id="overview">
           
           {/* Left: Image Gallery */}
           <div className="lg:w-[65%]">
-            <div className="relative h-[350px] md:h-[500px] rounded-2xl overflow-hidden group border border-slate-100 shadow-sm">
+            <div className="relative h-[400px] md:h-[550px] rounded-3xl overflow-hidden group border border-slate-200 shadow-lg bg-slate-900">
               <img
                 src={images[selectedImage]}
                 alt={property.title}
-                className="w-full h-full object-cover transition-transform duration-700"
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-90"
               />
-              <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-bold tracking-wide">
-                {selectedImage + 1} / {images.length}
+              <div className="absolute top-5 right-5 bg-black/60 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-xs font-bold tracking-widest shadow-lg">
+                <ImageIcon className="w-3.5 h-3.5 inline mr-1.5" /> {selectedImage + 1} / {images.length}
               </div>
             </div>
             
             {/* Thumbnails */}
             {images.length > 1 && (
-              <div className="flex gap-3 mt-4 overflow-x-auto hide-scrollbar pb-2">
+              <div className="flex gap-4 mt-6 overflow-x-auto hide-scrollbar pb-2 px-1">
                 {images.map((img, idx) => (
                   <div 
                     key={idx}
                     onClick={() => setSelectedImage(idx)}
-                    className={`relative w-24 h-16 md:w-32 md:h-20 rounded-xl overflow-hidden shrink-0 cursor-pointer transition-all duration-300 ${
-                      selectedImage === idx ? 'ring-2 ring-[#003B30] opacity-100' : 'opacity-60 hover:opacity-100'
+                    className={`relative w-28 h-20 md:w-36 md:h-24 rounded-2xl overflow-hidden shrink-0 cursor-pointer transition-all duration-300 ${
+                      selectedImage === idx ? 'ring-[3px] ring-[#D4AF37] opacity-100 shadow-md' : 'opacity-60 hover:opacity-100'
                     }`}
                   >
                     <img src={img} alt={`Gallery view ${idx + 1}`} className="w-full h-full object-cover" />
@@ -201,60 +218,63 @@ export default function PropertyDetailPage() {
 
           {/* Right: Quick Stats & Inline Form */}
           <div className="lg:w-[35%] flex flex-col gap-6">
-            <div className="border border-slate-200 rounded-2xl p-6 shadow-sm h-full flex flex-col">
+            <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-xl h-full flex flex-col relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/10 rounded-full blur-2xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
               
-              <div className="mb-6">
-                <p className="text-slate-500 text-sm font-semibold mb-1">Starting Price</p>
-                <div className="flex items-center text-[#003B30]">
-                  <TrendingUp className="w-7 h-7 mr-3" />
-                  <span className="text-3xl md:text-4xl font-extrabold tracking-tight">
-                    {property.priceText || `₹ ${(property.price / 10000000).toFixed(2)} CR* Onwards*`}
+              <div className="mb-8 relative z-10">
+                <p className="text-slate-500 text-xs font-bold tracking-widest uppercase mb-2">Starting Price</p>
+                <div className="flex items-center text-[#8B0000]">
+                  <TrendingUp className="w-8 h-8 mr-3 text-[#D4AF37]" />
+                  <span className="text-4xl md:text-5xl font-black tracking-tight">
+                    {formattedPrice}
                   </span>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-4 mb-8">
-                <div className="col-span-1 md:col-span-2 flex items-start">
-                  <ShieldCheck className="w-6 h-6 text-emerald-600 mr-3 shrink-0" />
+              <div className="grid grid-cols-2 gap-y-8 gap-x-4 mb-10 relative z-10">
+                <div className="col-span-2 flex items-start bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  <ShieldCheck className="w-6 h-6 text-[#D4AF37] mr-3 shrink-0" />
                   <div>
-                    <p className="text-sm font-bold text-slate-900">RERA Approved</p>
-                    <p className="text-xs text-slate-500 font-medium">{property.rera}</p>
+                    <p className="text-sm font-bold text-slate-900">RERA Approved Project</p>
+                    <p className="text-xs text-slate-500 font-medium mt-0.5">{property.rera || 'Check builder documents'}</p>
                   </div>
                 </div>
                 
                 <div className="flex flex-col">
-                  <div className="flex items-center text-slate-500 text-xs font-bold mb-1 uppercase tracking-wider"><Building className="w-4 h-4 mr-1.5"/> Configurations</div>
-                  <p className="font-bold text-slate-900 text-sm">{property.configurations}</p>
+                  <div className="flex items-center text-slate-400 text-[10px] font-bold mb-1.5 uppercase tracking-widest"><Building className="w-3.5 h-3.5 mr-1.5"/> Configuration</div>
+                  <p className="font-bold text-slate-900 text-sm md:text-base">{property.bhk ? `${property.bhk} BHK` : property.configurations || 'Various'}</p>
                 </div>
                 <div className="flex flex-col">
-                  <div className="flex items-center text-slate-500 text-xs font-bold mb-1 uppercase tracking-wider"><Star className="w-4 h-4 mr-1.5"/> Project Status</div>
-                  <p className="font-bold text-slate-900 text-sm">{property.projectStatus}</p>
+                  <div className="flex items-center text-slate-400 text-[10px] font-bold mb-1.5 uppercase tracking-widest"><Star className="w-3.5 h-3.5 mr-1.5"/> Status</div>
+                  <p className="font-bold text-slate-900 text-sm md:text-base">{property.status === 'approved' ? 'Active Listing' : (property.projectStatus || 'Ready')}</p>
                 </div>
                 <div className="flex flex-col">
-                  <div className="flex items-center text-slate-500 text-xs font-bold mb-1 uppercase tracking-wider"><Calendar className="w-4 h-4 mr-1.5"/> Possession</div>
-                  <p className="font-bold text-slate-900 text-sm">{property.possession}</p>
+                  <div className="flex items-center text-slate-400 text-[10px] font-bold mb-1.5 uppercase tracking-widest"><Calendar className="w-3.5 h-3.5 mr-1.5"/> Possession</div>
+                  <p className="font-bold text-slate-900 text-sm md:text-base">{property.possession || 'Immediate'}</p>
                 </div>
                 <div className="flex flex-col">
-                  <div className="flex items-center text-slate-500 text-xs font-bold mb-1 uppercase tracking-wider"><Building className="w-4 h-4 mr-1.5"/> Builder</div>
-                  <p className="font-bold text-slate-900 text-sm line-clamp-1">{property.builder}</p>
+                  <div className="flex items-center text-slate-400 text-[10px] font-bold mb-1.5 uppercase tracking-widest"><Maximize className="w-3.5 h-3.5 mr-1.5"/> Area</div>
+                  <p className="font-bold text-slate-900 text-sm md:text-base">{property.area || '-'} <span className="text-xs">sqft</span></p>
                 </div>
               </div>
 
               {/* Inline Help Form */}
-              <div className="mt-auto border-2 border-[#003B30]/10 rounded-xl p-4 bg-slate-50">
-                <div className="flex items-center mb-4">
-                  <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center mr-3 shrink-0">
-                    <Phone className="w-5 h-5 text-white" />
+              <div className="mt-auto border border-[#D4AF37]/30 rounded-2xl p-5 bg-[#D4AF37]/5 relative z-10">
+                <div className="flex items-center mb-5">
+                  <div className="w-10 h-10 bg-[#8B0000] rounded-full flex items-center justify-center mr-3 shrink-0 shadow-md">
+                    <Phone className="w-4 h-4 text-white" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-slate-900">Need Help with Anything?</p>
-                    <p className="text-xs text-slate-600 font-medium">Get Free Expert Consult Now!!!</p>
+                    <p className="text-sm font-black text-slate-900">Interested in this property?</p>
+                    <p className="text-xs text-slate-600 font-medium">Get a call back from our experts.</p>
                   </div>
                 </div>
-                <form onSubmit={(e) => handleLeadSubmit(e, 'Quick Form')} className="flex flex-col sm:flex-row gap-2">
-                  <Input placeholder="Name" className="bg-white border-slate-200 h-10 text-sm" value={quickForm.name} onChange={(e)=>setQuickForm({...quickForm, name: e.target.value})} required/>
-                  <Input placeholder="Phone" type="tel" className="bg-white border-slate-200 h-10 text-sm" value={quickForm.phone} onChange={(e)=>setQuickForm({...quickForm, phone: e.target.value})} required/>
-                  <Button type="submit" className="bg-[#003B30] hover:bg-[#00261c] text-white h-10 shrink-0">Submit <Share2 className="w-3 h-3 ml-2"/></Button>
+                <form onSubmit={(e) => handleLeadSubmit(e, 'Quick Form')} className="flex flex-col gap-3">
+                  <div className="flex gap-2">
+                    <Input placeholder="Name" className="bg-white border-slate-200 h-11 text-sm focus:border-[#D4AF37]" value={quickForm.name} onChange={(e)=>setQuickForm({...quickForm, name: e.target.value})} required/>
+                    <Input placeholder="Phone" type="tel" className="bg-white border-slate-200 h-11 text-sm focus:border-[#D4AF37]" value={quickForm.phone} onChange={(e)=>setQuickForm({...quickForm, phone: e.target.value})} required/>
+                  </div>
+                  <Button type="submit" className="bg-[#8B0000] hover:bg-[#600000] text-white font-bold h-11 w-full shadow-md shadow-[#8B0000]/20">Request Details</Button>
                 </form>
               </div>
 
@@ -263,203 +283,201 @@ export default function PropertyDetailPage() {
         </div>
 
         {/* --- MAIN CONTENT GRID --- */}
-        <div className="flex flex-col lg:flex-row gap-10">
+        <div className="flex flex-col lg:flex-row gap-12">
           
           {/* LEFT COLUMN: Main Details */}
-          <div className="lg:w-[65%] space-y-12">
+          <div className="lg:w-[65%] space-y-16">
             
+            {/* Overview / About Section */}
+            <section id="about">
+              <div className="flex items-center gap-3 mb-8">
+                 <FileText className="w-6 h-6 text-[#D4AF37]" />
+                 <h2 className="text-2xl md:text-3xl font-black text-slate-900">Property Overview</h2>
+              </div>
+              <div className="prose prose-lg prose-slate max-w-none text-slate-600 leading-relaxed font-medium">
+                <p>
+                  {property.description || `${property.title} is a premium ${property.property_type} located in ${property.location}, ${property.city}. It offers modern amenities and excellent connectivity.`}
+                </p>
+              </div>
+
+              <div className="mt-10 grid sm:grid-cols-2 gap-8 bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+                <div>
+                  <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Developer</h4>
+                  <p className="font-bold text-slate-900">{property.builder || 'Verified Owner/Builder'}</p>
+                </div>
+                <div>
+                  <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Furnishing</h4>
+                  <p className="font-bold text-slate-900 capitalize">{property.furnishing || 'Unfurnished'}</p>
+                </div>
+                
+                <div className="sm:col-span-2">
+                  <h4 className="font-extrabold text-slate-900 mb-4 mt-2">Property Highlights:</h4>
+                  <ul className="grid sm:grid-cols-2 gap-4">
+                    {['Spacious Layout & Natural Light', 'Premium Fittings & Fixtures', 'Excellent Neighborhood Connectivity', '24/7 Water & Power Supply'].map((item, i) => (
+                      <li key={i} className="flex items-start text-slate-600 font-medium text-sm">
+                        <CheckCircle className="w-4 h-4 text-[#D4AF37] mr-2 shrink-0 mt-0.5" /> {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </section>
+
             {/* Price List Section */}
             <section id="price-list">
-              <h2 className="text-2xl font-extrabold text-slate-900 mb-6">Price List</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div className="flex items-center gap-3 mb-8">
+                 <DollarSign className="w-6 h-6 text-[#D4AF37]" />
+                 <h2 className="text-2xl md:text-3xl font-black text-slate-900">Pricing & Floor Plans</h2>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-6">
                 {mockPriceList.map((item, idx) => (
-                  <div key={idx} className="border border-slate-200 rounded-2xl p-5 hover:border-[#003B30]/30 hover:shadow-md transition-all flex flex-col">
-                    <span className="bg-emerald-100 text-emerald-700 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded w-fit mb-3">Unit</span>
-                    <h3 className="text-xl font-bold text-slate-900 mb-4">{item.type}</h3>
+                  <div key={idx} className="bg-white border border-slate-200 rounded-3xl p-6 hover:border-[#D4AF37] hover:shadow-xl transition-all flex flex-col group cursor-pointer relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-16 h-16 bg-slate-50 rounded-bl-full -mr-8 -mt-8 group-hover:bg-[#D4AF37]/10 transition-colors"></div>
+                    <span className="text-[#8B0000] text-[10px] font-black uppercase tracking-widest mb-4">Configuration</span>
+                    <h3 className="text-2xl font-black text-slate-900 mb-4">{item.type}</h3>
                     
-                    <span className="bg-emerald-100 text-emerald-700 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded w-fit mb-1">Size</span>
-                    <p className="text-slate-600 font-medium text-sm mb-4 border-b border-slate-100 pb-4">{item.size}</p>
+                    <div className="mb-6 space-y-1">
+                      <p className="text-slate-500 font-medium text-sm">Super Area: <span className="font-bold text-slate-900">{item.size}</span></p>
+                    </div>
                     
-                    <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Price / sq.ft.</p>
-                    <p className="text-xl font-extrabold text-[#003B30] mb-6">{item.price} <span className="text-sm">Onwards</span></p>
-                    
-                    <Button className="w-full mt-auto bg-[#003B30] hover:bg-[#00261c] text-white font-bold rounded-xl h-11">
-                      Get Breakdown <FileText className="w-4 h-4 ml-2" />
-                    </Button>
+                    <div className="mt-auto pt-6 border-t border-slate-100">
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Starting From</p>
+                      <p className="text-xl font-black text-[#003B30] group-hover:text-[#8B0000] transition-colors">{item.price}</p>
+                    </div>
                   </div>
                 ))}
               </div>
               
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-center gap-4">
-                <div>
-                  <h4 className="font-bold text-slate-900">Want the exact pricing breakdown?</h4>
-                  <p className="text-sm text-slate-500">Get detailed unit-wise pricing & available offers</p>
+              <div className="bg-slate-900 rounded-3xl p-8 flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden">
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 pointer-events-none"></div>
+                <div className="relative z-10 text-white">
+                  <h4 className="text-xl font-black mb-1">Download Detailed Brochure</h4>
+                  <p className="text-sm text-slate-400 font-medium">Get floor plans, site map, and exact unit pricing.</p>
                 </div>
-                <Button className="bg-[#003B30] hover:bg-[#00261c] text-white font-bold rounded-xl h-11 px-6">
-                  Get Price List <Download className="w-4 h-4 ml-2" />
+                <Button className="relative z-10 bg-[#D4AF37] hover:bg-[#c09b2e] text-slate-900 font-black rounded-xl h-12 px-8 shadow-lg shadow-[#D4AF37]/20">
+                  Download PDF <Download className="w-4 h-4 ml-2" />
                 </Button>
               </div>
-              <p className="text-[11px] text-slate-400 mt-3">*All prices are indicative and subject to change without prior notice.</p>
             </section>
 
             {/* Amenities Section */}
             <section id="amenities">
-              <h2 className="text-2xl font-extrabold text-slate-900 mb-6">{property.title} Amenities</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {mockAmenities.map((amenity, idx) => (
-                  <div key={idx} className="border border-slate-200 rounded-2xl p-6 flex flex-col items-center justify-center text-center hover:shadow-sm hover:border-[#003B30]/20 transition-all">
-                    <amenity.icon className="w-8 h-8 text-slate-700 mb-3 stroke-[1.5]" />
-                    <span className="text-sm font-semibold text-slate-700">{amenity.name}</span>
-                  </div>
-                ))}
+              <div className="flex items-center gap-3 mb-8">
+                 <Sparkles className="w-6 h-6 text-[#D4AF37]" />
+                 <h2 className="text-2xl md:text-3xl font-black text-slate-900">Project Amenities</h2>
               </div>
-              <Button variant="outline" className="w-full mt-4 h-12 border-slate-200 text-slate-600 font-bold hover:bg-slate-50">
-                View all 16 amenities
-              </Button>
-            </section>
-
-            {/* Overview / About Section */}
-            <section id="about">
-              <h2 className="text-2xl font-extrabold text-slate-900 mb-6">Overview of {property.title}</h2>
-              <div className="prose prose-slate max-w-none text-slate-600 mb-8 leading-relaxed">
-                <p>
-                  {property.title} is a high quality, low-density residential project spread across 6 acres of land, located in Techzone 4, Greater Noida West. The project has 6 towers with G+30 floors. It has 3 BHK and 4 BHK apartments with Vastu-compliant layout, 80% open green space. It was developed under the supervision of the Supreme Court and NBCC, thus providing high accountability, elite features such as 25,000 sq. ft. clubhouse, and uninterrupted connectivity.
-                </p>
-              </div>
-
-              <div className="space-y-6">
-                <div>
-                  <span className="font-extrabold text-slate-900">Type of Property: </span>
-                  <span className="text-slate-600">{property.type || 'Residential'}</span>
+              
+              {/* Dynamic Amenities if available from backend, else mock */}
+              {property.amenities && property.amenities.length > 0 ? (
+                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                   {property.amenities.map((item, i) => (
+                      <div key={i} className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-center text-center shadow-sm">
+                        <span className="text-sm font-bold text-slate-700">{item}</span>
+                      </div>
+                   ))}
+                 </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
+                  {mockAmenities.map((amenity, idx) => (
+                    <div key={idx} className="bg-white border border-slate-200 rounded-3xl p-6 flex flex-col items-center justify-center text-center hover:shadow-lg hover:border-[#D4AF37]/50 transition-all group">
+                      <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-4 group-hover:bg-[#D4AF37]/10 transition-colors">
+                        <amenity.icon className="w-6 h-6 text-slate-500 group-hover:text-[#D4AF37] transition-colors" />
+                      </div>
+                      <span className="text-sm font-bold text-slate-700">{amenity.name}</span>
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <span className="font-extrabold text-slate-900">Property Units: </span>
-                  <span className="text-slate-600">108 units per acer (4 units on each floor)</span>
-                </div>
-
-                <div>
-                  <h4 className="font-extrabold text-slate-900 mb-4 mt-2">Location Highlights:</h4>
-                  <ul className="space-y-3">
-                    {['Centrally located in a non-congested area.', '100-meter completely developed green belt view.', 'Smooth access to major expressways.', 'Proximity to basic amenities like a top-class hospital, an international school and a marketplace.'].map((item, i) => (
-                      <li key={i} className="flex items-start text-slate-600">
-                        <ChevronRight className="w-5 h-5 text-[#003B30] mr-2 shrink-0 mt-0.5" /> {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div>
-                  <span className="font-extrabold text-slate-900">Real Estate Developer: </span>
-                  <span className="text-slate-600">{property.builder}</span>
-                </div>
-
-                <div>
-                  <h4 className="font-extrabold text-slate-900 mb-4 mt-2">Property Highlights:</h4>
-                  <ul className="space-y-3">
-                    {['Double-height designer entrance lobbies in every tower.', 'Spacious balconies with panoramic views.'].map((item, i) => (
-                      <li key={i} className="flex items-start text-slate-600">
-                        <ChevronRight className="w-5 h-5 text-[#003B30] mr-2 shrink-0 mt-0.5" /> {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
+              )}
             </section>
 
             {/* Location Map Section */}
             <section id="location">
-              <h2 className="text-2xl font-extrabold text-slate-900 mb-6">{property.title} Location</h2>
-              <div className="w-full h-[400px] bg-slate-100 rounded-2xl overflow-hidden relative border border-slate-200">
+              <div className="flex items-center gap-3 mb-8">
+                 <Map className="w-6 h-6 text-[#D4AF37]" />
+                 <h2 className="text-2xl md:text-3xl font-black text-slate-900">Neighborhood Map</h2>
+              </div>
+              <div className="w-full h-[450px] bg-slate-200 rounded-[2rem] overflow-hidden relative border-4 border-white shadow-xl">
                 <a href={mapOpenUrl} target="_blank" rel="noopener noreferrer">
-                  <Button variant="outline" className="absolute top-4 left-4 z-10 bg-white text-blue-600 font-bold border-slate-200 hover:bg-slate-50 shadow-sm">
-                    Open in Maps <Share2 className="w-4 h-4 ml-2" />
+                  <Button className="absolute top-6 left-6 z-10 bg-white text-slate-900 font-bold border-slate-200 hover:bg-slate-50 shadow-lg shadow-black/10 rounded-xl">
+                    Open in Google Maps <Share2 className="w-4 h-4 ml-2" />
                   </Button>
                 </a>
                 <iframe
                   title={`Map for ${property.title}`}
                   src={mapEmbedUrl}
-                  className="w-full h-full border-0"
+                  className="w-full h-full border-0 grayscale-[20%] opacity-90 hover:grayscale-0 hover:opacity-100 transition-all duration-500"
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
                 />
               </div>
-              <p className="flex items-center text-slate-500 font-medium mt-4">
-                <MapPin className="w-5 h-5 mr-2 text-slate-400" /> {property.location}, {property.city}
-              </p>
             </section>
 
           </div>
 
           {/* RIGHT COLUMN: Sticky Lead Form & Why Invest */}
           <div className="lg:w-[35%]">
-            <div className="sticky top-28 space-y-6">
+            <div className="sticky top-28 space-y-8">
               
               {/* Primary Sticky Form Card */}
-              <div className="bg-white rounded-[2rem] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-emerald-100 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-2 bg-[#003B30]"></div>
+              <div className="bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden text-white">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-[#D4AF37]/20 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
                 
-                <div className="mb-6">
-                  <span className="inline-block bg-[#003B30] text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3 shadow-sm">Exclusive</span>
-                  <div className="flex gap-3 items-start">
-                    <div className="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center shrink-0 mt-1 shadow-md">
-                      <Star className="w-5 h-5 text-white fill-current" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-extrabold text-slate-900 leading-tight">Get Offers You Won't Find Anywhere Else</h3>
-                      <p className="text-xs text-slate-500 mt-1 font-medium">Only from ANK Realty - Top Channel Partner</p>
-                    </div>
-                  </div>
+                <div className="mb-8 relative z-10">
+                  <span className="inline-block bg-[#8B0000] text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-md mb-4 shadow-sm">
+                    Connect with Seller
+                  </span>
+                  <h3 className="text-2xl font-black leading-tight mb-2">Interested in {property.title}?</h3>
+                  <p className="text-sm text-slate-400 font-medium">Leave your details and we will arrange a direct meeting.</p>
                 </div>
 
-                <form onSubmit={(e) => handleLeadSubmit(e, 'Exclusive Offers Form')} className="space-y-4">
+                <form onSubmit={(e) => handleLeadSubmit(e, 'Main Lead Form')} className="space-y-4 relative z-10">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-slate-700">Name</Label>
-                    <Input placeholder="Full name" className="h-12 bg-white border-slate-200 rounded-xl focus-visible:ring-[#003B30]" value={leadForm.name} onChange={(e)=>setLeadForm({...leadForm, name: e.target.value})} required/>
+                    <Label className="text-xs font-bold text-slate-300 uppercase tracking-widest pl-1">Full Name</Label>
+                    <Input placeholder="John Doe" className="h-14 bg-white/10 border-white/20 text-white placeholder:text-slate-500 rounded-xl focus:border-[#D4AF37]" value={leadForm.name} onChange={(e)=>setLeadForm({...leadForm, name: e.target.value})} required/>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-slate-700">Email</Label>
-                    <Input placeholder="you@example.com" type="email" className="h-12 bg-white border-slate-200 rounded-xl focus-visible:ring-[#003B30]" value={leadForm.email} onChange={(e)=>setLeadForm({...leadForm, email: e.target.value})} required/>
+                    <Label className="text-xs font-bold text-slate-300 uppercase tracking-widest pl-1">Email Address</Label>
+                    <Input placeholder="john@example.com" type="email" className="h-14 bg-white/10 border-white/20 text-white placeholder:text-slate-500 rounded-xl focus:border-[#D4AF37]" value={leadForm.email} onChange={(e)=>setLeadForm({...leadForm, email: e.target.value})} required/>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-slate-700">Phone</Label>
-                    <Input placeholder="+91 98765 43210" type="tel" className="h-12 bg-white border-slate-200 rounded-xl focus-visible:ring-[#003B30]" value={leadForm.phone} onChange={(e)=>setLeadForm({...leadForm, phone: e.target.value})} required/>
+                    <Label className="text-xs font-bold text-slate-300 uppercase tracking-widest pl-1">Phone Number</Label>
+                    <Input placeholder="+91 98765 43210" type="tel" className="h-14 bg-white/10 border-white/20 text-white placeholder:text-slate-500 rounded-xl focus:border-[#D4AF37]" value={leadForm.phone} onChange={(e)=>setLeadForm({...leadForm, phone: e.target.value})} required/>
                   </div>
-                  <div className="pt-2">
-                    <Button type="submit" className="w-full h-14 bg-[#003B30] hover:bg-[#00261c] text-white font-bold rounded-xl text-lg transition-all shadow-lg shadow-[#003B30]/20">
-                      Get Best Price <ChevronRight className="w-5 h-5 ml-1" />
+                  <div className="pt-4">
+                    <Button type="submit" className="w-full h-14 bg-[#D4AF37] hover:bg-[#c09b2e] text-slate-900 font-black rounded-xl text-lg transition-all shadow-lg shadow-[#D4AF37]/20 hover:-translate-y-0.5">
+                      Get Callback Now
                     </Button>
                   </div>
                 </form>
 
-                <div className="mt-5 flex items-center justify-center gap-4 text-xs font-bold text-emerald-600 bg-emerald-50 rounded-lg py-3 border border-emerald-100">
-                  <span className="flex items-center"><ShieldCheck className="w-4 h-4 mr-1.5"/> 100% Secure</span>
-                  <span className="flex items-center"><ZapIcon className="w-4 h-4 mr-1.5"/> Quick Response</span>
+                <div className="mt-6 flex items-center justify-center gap-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest border-t border-white/10 pt-6">
+                  <span className="flex items-center"><ShieldCheck className="w-4 h-4 mr-1.5 text-green-500"/> Privacy Protected</span>
                 </div>
               </div>
 
               {/* Why Invest Box */}
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
-                <h3 className="font-extrabold text-slate-900 mb-5">Why Invest?</h3>
-                <div className="space-y-5">
+              <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm">
+                <h3 className="font-black text-slate-900 mb-6 text-xl">Investment Highlights</h3>
+                <div className="space-y-6">
                   <div className="flex gap-4">
-                    <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 text-emerald-600"><ShieldCheck className="w-5 h-5"/></div>
+                    <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center shrink-0 border border-emerald-100"><ShieldCheck className="w-5 h-5 text-emerald-600"/></div>
                     <div>
-                      <h4 className="font-bold text-slate-900 text-sm">RERA Approved</h4>
-                      <p className="text-xs text-slate-500 font-medium">RERA No. {property.rera}</p>
+                      <h4 className="font-bold text-slate-900 text-sm mb-1">RERA Approved & Verified</h4>
+                      <p className="text-xs text-slate-500 font-medium leading-relaxed">Property documents and builder history have been cross-checked.</p>
                     </div>
                   </div>
                   <div className="flex gap-4">
-                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0 text-blue-600"><Building className="w-5 h-5"/></div>
+                    <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center shrink-0 border border-blue-100"><MapPin className="w-5 h-5 text-blue-600"/></div>
                     <div>
-                      <h4 className="font-bold text-slate-900 text-sm">Trusted Developer</h4>
-                      <p className="text-xs text-slate-500 font-medium">{property.builder}</p>
+                      <h4 className="font-bold text-slate-900 text-sm mb-1">Prime Accessibility</h4>
+                      <p className="text-xs text-slate-500 font-medium leading-relaxed">Located near upcoming transit hubs ensuring long-term value.</p>
                     </div>
                   </div>
                   <div className="flex gap-4">
-                    <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0 text-amber-600"><TrendingUp className="w-5 h-5"/></div>
+                    <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center shrink-0 border border-amber-100"><TrendingUp className="w-5 h-5 text-amber-600"/></div>
                     <div>
-                      <h4 className="font-bold text-slate-900 text-sm">High ROI Potential</h4>
-                      <p className="text-xs text-slate-500 font-medium">Prime location with strong appreciation</p>
+                      <h4 className="font-bold text-slate-900 text-sm mb-1">High ROI Potential</h4>
+                      <p className="text-xs text-slate-500 font-medium leading-relaxed">Historical data shows strong appreciation in this specific sector.</p>
                     </div>
                   </div>
                 </div>
@@ -470,64 +488,69 @@ export default function PropertyDetailPage() {
         </div>
       </div>
 
-      {/* --- ADDED: FOOTER SECTION --- */}
-      <footer className="bg-slate-950 text-white pt-16 pb-10 px-6 border-t-[6px] border-[#003B30] mt-10">
-        <div className="max-w-[1400px] mx-auto grid md:grid-cols-4 gap-10">
-          <div>
-            <h3 className="text-3xl font-black mb-3">ANK Realty.</h3>
-            <p className="text-slate-400 text-sm leading-relaxed">
-              Premium property discovery, verified advisory, and trusted support for buyers and investors across the nation.
-            </p>
-          </div>
-          <div>
-            <h4 className="font-bold mb-4 text-slate-200">Quick Links</h4>
-            <div className="space-y-3 text-slate-400 text-sm flex flex-col">
-              <Link to="/buy" className="hover:text-white transition-colors w-fit">Buy Property</Link>
-              <Link to="/sell" className="hover:text-white transition-colors w-fit">Sell Property</Link>
-              <Link to="/rent" className="hover:text-white transition-colors w-fit">Rent Property</Link>
+      {/* FOOTER */}
+      <footer className="bg-[#050505] text-white pt-20 pb-10 px-6 border-t-[6px] border-[#8B0000]">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+            <div className="space-y-6 pr-4">
+              <h3 className="text-3xl font-extrabold tracking-tight text-[#D4AF37]">ANK <span className="text-white">REALTY</span></h3>
+              <p className="text-slate-400 text-sm leading-relaxed font-medium">
+                The Red Carpet of Real Estate. We are committed to providing the highest level of service, transparency, and expertise in the Indian real estate market.
+              </p>
+              <div className="flex space-x-3 pt-2">
+                  <div className="w-10 h-10 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all cursor-pointer"><Mail className="w-4 h-4"/></div>
+                  <div className="w-10 h-10 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all cursor-pointer"><Phone className="w-4 h-4"/></div>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="font-bold text-base mb-6 text-white uppercase tracking-widest text-[11px]">Quick Links</h4>
+              <ul className="space-y-4 text-slate-400 font-medium text-sm">
+                <li><Link to="/buy" className="hover:text-[#D4AF37] flex items-center transition-colors"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Buy Property</Link></li>
+                <li><Link to="/sell" className="hover:text-[#D4AF37] flex items-center transition-colors"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Sell Property</Link></li>
+                <li><Link to="/rent" className="hover:text-[#D4AF37] flex items-center transition-colors"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Rent Property</Link></li>
+                <li><Link to="/contact" className="hover:text-[#D4AF37] flex items-center transition-colors"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Contact Us</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-bold text-base mb-6 text-white uppercase tracking-widest text-[11px]">Categories</h4>
+              <ul className="space-y-4 text-slate-400 font-medium text-sm">
+                <li><Link to="/buy" className="hover:text-[#D4AF37] flex items-center transition-colors"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Apartments</Link></li>
+                <li><Link to="/buy" className="hover:text-[#D4AF37] flex items-center transition-colors"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Villas</Link></li>
+                <li><Link to="/buy" className="hover:text-[#D4AF37] flex items-center transition-colors"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Plots / Land</Link></li>
+                <li><Link to="/buy" className="hover:text-[#D4AF37] flex items-center transition-colors"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Commercial</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-bold text-base mb-6 text-white uppercase tracking-widest text-[11px]">Contact Us</h4>
+              <div className="space-y-4 text-slate-400 font-medium text-sm">
+                <div className="flex items-start bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                  <MapPin className="w-5 h-5 mr-3 text-[#D4AF37] shrink-0" /> 
+                  <p className="text-xs leading-relaxed">Tapasya Corp Heights, Sector 126, Noida, UP</p>
+                </div>
+                <div className="flex items-center bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                  <Mail className="w-5 h-5 mr-3 text-[#D4AF37] shrink-0" /> 
+                  <p className="text-xs">info@ankrealty.com</p>
+                </div>
+                <div className="flex items-center bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                  <Phone className="w-5 h-5 mr-3 text-[#D4AF37] shrink-0" /> 
+                  <p className="text-xs">+91 98765 43210</p>
+                </div>
+              </div>
             </div>
           </div>
-          <div>
-            <h4 className="font-bold mb-4 text-slate-200">Resources</h4>
-            <div className="space-y-3 text-slate-400 text-sm flex flex-col">
-              <Link to="/blog" className="hover:text-white transition-colors w-fit">Blog & Insights</Link>
-              <Link to="/about" className="hover:text-white transition-colors w-fit">About Us</Link>
-              <Link to="/contact" className="hover:text-white transition-colors w-fit">Contact Support</Link>
+          
+          <div className="border-t border-slate-800/80 pt-6 flex flex-col md:flex-row justify-between items-center text-xs text-slate-500 font-medium">
+            <p>&copy; {new Date().getFullYear()} ANK Realty. All rights reserved.</p>
+            <div className="flex space-x-6 mt-4 md:mt-0">
+                <Link to="/privacy" className="hover:text-[#D4AF37] transition-colors">Privacy Policy</Link>
+                <Link to="/terms" className="hover:text-[#D4AF37] transition-colors">Terms of Service</Link>
             </div>
-          </div>
-          <div>
-            <h4 className="font-bold mb-4 text-slate-200">Contact Us</h4>
-            <div className="space-y-3 text-slate-400 text-sm flex flex-col">
-              <p className="flex items-start">
-                <MapPin className="w-4 h-4 mr-2 mt-0.5 text-[#003B30] shrink-0" /> Tapasya Corp Heights, Noida, UP
-              </p>
-              <p className="flex items-center">
-                <Mail className="w-4 h-4 mr-2 text-[#003B30] shrink-0" /> info@ankrealty.com
-              </p>
-              <p className="flex items-center">
-                <Phone className="w-4 h-4 mr-2 text-[#003B30] shrink-0" /> +91 98765 43210
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="max-w-[1400px] mx-auto border-t border-slate-800 mt-10 pt-6 text-sm text-slate-500 flex flex-col md:flex-row justify-between items-center">
-          <p>© {new Date().getFullYear()} ANK Realty. All rights reserved.</p>
-          <div className="flex space-x-6 mt-4 md:mt-0">
-            <Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-            <Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
           </div>
         </div>
       </footer>
-      
-      {/* FLOATING CHATBOT ICON (Matched to theme) */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <button className="bg-[#003B30] hover:bg-[#00261c] text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-transform flex items-center justify-center group border border-white/10 relative">
-          <MessageSquare className="w-7 h-7" />
-          <div className="absolute right-full mr-4 bottom-1/2 translate-y-1/2 bg-white text-slate-800 text-sm font-bold py-2 px-4 rounded-2xl rounded-br-sm shadow-[0_4px_20px_rgb(0,0,0,0.1)] border border-slate-100 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-            Hi, I'm your real estate assistant
-          </div>
-        </button>
-      </div>
 
     </div>
   );
