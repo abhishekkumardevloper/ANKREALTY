@@ -1,7 +1,7 @@
+// src/pages/RentPage.jsx (Used for Resale Properties)
 import React, { useState, useEffect, useMemo } from "react";
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
-import resaleListings from '../lib/resaleListings'; // Your new 70-item data array
 import Navbar from "../components/Navbar";
 import { Button } from "@/components/ui/button";
 import { 
@@ -13,8 +13,8 @@ import {
   XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, CartesianGrid 
 } from 'recharts';
 
-// API Configuration
-const API_URL = 'http://127.0.0.1:8000/api/properties';
+// API Configuration matching your environment
+const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000/api";
 
 const rentTrends = [
   { month: 'Jan', price: 24000 }, 
@@ -29,29 +29,27 @@ const rentTrends = [
 
 export default function RentPage() {
   const navigate = useNavigate(); 
+  
+  // DYNAMIC DATA STATES
   const [resaleProperties, setResaleProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   
+  // FILTER STATES
   const [searchCity, setSearchCity] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [propertyType, setPropertyType] = useState("");
   const [sortBy, setSortBy] = useState("newest");
 
+  // FETCH DATA FROM BACKEND
   useEffect(() => {
     const fetchResaleProperties = async () => {
+      setLoading(true);
       try {
-        const response = await axios.get(API_URL);
-        const activeResale = Array.isArray(response.data)
-          ? response.data.filter((p) => {
-              const status = (p.status || "").toLowerCase();
-              const category = (p.category || p.type || "").toLowerCase();
-              return (status === "active" || status === "approved") && (category === "sell" || category === "resale");
-            })
-          : [];
-        setResaleProperties([...resaleListings, ...activeResale]);
+        // Fetch properties strictly in the 'resale' category
+        const response = await axios.get(`${API_BASE}/properties?category=resale&limit=100`);
+        setResaleProperties(response.data || []);
       } catch (error) {
         console.error("Error fetching resale properties:", error);
-        setResaleProperties(resaleListings); // Fallback to your Excel listings
       } finally {
         setLoading(false);
       }
@@ -59,19 +57,31 @@ export default function RentPage() {
     fetchResaleProperties();
   }, []);
 
+  // FILTER & SORT LOGIC
   const filteredAndSortedRentals = useMemo(() => {
     let result = resaleProperties.filter(r => {
-      const matchesCity = searchCity ? (r.city?.toLowerCase().includes(searchCity.toLowerCase()) || r.title?.toLowerCase().includes(searchCity.toLowerCase())) : true;
+      const matchesCity = searchCity 
+        ? (r.city?.toLowerCase().includes(searchCity.toLowerCase()) || r.title?.toLowerCase().includes(searchCity.toLowerCase()) || r.location?.toLowerCase().includes(searchCity.toLowerCase())) 
+        : true;
       const matchesPrice = maxPrice ? Number(r.price) <= Number(maxPrice) : true;
-      const matchesType = propertyType ? (r.property_type || r.category || r.type || "").toLowerCase() === propertyType.toLowerCase() : true;
+      const matchesType = propertyType ? (r.property_type || "").toLowerCase() === propertyType.toLowerCase() : true;
+      
       return matchesCity && matchesPrice && matchesType;
     });
 
+    // Sorting
     if (sortBy === "price_low") result.sort((a, b) => Number(a.price) - Number(b.price));
     else if (sortBy === "price_high") result.sort((a, b) => Number(b.price) - Number(a.price));
+    // Default 'newest' is handled by the backend's descending created_at sort
     
     return result;
   }, [resaleProperties, searchCity, maxPrice, propertyType, sortBy]);
+
+  // Helper to safely get the main image
+  const getMainImage = (property) => {
+    if (property.images && property.images.length > 0) return property.images[0];
+    return property.imageUrl || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80"; // Fallback
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans relative selection:bg-[#D4AF37]/30">
@@ -184,26 +194,21 @@ export default function RentPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredAndSortedRentals.map((property) => {
-               const coverImage = property.images && property.images.length > 0 
-                 ? property.images[0] 
-                 : property.imageUrl || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80";
-
-              return (
+            {filteredAndSortedRentals.map((property) => (
                 <div 
                   key={property.id} 
                   className="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-2xl hover:border-[#D4AF37]/50 transition-all duration-300 group cursor-pointer flex flex-col transform hover:-translate-y-1"
-                  onClick={() => navigate(`/property/${property.id}`)}
+                  onClick={() => navigate(`/property/${property.id}`, { state: { property } })}
                 >
                   <div className="h-60 relative overflow-hidden p-2">
                      <div className="w-full h-full rounded-3xl overflow-hidden relative">
                        <img 
-                         src={coverImage} 
+                         src={getMainImage(property)} 
                          alt={property.title}
                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                        />
                        <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm text-slate-900 px-3 py-1 rounded-lg text-xs font-black uppercase shadow-sm flex items-center gap-1.5">
-                         <span className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse"></span> Resale
+                         <span className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse"></span> {property.projectStatus || 'Resale'}
                        </div>
                        <button className="absolute top-3 right-3 p-2 bg-black/20 hover:bg-[#8B0000] backdrop-blur-md rounded-full text-white transition-all border border-white/20">
                          <ShieldCheck className="w-4 h-4" />
@@ -214,17 +219,19 @@ export default function RentPage() {
                   <div className="p-6 pt-3 flex-1 flex flex-col">
                      <div className="flex justify-between items-start mb-2">
                          <p className="text-[#8B0000] text-xs font-bold uppercase tracking-wider bg-slate-50 border border-slate-100 px-2 py-1 rounded-md">
-                           {property.category || property.type || 'Resale'}
+                           {property.property_type || property.type || 'Property'}
                          </p>
                      </div>
                      <h3 className="font-black text-xl text-slate-900 line-clamp-1 mb-2 group-hover:text-[#8B0000] transition-colors">
                        {property.title}
                      </h3>
-                     <p className="text-slate-500 text-sm flex items-center mb-5"><MapPin className="w-4 h-4 mr-1 text-slate-400"/> {property.city}</p>
+                     <p className="text-slate-500 text-sm flex items-center mb-5">
+                       <MapPin className="w-4 h-4 mr-1 text-slate-400"/> {property.location}, {property.city}
+                     </p>
                      
                      <div className="grid grid-cols-3 gap-2 mb-6 text-slate-600 text-sm font-bold">
                         <div className="flex flex-col items-center justify-center bg-slate-50 py-2.5 rounded-xl border border-slate-100">
-                          <Bed className="w-4 h-4 text-[#D4AF37] mb-1"/> {property.bedrooms || '-'}
+                          <Bed className="w-4 h-4 text-[#D4AF37] mb-1"/> {property.bhk || '-'}
                         </div>
                         <div className="flex flex-col items-center justify-center bg-slate-50 py-2.5 rounded-xl border border-slate-100">
                           <Bath className="w-4 h-4 text-[#D4AF37] mb-1"/> {property.bathrooms || '-'}
@@ -238,7 +245,7 @@ export default function RentPage() {
                         <div>
                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Expected Price</p>
                            <span className="text-2xl font-black text-slate-900">
-                             {property.price > 0 ? `₹${Number(property.price).toLocaleString('en-IN')}` : property.priceText || 'On Request'}
+                             {property.price > 0 ? `₹${property.price >= 10000000 ? (property.price / 10000000).toFixed(2) + ' Cr' : (property.price / 100000).toFixed(2) + ' Lac'}` : 'On Request'}
                            </span>
                         </div>
                         <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-[#8B0000] group-hover:text-[#D4AF37] transition-colors">
@@ -247,8 +254,7 @@ export default function RentPage() {
                      </div>
                   </div>
                 </div>
-              );
-            })}
+            ))}
           </div>
         )}
       </section>
