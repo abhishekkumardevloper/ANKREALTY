@@ -1,3 +1,4 @@
+// src/pages/BuyPage.jsx
 import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from "../components/Navbar";
@@ -9,107 +10,12 @@ import {
   Phone, ShieldCheck, MessageSquare, Send, Mail
 } from "lucide-react";
 
-// --- EXPLICIT HARDCODED PROPERTY DATA ---
-const propertyListings = [
-  // FRESH PROPERTIES - NOIDA RESIDENTIAL
-  { 
-    id: 'f1', title: 'Experion Saatori', city: 'Noida', location: 'Sec 151', category: 'buy', type: 'apartment', bedrooms: 4, bathrooms: 4, price: 18500000, area: 2400, 
-    images: [
-      'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80',
-      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200&q=80',
-      'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&q=80',
-      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=80'
-    ]
-  },
-  { 
-    id: 'f2', title: 'Smart World Elie Saab', city: 'Noida', location: 'Sec 98', category: 'buy', type: 'villa', bedrooms: 5, bathrooms: 5, price: 22000000, area: 3100, 
-    images: [
-      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=1200&q=80',
-      'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=1200&q=80',
-      'https://images.unsplash.com/photo-1502672260266-1c1de2d96674?w=1200&q=80',
-      'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&q=80'
-    ]
-  },
-  { 
-    id: 'f3', title: 'M3M Jacob & Co', city: 'Noida', location: 'Sec 97', category: 'buy', type: 'apartment', bedrooms: 4, bathrooms: 5, price: 35000000, area: 4500, 
-    images: [
-      'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=1200&q=80',
-      'https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=1200&q=80',
-      'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=1200&q=80',
-      'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=1200&q=80'
-    ]
-  },
-  { 
-    id: 'f4', title: 'Max Estate', city: 'Noida', location: 'Sec 105', category: 'buy', type: 'apartment', bedrooms: 3, bathrooms: 3, price: 17500000, area: 2200, 
-    images: [
-      'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=1200&q=80',
-      'https://images.unsplash.com/photo-1536376072261-38c75010e6c9?w=1200&q=80',
-      'https://images.unsplash.com/photo-1593696140826-c58b021acf8b?w=1200&q=80',
-      'https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6?w=1200&q=80'
-    ]
-  },
-  { 
-    id: 'f5', title: 'RG Mirage', city: 'Noida', location: 'Sec 120', category: 'buy', type: 'apartment', bedrooms: 3, bathrooms: 2, price: 11000000, area: 1600, 
-    images: [
-      'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80',
-      'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=1200&q=80',
-      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=1200&q=80',
-      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200&q=80'
-    ]
-  },
-  { 
-    id: 'f6', title: 'Godrej Riverine', city: 'Noida', location: 'Sec 44', category: 'buy', type: 'apartment', bedrooms: 4, bathrooms: 4, price: 21000000, area: 2800, 
-    images: [
-      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=80',
-      'https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=1200&q=80',
-      'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=1200&q=80',
-      'https://images.unsplash.com/photo-1502672260266-1c1de2d96674?w=1200&q=80'
-    ]
-  },
-  
-  // FRESH PROPERTIES - NOIDA COMMERCIAL (Plots)
-  { 
-    id: 'c1', title: 'M3M Line Plot', city: 'Noida', location: 'Sec 72', category: 'buy', type: 'plot', bedrooms: 0, bathrooms: 0, price: 8000000, area: 500, 
-    images: [
-      'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80',
-      'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80',
-      'https://images.unsplash.com/photo-1416331108676-a22ccb276e35?w=1200&q=80',
-      'https://images.unsplash.com/photo-1556800045-89b531dc1b76?w=1200&q=80'
-    ]
-  },
-  { 
-    id: 'c2', title: 'Max Estate Commercial', city: 'Noida', location: 'Sec 105', category: 'buy', type: 'commercial', bedrooms: 0, bathrooms: 2, price: 12000000, area: 1200, 
-    images: [
-      'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=1200&q=80',
-      'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=1200&q=80',
-      'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80',
-      'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80'
-    ]
-  },
-
-  // FRESH PROPERTIES - GREATER NOIDA WEST
-  { 
-    id: 'gw1', title: 'Fusion – The Brook', city: 'Greater Noida West', location: 'Sec 12', category: 'buy', type: 'apartment', bedrooms: 2, bathrooms: 2, price: 8500000, area: 1300, 
-    images: [
-      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200&q=80',
-      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=80',
-      'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=1200&q=80',
-      'https://images.unsplash.com/photo-1502672260266-1c1de2d96674?w=1200&q=80'
-    ]
-  },
-  { 
-    id: 'gw2', title: 'Yatharth Eternia', city: 'Greater Noida West', location: 'Tech Zone 4', category: 'buy', type: 'apartment', bedrooms: 3, bathrooms: 2, price: 9200000, area: 1450, 
-    images: [
-      'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80',
-      'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=1200&q=80',
-      'https://images.unsplash.com/photo-1536376072261-38c75010e6c9?w=1200&q=80',
-      'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=1200&q=80'
-    ]
-  }
-];
+const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:8000/api";
 
 export default function BuyPage() {
   const navigate = useNavigate();
+  
+  // DYNAMIC DATA STATES
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   
@@ -134,14 +40,25 @@ export default function BuyPage() {
   const [intRate, setIntRate] = useState(8.5);
   const [tenure, setTenure] = useState(20);
 
-  // FETCH DATA
+  // FETCH DATA FROM BACKEND
   useEffect(() => {
-    // Simulating API load for the hardcoded data
-    const timer = setTimeout(() => {
-      setProperties(propertyListings);
-      setLoading(false);
-    }, 800);
-    return () => clearTimeout(timer);
+    const fetchProperties = async () => {
+      setLoading(true);
+      try {
+        // Fetch properties strictly in the 'buy' category
+        const response = await fetch(`${API_BASE}/properties?category=buy&limit=100`);
+        if (response.ok) {
+          const data = await response.json();
+          setProperties(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch properties:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchProperties();
   }, []);
 
   // Filter & Sort Logic
@@ -151,7 +68,7 @@ export default function BuyPage() {
         ? (p.city?.toLowerCase().includes(searchCity.toLowerCase()) || p.location?.toLowerCase().includes(searchCity.toLowerCase()) || p.title?.toLowerCase().includes(searchCity.toLowerCase())) 
         : true;
       const matchesPrice = maxPrice ? Number(p.price) <= Number(maxPrice) : true;
-      const matchesType = propertyType ? p.type?.toLowerCase() === propertyType.toLowerCase() : true;
+      const matchesType = propertyType ? p.property_type?.toLowerCase() === propertyType.toLowerCase() : true;
       
       return matchesCity && matchesPrice && matchesType;
     });
@@ -159,6 +76,7 @@ export default function BuyPage() {
     // Sorting
     if (sortBy === "price_low") result.sort((a, b) => Number(a.price) - Number(b.price));
     else if (sortBy === "price_high") result.sort((a, b) => Number(b.price) - Number(a.price));
+    // Default 'newest' is handled by the backend's descending created_at sort
     
     return result;
   }, [properties, searchCity, maxPrice, propertyType, sortBy]);
@@ -172,6 +90,12 @@ export default function BuyPage() {
       return Math.round((p * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1));
     }
     return 0;
+  };
+
+  // Helper to safely get the main image
+  const getMainImage = (property) => {
+    if (property.images && property.images.length > 0) return property.images[0];
+    return 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80'; // Fallback
   };
 
   return (
@@ -296,7 +220,7 @@ export default function BuyPage() {
                   <div className="h-60 relative overflow-hidden p-2">
                      <div className="w-full h-full rounded-3xl overflow-hidden relative">
                        <img 
-                         src={property.images[0]} 
+                         src={getMainImage(property)} 
                          alt={property.title}
                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                        />
@@ -312,7 +236,7 @@ export default function BuyPage() {
                   <div className="p-6 pt-4 flex-1 flex flex-col">
                      <div className="flex justify-between items-start mb-2">
                         <p className="text-[#8B0000] text-xs font-bold uppercase tracking-wider bg-slate-50 border border-slate-100 px-2 py-1 rounded-md">
-                          {property.type || 'Property'}
+                          {property.property_type || 'Property'}
                         </p>
                      </div>
                      <h3 className="text-xl font-black text-slate-900 mb-2 line-clamp-1 group-hover:text-[#8B0000] transition-colors">
@@ -325,7 +249,7 @@ export default function BuyPage() {
                      {/* Features */}
                      <div className="grid grid-cols-3 gap-2 mb-6 text-slate-600 text-sm font-bold">
                         <div className="flex flex-col items-center justify-center bg-slate-50 py-2 rounded-xl border border-slate-100">
-                          <Bed className="w-4 h-4 text-[#D4AF37] mb-1"/> {property.bedrooms || '-'}
+                          <Bed className="w-4 h-4 text-[#D4AF37] mb-1"/> {property.bhk || '-'}
                         </div>
                         <div className="flex flex-col items-center justify-center bg-slate-50 py-2 rounded-xl border border-slate-100">
                           <Bath className="w-4 h-4 text-[#D4AF37] mb-1"/> {property.bathrooms || '-'}
