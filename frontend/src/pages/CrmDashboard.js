@@ -11,7 +11,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 export default function CrmDashboard() {
-  const { api, user } = useAuth ? useAuth() : { api: null, user: null }; // Fallback if auth context is missing
+ const auth = useAuth(); // Hook ko directly call karein
+const api = auth?.api;
+const user = auth?.user;
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [searchTerm, setSearchTerm] = useState('');
