@@ -11,11 +11,14 @@ import { useAuth } from '@/contexts/AuthContext';
 
 // Helper function to safely extract FastAPI error messages
 const getErrorMessage = (error) => {
-  // Added optional chaining (?.) to prevent React white-screen crashes if error object is malformed
   if (error?.response?.data?.detail) {
     const detail = error.response.data.detail;
     if (typeof detail === 'string') return detail;
-    if (Array.isArray(detail) && detail.length > 0) return `Error: ${detail[0].msg}`;
+    if (Array.isArray(detail) && detail.length > 0) {
+      // Pulls the exact field name that is failing
+      const fieldName = detail[0].loc ? detail[0].loc[detail[0].loc.length - 1] : 'Field';
+      return `Error in ${fieldName}: ${detail[0].msg}`;
+    }
   }
   return error?.message || 'An unexpected error occurred.';
 };
@@ -82,16 +85,21 @@ export default function AdminPanel() {
   }, [page, properties]);
 
   // --- THE FIX ---
-  // DO NOT set 'Content-Type': 'multipart/form-data' manually.
-  // Axios automatically sets it WITH the required boundary string when you pass a FormData object.
   const saveProperty = async (payload) => {
     try {
+      // Explicitly tell Axios to send this as a multipart form
+      // so it doesn't accidentally flatten your payload into an empty JSON object.
+      const config = {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      };
+
       if (editing) {
-        // Just pass the payload. Axios handles the headers perfectly.
-        await api.put(`/properties/${editing.id}`, payload);
+        await api.put(`/properties/${editing.id}`, payload, config);
         toast.success('Property updated successfully.');
       } else {
-        await api.post('/properties', payload);
+        await api.post('/properties', payload, config);
         toast.success('Property created successfully.');
       }
       setEditing(null);
