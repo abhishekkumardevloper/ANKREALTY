@@ -7,7 +7,7 @@ import {
   Heart, ShieldCheck, Share2, CheckCircle, Info, ChevronRight, 
   Image as ImageIcon, Download, FileText, Check, Building,
   TrendingUp, Coffee, Zap, ArrowUpDown, Shield, Dumbbell, Droplets, Wind,
-  Star, Lock, Zap as ZapIcon, MessageSquare, Map, DollarSign, Sparkles // <-- FIXED: Added Sparkles here!
+  Star, Lock, Zap as ZapIcon, MessageSquare, Map, DollarSign, Sparkles
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { Button } from '@/components/ui/button';
@@ -16,15 +16,7 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
 
-// Using Vite environment variable to match your HomePage
 const API_BASE = import.meta.env.VITE_API_URL || "https://ankrealty.onrender.com/api";
-
-// --- MOCK DATA FOR NEW SECTIONS ---
-const mockPriceList = [
-  { type: "3 BHK", size: "1932 Sq.ft.", price: "₹ 1.72 CR*" },
-  { type: "3 BHK + Study", size: "2239 Sq.ft.", price: "₹ 1.99 CR*" },
-  { type: "4 BHK + Study", size: "2625 Sq.ft.", price: "₹ 2.33 CR*" },
-];
 
 const mockAmenities = [
   { name: "Cafeteria/Food Court", icon: Coffee },
@@ -42,7 +34,6 @@ export default function PropertyDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  // Safe fallback if useAuth isn't perfectly configured
   const auth = useAuth();
   const user = auth?.user;
 
@@ -59,7 +50,6 @@ export default function PropertyDetailPage() {
       const response = await axios.get(`${API_BASE}/properties/${id}`);
       setProperty(response.data);
     } catch (error) {
-      // If API fails, try to use state passed from previous page
       const fallbackProperty = location.state?.property;
       if (fallbackProperty) {
         setProperty({
@@ -111,7 +101,6 @@ export default function PropertyDetailPage() {
 
   if (!property) return null;
 
-  // FIXED: Proper string interpolation (added the missing $) and valid Google Maps URLs
   const mapQuery = encodeURIComponent(`${property.title}, ${property.location || property.area || ''}, ${property.city || ''}`);
   const mapEmbedUrl = `https://maps.google.com/maps?q=${mapQuery}&output=embed`;
   const mapOpenUrl = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
@@ -127,18 +116,32 @@ export default function PropertyDetailPage() {
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
     if (element) {
-      const yOffset = -120; // Adjust for sticky header
+      const yOffset = -120;
       const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
       window.scrollTo({ top: y, behavior: 'smooth' });
     }
   };
 
-  // Safe currency format
   const formattedPrice = property.price 
     ? property.price >= 10000000 
       ? `₹ ${(property.price / 10000000).toFixed(2)} Cr` 
       : `₹ ${(property.price / 100000).toFixed(2)} Lac`
     : 'Price on Request';
+
+  // Generate dynamic floor plans based on real property data
+  const dynamicFloorPlans = property.floorPlans && property.floorPlans.length > 0 
+    ? property.floorPlans 
+    : [
+        {
+          type: property.bhk ? `${property.bhk} BHK` : property.configurations || property.property_type || "Premium Unit",
+          size: property.area ? `${property.area} Sq.ft.` : "Size on Request",
+          price: formattedPrice,
+          // Calculate Per Sq Ft if both price and area are available
+          perSqFt: (property.price && property.area && !isNaN(property.price) && !isNaN(property.area)) 
+            ? `₹ ${Math.round(property.price / property.area).toLocaleString('en-IN')}/sq.ft.` 
+            : null
+        }
+      ];
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans selection:bg-[#D4AF37]/30 text-slate-800 pb-0 relative">
@@ -296,9 +299,12 @@ export default function PropertyDetailPage() {
                  <FileText className="w-6 h-6 text-[#D4AF37]" />
                  <h2 className="text-2xl md:text-3xl font-black text-slate-900">Property Overview</h2>
               </div>
-              <div className="prose prose-lg prose-slate max-w-none text-slate-600 leading-relaxed font-medium">
-                <p>
-                  {property.description || `${property.title} is a premium ${property.property_type} located in ${property.location}, ${property.city}. It offers modern amenities and excellent connectivity.`}
+              
+              {/* FIXED ALIGNMENT FOR DESCRIPTION */}
+              <div className="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-2 h-full bg-[#D4AF37]"></div>
+                <p className="text-slate-700 leading-relaxed md:leading-loose text-justify whitespace-pre-line text-base md:text-lg font-medium">
+                  {property.description || `${property.title} is a premium ${property.property_type || 'property'} located in the prime area of ${property.location}, ${property.city}. \n\nDesigned with modern architecture and exceptional space planning, it offers an unparalleled lifestyle. Enjoy seamless connectivity to major commercial hubs, renowned schools, and top-tier hospitals. The property is equipped with top-of-the-line amenities ensuring absolute comfort, security, and convenience for you and your family.`}
                 </p>
               </div>
 
@@ -325,21 +331,26 @@ export default function PropertyDetailPage() {
               </div>
             </section>
 
-            {/* Price List Section */}
+            {/* Pricing & Floor Plans Section */}
             <section id="price-list">
               <div className="flex items-center gap-3 mb-8">
                  <DollarSign className="w-6 h-6 text-[#D4AF37]" />
                  <h2 className="text-2xl md:text-3xl font-black text-slate-900">Pricing & Floor Plans</h2>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-6">
-                {mockPriceList.map((item, idx) => (
+              
+              {/* DYNAMIC REAL DATA RENDERING */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
+                {dynamicFloorPlans.map((item, idx) => (
                   <div key={idx} className="bg-white border border-slate-200 rounded-3xl p-6 hover:border-[#D4AF37] hover:shadow-xl transition-all flex flex-col group cursor-pointer relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-16 h-16 bg-slate-50 rounded-bl-full -mr-8 -mt-8 group-hover:bg-[#D4AF37]/10 transition-colors"></div>
                     <span className="text-[#8B0000] text-[10px] font-black uppercase tracking-widest mb-4">Configuration</span>
-                    <h3 className="text-2xl font-black text-slate-900 mb-4">{item.type}</h3>
+                    <h3 className="text-2xl font-black text-slate-900 mb-4 truncate">{item.type}</h3>
                     
-                    <div className="mb-6 space-y-1">
+                    <div className="mb-6 space-y-2">
                       <p className="text-slate-500 font-medium text-sm">Super Area: <span className="font-bold text-slate-900">{item.size}</span></p>
+                      {item.perSqFt && (
+                         <p className="text-slate-500 font-medium text-sm">Avg. Price: <span className="font-bold text-slate-900">{item.perSqFt}</span></p>
+                      )}
                     </div>
                     
                     <div className="mt-auto pt-6 border-t border-slate-100">
@@ -369,7 +380,6 @@ export default function PropertyDetailPage() {
                  <h2 className="text-2xl md:text-3xl font-black text-slate-900">Project Amenities</h2>
               </div>
               
-              {/* Dynamic Amenities if available from backend, else mock */}
               {property.amenities && property.amenities.length > 0 ? (
                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                    {property.amenities.map((item, i) => (
