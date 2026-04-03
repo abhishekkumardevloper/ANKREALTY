@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { 
   Calendar, Home, MessageSquare, Phone, Search, TrendingUp, Users, 
-  Plus, X, MapPin, Building, Mail, Clock, ArrowRight, ShieldCheck, CheckCircle
+  Plus, X, MapPin, Building, Mail, Clock, ArrowRight, ShieldCheck, CheckCircle, Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,7 @@ export default function CrmDashboard() {
   const user = auth?.user;
   
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -43,7 +44,6 @@ export default function CrmDashboard() {
     
     setLoading(true);
     try {
-      // FIXED: Removed simulated data and connected to the live backend route!
       const response = await api.get('/dashboard/agent');
       
       if (response.data) {
@@ -57,7 +57,7 @@ export default function CrmDashboard() {
       }
     } catch (error) {
       console.error("Dashboard Fetch Error:", error);
-      toast.error('Failed to load live CRM data.');
+      toast.error('Failed to load CRM data. Please refresh.');
     } finally {
       setLoading(false);
     }
@@ -76,39 +76,41 @@ export default function CrmDashboard() {
 
   const filteredInquiries = useMemo(() => 
     data.inquiries.filter((item) => 
-      [item.from_user_name, item.message, item.property_id].filter(Boolean).some((field) => String(field).toLowerCase().includes(searchTerm.toLowerCase()))
+      [item.from_user_name, item.message, item.property_id, item.phone].filter(Boolean).some((field) => String(field).toLowerCase().includes(searchTerm.toLowerCase()))
     ), 
   [data.inquiries, searchTerm]);
 
-  // Handle Manual Lead Submission
-  const handleAddLeadSubmit = (e) => {
+  // Handle Manual Lead Submission (Connected to Real API)
+  const handleAddLeadSubmit = async (e) => {
     e.preventDefault();
     if (!newLead.clientName || !newLead.phone) {
       toast.error("Name and Phone are required!");
       return;
     }
 
-    // Create a new mock lead object for the UI
-    const createdLead = {
-      id: `manual_${Date.now()}`,
-      from_user_name: newLead.clientName,
-      phone: newLead.phone,
-      property_id: newLead.propertyId || 'General Inquiry',
-      message: newLead.message || 'Added manually via CRM.',
-      created_at: new Date().toISOString(),
-      isManual: true
-    };
+    setIsSubmitting(true);
+    try {
+      // Post to the unified contacts route
+      await api.post('/contacts', {
+        name: newLead.clientName,
+        phone: newLead.phone,
+        email: 'N/A', 
+        interest: newLead.propertyId || 'Manual CRM Entry',
+        message: newLead.message || 'Added manually via Agent CRM.'
+      });
 
-    // Update state to show the manually added lead immediately in the pipeline
-    setData(prev => ({
-      ...prev,
-      total_inquiries: prev.total_inquiries + 1,
-      inquiries: [createdLead, ...prev.inquiries]
-    }));
-
-    toast.success("New lead added successfully!");
-    setIsAddLeadOpen(false);
-    setNewLead({ clientName: '', phone: '', propertyId: '', message: '' });
+      toast.success("New lead logged successfully!");
+      setIsAddLeadOpen(false);
+      setNewLead({ clientName: '', phone: '', propertyId: '', message: '' });
+      
+      // Refresh dashboard data to immediately show the new lead
+      await fetchDashboardData();
+    } catch (error) {
+      console.error("Add Lead Error:", error);
+      toast.error("Failed to add lead. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const stats = [
@@ -121,8 +123,8 @@ export default function CrmDashboard() {
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans selection:bg-[#D4AF37]/30">
       
-      {/* SIDEBAR */}
-      <aside className="w-64 bg-[#050505] text-slate-300 flex flex-col fixed h-full z-20 border-r border-slate-800 shadow-2xl">
+      {/* SIDEBAR - Hidden on mobile, visible on medium screens and up */}
+      <aside className="w-64 bg-[#050505] text-slate-300 flex-col fixed h-full z-20 border-r border-slate-800 shadow-2xl hidden md:flex">
         <div className="h-20 flex items-center px-6 border-b border-slate-800 bg-[#000000]">
           <h1 className="text-2xl font-black text-[#D4AF37] tracking-tight">ANK<span className="text-white">REALTY</span></h1>
           <span className="bg-[#8B0000] text-white text-[10px] font-bold px-2 py-0.5 rounded ml-3 uppercase tracking-widest">CRM</span>
@@ -155,7 +157,7 @@ export default function CrmDashboard() {
               {user?.name?.charAt(0) || 'A'}
             </div>
             <div>
-              <p className="text-sm font-bold text-white leading-tight">{user?.name || 'Agent User'}</p>
+              <p className="text-sm font-bold text-white leading-tight truncate w-32">{user?.name || 'Agent User'}</p>
               <p className="text-[10px] text-[#D4AF37] uppercase tracking-widest font-bold">{user?.role || 'Broker'}</p>
             </div>
           </div>
@@ -163,40 +165,50 @@ export default function CrmDashboard() {
       </aside>
 
       {/* MAIN CONTENT */}
-      <main className="ml-64 flex-1 flex flex-col min-h-screen">
+      <main className="md:ml-64 flex-1 flex flex-col min-h-screen">
         
         {/* TOP HEADER */}
-        <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 sticky top-0 z-10 shadow-sm">
-          <h2 className="text-2xl font-black text-slate-900 capitalize flex items-center gap-2">
+        <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-8 sticky top-0 z-10 shadow-sm">
+          <h2 className="text-xl md:text-2xl font-black text-slate-900 capitalize flex items-center gap-2">
             {activeTab.replace('-', ' ')}
           </h2>
           
-          <div className="flex items-center gap-4">
-            <div className="relative group">
+          <div className="flex items-center gap-3 md:gap-4">
+            <div className="relative group hidden sm:block">
               <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#8B0000] transition-colors" />
               <Input 
-                placeholder="Search leads, names, or properties..." 
+                placeholder="Search leads or properties..." 
                 value={searchTerm} 
                 onChange={(e) => setSearchTerm(e.target.value)} 
-                className="pl-10 w-72 lg:w-96 bg-slate-50 border-slate-200 rounded-full h-11 focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 transition-all font-medium" 
+                className="pl-10 w-64 lg:w-80 bg-slate-50 border-slate-200 rounded-full h-11 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20 transition-all font-medium" 
               />
             </div>
-            <Button onClick={() => setIsAddLeadOpen(true)} className="bg-[#8B0000] hover:bg-[#600000] text-white font-bold rounded-full h-11 px-6 shadow-md shadow-[#8B0000]/20 transition-all hover:-translate-y-0.5 hidden sm:flex">
-              <Plus className="w-4 h-4 mr-1.5" /> Add Lead
+            <Button onClick={() => setIsAddLeadOpen(true)} className="bg-[#8B0000] hover:bg-[#600000] text-white font-bold rounded-full h-11 px-4 sm:px-6 shadow-md shadow-[#8B0000]/20 transition-all hover:-translate-y-0.5">
+              <Plus className="w-4 h-4 sm:mr-1.5" /> <span className="hidden sm:inline">Add Lead</span>
             </Button>
           </div>
         </header>
 
         {/* SCROLLABLE AREA */}
-        <div className="p-8 flex-1 overflow-y-auto">
+        <div className="p-4 md:p-8 flex-1 overflow-y-auto">
           
           {/* TAB: DASHBOARD */}
           {activeTab === 'dashboard' && (
             <div className="space-y-8 animate-in fade-in duration-500">
+              
+              {/* Mobile Search - Visible only on small screens */}
+              <div className="sm:hidden relative">
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Input 
+                  placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} 
+                  className="pl-10 w-full bg-white border-slate-200 rounded-full h-11 focus:border-[#D4AF37] shadow-sm" 
+                />
+              </div>
+
               {/* Stats Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                 {stats.map((stat) => (
-                  <div key={stat.title} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-5 hover:shadow-md transition-shadow">
+                  <div key={stat.title} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-5 hover:shadow-md transition-shadow hover:border-slate-200">
                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border ${stat.color}`}>
                       <stat.icon className="w-6 h-6" />
                     </div>
@@ -218,15 +230,15 @@ export default function CrmDashboard() {
                   <div className="p-4 flex-1">
                     <div className="space-y-3">
                       {filteredInquiries.slice(0, 4).map((lead) => (
-                        <div key={lead.id} className="p-4 rounded-2xl bg-white border border-slate-100 hover:border-[#D4AF37]/50 hover:shadow-md transition-all group flex items-start justify-between gap-4">
+                        <div key={lead.id} className="p-4 rounded-2xl bg-white border border-slate-100 hover:border-[#D4AF37]/40 hover:shadow-md transition-all group flex flex-col sm:flex-row items-start justify-between gap-4">
                           <div className="flex gap-4">
                             <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
                               <Users className="w-5 h-5 text-slate-400 group-hover:text-[#8B0000] transition-colors" />
                             </div>
                             <div>
                               <div className="flex items-center gap-2 mb-1">
-                                <p className="font-black text-slate-900 text-base">{lead.from_user_name}</p>
-                                {lead.isManual && <span className="bg-amber-100 text-amber-700 text-[9px] font-bold uppercase px-2 py-0.5 rounded-sm">Manual</span>}
+                                <p className="font-black text-slate-900 text-base">{lead.from_user_name || 'Web Visitor'}</p>
+                                {lead.property_id?.includes('Manual') && <span className="bg-amber-100 text-amber-700 text-[9px] font-bold uppercase px-2 py-0.5 rounded-sm">Manual</span>}
                               </div>
                               <p className="text-sm text-slate-500 font-medium mb-2 line-clamp-1">{lead.message}</p>
                               <div className="flex items-center gap-3 text-xs font-bold text-slate-400">
@@ -235,8 +247,8 @@ export default function CrmDashboard() {
                               </div>
                             </div>
                           </div>
-                          <a href={`tel:${lead.phone?.replace(/\s+/g, '')}`} className="w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center hover:bg-green-500 hover:text-white transition-colors shrink-0">
-                            <Phone className="w-4 h-4" />
+                          <a href={`tel:${lead.phone?.replace(/\s+/g, '')}`} className="w-full sm:w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center hover:bg-green-500 hover:text-white transition-colors shrink-0 border border-green-100">
+                            <Phone className="w-4 h-4 mr-2 sm:mr-0" /> <span className="sm:hidden font-bold">Call Lead</span>
                           </a>
                         </div>
                       ))}
@@ -258,11 +270,11 @@ export default function CrmDashboard() {
                     <p className="text-slate-400 text-sm mb-8 leading-relaxed">Manage your inventory or log an offline client interaction instantly.</p>
                   </div>
                   <div className="space-y-3 relative z-10">
-                    <Button onClick={() => setIsAddLeadOpen(true)} className="w-full h-12 bg-[#D4AF37] hover:bg-[#c09b2e] text-slate-900 font-black rounded-xl shadow-lg shadow-[#D4AF37]/20 flex justify-between items-center px-5">
+                    <Button onClick={() => setIsAddLeadOpen(true)} className="w-full h-12 bg-[#D4AF37] hover:bg-[#c09b2e] text-slate-900 font-black rounded-xl shadow-lg shadow-[#D4AF37]/20 flex justify-between items-center px-5 transition-transform hover:-translate-y-1">
                       Log New Lead <ArrowRight className="w-4 h-4" />
                     </Button>
                     <a href="/post-property" className="block">
-                      <Button variant="outline" className="w-full h-12 mt-3 border-white/20 text-white hover:bg-white/10 hover:text-white font-bold rounded-xl flex justify-between items-center px-5 bg-transparent">
+                      <Button variant="outline" className="w-full h-12 mt-3 border-white/20 text-white hover:bg-white/10 hover:text-white font-bold rounded-xl flex justify-between items-center px-5 bg-transparent transition-transform hover:-translate-y-1">
                         Add Property <Home className="w-4 h-4" />
                       </Button>
                     </a>
@@ -275,7 +287,7 @@ export default function CrmDashboard() {
           {/* TAB: PROPERTIES */}
           {activeTab === 'properties' && (
             <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4">
-              <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-50/50">
                 <h3 className="text-xl font-black text-slate-900">Managed Inventory</h3>
                 <a href="/post-property">
                   <Button className="bg-[#8B0000] hover:bg-[#600000] text-white font-bold rounded-xl shadow-md h-10 px-5">
@@ -300,9 +312,9 @@ export default function CrmDashboard() {
                         ₹ {Number(item.price || 0).toLocaleString('en-IN')}
                       </p>
                       <span className={`px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-widest ${
-                        item.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                        item.status === 'approved' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-amber-100 text-amber-700 border border-amber-200'
                       }`}>
-                        {item.status}
+                        {item.status || 'Pending'}
                       </span>
                     </div>
                   </div>
@@ -326,9 +338,6 @@ export default function CrmDashboard() {
                   <h3 className="text-xl font-black text-slate-900">Lead Pipeline</h3>
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Showing {filteredInquiries.length} results</p>
                 </div>
-                <Button onClick={() => setIsAddLeadOpen(true)} className="bg-[#8B0000] hover:bg-[#600000] text-white font-bold rounded-xl shadow-md h-10 px-5 sm:hidden flex">
-                  <Plus className="w-4 h-4 mr-1.5" /> Add
-                </Button>
               </div>
               <div className="divide-y divide-slate-100">
                 {filteredInquiries.map((item) => (
@@ -339,27 +348,27 @@ export default function CrmDashboard() {
                       </div>
                       <div>
                         <div className="flex items-center gap-3 mb-2">
-                          <h4 className="text-lg font-black text-slate-900">{item.from_user_name}</h4>
-                          {item.isManual && <span className="bg-amber-100 text-amber-700 text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border border-amber-200">Manual Entry</span>}
+                          <h4 className="text-lg font-black text-slate-900">{item.from_user_name || 'Web Visitor'}</h4>
+                          {item.property_id?.includes('Manual') && <span className="bg-amber-100 text-amber-700 text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border border-amber-200">Manual Entry</span>}
                         </div>
-                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-3 relative">
+                        <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm mb-3 relative">
                           <MessageSquare className="w-4 h-4 absolute top-4 left-4 text-slate-300" />
                           <p className="text-sm font-medium text-slate-700 leading-relaxed pl-7">{item.message}</p>
                         </div>
                         <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-slate-500">
-                          {item.property_id && <span className="flex items-center bg-slate-100 px-2.5 py-1 rounded-md"><Building className="w-3.5 h-3.5 mr-1.5 text-[#D4AF37]"/> Ref: {item.property_id}</span>}
+                          {item.property_id && <span className="flex items-center bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-md"><Building className="w-3.5 h-3.5 mr-1.5 text-[#D4AF37]"/> Ref: {item.property_id}</span>}
                           <span className="flex items-center"><Calendar className="w-3.5 h-3.5 mr-1.5 text-slate-400"/> {new Date(item.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</span>
                         </div>
                       </div>
                     </div>
                     <div className="flex flex-row md:flex-col gap-3 shrink-0 mt-4 md:mt-0 w-full md:w-auto justify-end border-t md:border-t-0 border-slate-100 pt-4 md:pt-0">
                       <a href={`tel:${(item.phone || '').replace(/\s+/g, '')}`} className="flex-1 md:flex-none">
-                        <Button className="w-full bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl shadow-md h-11">
+                        <Button className="w-full bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl shadow-md h-11 transition-transform hover:-translate-y-0.5">
                           <Phone className="w-4 h-4 mr-2" /> Call Lead
                         </Button>
                       </a>
                       <a href={`mailto:${item.email || ''}`} className="flex-1 md:flex-none">
-                        <Button variant="outline" className="w-full border-slate-200 text-slate-700 font-bold hover:bg-slate-50 rounded-xl h-11">
+                        <Button variant="outline" className="w-full border-slate-200 text-slate-700 font-bold hover:bg-slate-50 rounded-xl h-11 transition-transform hover:-translate-y-0.5">
                           <Mail className="w-4 h-4 mr-2" /> Email
                         </Button>
                       </a>
@@ -382,10 +391,8 @@ export default function CrmDashboard() {
       {/* --- ADD MANUAL LEAD MODAL --- */}
       {isAddLeadOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsAddLeadOpen(false)}></div>
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => !isSubmitting && setIsAddLeadOpen(false)}></div>
           
-          {/* Modal Content */}
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg relative z-10 animate-in zoom-in-95 duration-200 overflow-hidden border border-slate-100">
             <div className="bg-slate-900 p-6 flex justify-between items-center relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/20 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
@@ -393,35 +400,35 @@ export default function CrmDashboard() {
                 <h3 className="text-xl font-black text-white">Log Offline Lead</h3>
                 <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Manual CRM Entry</p>
               </div>
-              <button onClick={() => setIsAddLeadOpen(false)} className="w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors relative z-10">
+              <button disabled={isSubmitting} onClick={() => setIsAddLeadOpen(false)} className="w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors relative z-10">
                 <X className="w-4 h-4" />
               </button>
             </div>
             
             <form onSubmit={handleAddLeadSubmit} className="p-6 space-y-5">
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Client Full Name <span className="text-[#8B0000]">*</span></Label>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest block">Client Full Name <span className="text-[#8B0000]">*</span></label>
                 <Input 
                   placeholder="e.g. Ramesh Kumar" 
                   value={newLead.clientName} onChange={(e) => setNewLead({...newLead, clientName: e.target.value})}
-                  className="h-12 bg-slate-50 border-slate-200 rounded-xl focus:border-[#D4AF37] font-medium" required
+                  className="h-12 bg-slate-50 border-slate-200 rounded-xl focus:border-[#D4AF37] font-medium transition-colors" required
                 />
               </div>
               
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Phone Number <span className="text-[#8B0000]">*</span></Label>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest block">Phone Number <span className="text-[#8B0000]">*</span></label>
                 <Input 
                   type="tel" placeholder="+91 98765 XXXXX" 
                   value={newLead.phone} onChange={(e) => setNewLead({...newLead, phone: e.target.value})}
-                  className="h-12 bg-slate-50 border-slate-200 rounded-xl focus:border-[#D4AF37] font-medium" required
+                  className="h-12 bg-slate-50 border-slate-200 rounded-xl focus:border-[#D4AF37] font-medium transition-colors" required
                 />
               </div>
               
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Interested Property</Label>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest block">Interested Property</label>
                 <select 
                   value={newLead.propertyId} onChange={(e) => setNewLead({...newLead, propertyId: e.target.value})}
-                  className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/50 appearance-none font-medium text-slate-700"
+                  className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/50 appearance-none font-medium text-slate-700 transition-colors"
                 >
                   <option value="">General Inquiry (No specific property)</option>
                   {data.properties.map(p => (
@@ -431,20 +438,20 @@ export default function CrmDashboard() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Lead Notes</Label>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest block">Lead Notes</label>
                 <Textarea 
                   placeholder="Add context about their requirements, budget, or timeline..." 
                   value={newLead.message} onChange={(e) => setNewLead({...newLead, message: e.target.value})}
-                  rows={4} className="bg-slate-50 border-slate-200 rounded-xl focus:border-[#D4AF37] resize-none font-medium p-4"
+                  rows={4} className="bg-slate-50 border-slate-200 rounded-xl focus:border-[#D4AF37] resize-none font-medium p-4 transition-colors"
                 />
               </div>
 
               <div className="pt-4 flex gap-3">
-                <Button type="button" variant="outline" onClick={() => setIsAddLeadOpen(false)} className="flex-1 h-12 rounded-xl font-bold border-slate-200 text-slate-600 hover:bg-slate-50">
+                <Button type="button" disabled={isSubmitting} variant="outline" onClick={() => setIsAddLeadOpen(false)} className="flex-1 h-12 rounded-xl font-bold border-slate-200 text-slate-600 hover:bg-slate-50">
                   Cancel
                 </Button>
-                <Button type="submit" className="flex-1 h-12 bg-[#8B0000] hover:bg-[#600000] text-white font-bold rounded-xl shadow-lg shadow-[#8B0000]/20">
-                  <CheckCircle className="w-4 h-4 mr-2" /> Save Lead
+                <Button type="submit" disabled={isSubmitting} className="flex-1 h-12 bg-[#8B0000] hover:bg-[#600000] text-white font-bold rounded-xl shadow-lg shadow-[#8B0000]/20 transition-all hover:-translate-y-0.5">
+                  {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : <><CheckCircle className="w-4 h-4 mr-2" /> Save Lead</>}
                 </Button>
               </div>
             </form>
