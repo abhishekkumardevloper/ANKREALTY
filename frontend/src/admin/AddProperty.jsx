@@ -125,14 +125,12 @@ export default function AddProperty({ onSave, editing, onCancel }) {
     // Handle existing media state for PUT request
     if (editing) {
       formData.append('existing_images', JSON.stringify(media.existingImages));
-      // Optionally add existing videos/pdfs if your backend expects to manage them
     }
 
     // Append new files using the EXACT keys your FastAPI expects
     media.images.forEach(img => formData.append('new_images', img));
-    // If your backend supports video and pdf uploads on properties, use the correct keys:
-    // media.videos.forEach(vid => formData.append('new_videos', vid));
-    // if (media.pdf) formData.append('brochure', media.pdf);
+    media.videos.forEach(vid => formData.append('new_videos', vid));
+    if (media.pdf) formData.append('brochure', media.pdf);
 
     // Pass FormData to parent (AdminPanel)
     onSave(formData);
@@ -175,7 +173,8 @@ export default function AddProperty({ onSave, editing, onCancel }) {
                     <option value="buy">Buy</option>
                     <option value="resale">Resale</option>
                     <option value="rent">Rent</option>
-                    <option value="client-project">Client Project</option>
+                    {/* UPDATED THIS LINE TO SHOW CORPORATE LEASE CLEARLY */}
+                    <option value="client-project">Corporate Lease</option>
                   </select>
                 </div>
                 <div>
@@ -238,7 +237,7 @@ export default function AddProperty({ onSave, editing, onCancel }) {
               
               <div className="md:col-span-2">
                 <label className="text-xs font-bold text-slate-700 mb-1 block">Amenities (Comma Separated)</label>
-                <Input name="amenities" value={form.amenities} onChange={handleChange} placeholder="e.g. Gym, Pool, Power Backup, Security" className="focus:border-[#D4AF37]" />
+                <Input name="amenities" value={form.amenities} onChange={handleChange} placeholder="e.g. Grade-A Office, Cafeteria, Power Backup, Security" className="focus:border-[#D4AF37]" />
               </div>
             </div>
           </div>
