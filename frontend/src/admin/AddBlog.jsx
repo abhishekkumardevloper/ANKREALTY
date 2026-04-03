@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Edit2, Search, Trash2, Plus, Image as ImageIcon, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import AddBlog from './AddBlog';
+import AddBlog from './AddBlog'; // Forms logic in separate file
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function BlogList({ blogs = [], refreshData, loading }) {
@@ -21,7 +21,6 @@ export default function BlogList({ blogs = [], refreshData, loading }) {
   const handleSave = async (formData) => {
     try {
       if (editingBlog) {
-        // Assume PUT /blogs/{id} exists for updating
         await api.put(`/blogs/${editingBlog.id}`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
