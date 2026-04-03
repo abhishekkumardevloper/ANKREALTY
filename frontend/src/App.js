@@ -20,6 +20,7 @@ import ResalePage from "./pages/rent";
 // 🔥 Premium Pages Imports
 import BlogPage from "./pages/blog";
 import CorporateLeasingPage from "./pages/CorporateLeasingPage";
+import ConstructionPage from "./pages/ConstructionPage"; // ADDED CONSTRUCTION PAGE IMPORT
 import VideosPage from "./pages/videos";
 import InsightsPage from "./pages/insight";
 import CareersPage from "./pages/career";
@@ -84,6 +85,9 @@ function AppRoutes() {
       <Route path="/insights" element={<InsightsPage />} />
       <Route path="/careers" element={<CareersPage />} />
       <Route path="/corporate-leasing" element={<CorporateLeasingPage />} />
+      
+      {/* ADDED CONSTRUCTION ROUTE HERE */}
+      <Route path="/construction" element={<ConstructionPage />} />
 
       <Route path="/properties" element={<PropertyListingPage />} />
       <Route path="/projects" element={<Navigate to="/properties" replace />} />
