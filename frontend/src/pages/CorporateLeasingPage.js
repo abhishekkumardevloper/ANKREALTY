@@ -1,6 +1,6 @@
 // src/pages/CorporateLeasingPage.jsx
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,12 +11,13 @@ import {
   Building2, Briefcase, Landmark, Monitor, FileText, 
   DownloadCloud, Mail, Phone, MapPin, ChevronRight, 
   ShieldCheck, Globe, Handshake, ArrowRight, Building,
-  CheckCircle, Facebook, Twitter, Instagram, Linkedin, Loader2
+  CheckCircle, Facebook, Twitter, Instagram, Linkedin, Loader2,
+  Maximize
 } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://ankrealty.onrender.com/api";
 
-// --- DUMMY CLIENT LOGOS / NAMES ---
+// --- CLIENT LOGOS ---
 const clients = [
   { name: "Tech Mahindra", src: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Tech_Mahindra_New_Logo.svg/512px-Tech_Mahindra_New_Logo.svg.png" },
   { name: "HDFC Bank", src: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/HDFC_Bank_Logo.svg/512px-HDFC_Bank_Logo.svg.png" },
@@ -25,11 +26,7 @@ const clients = [
   { name: "Wipro", src: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Wipro_Primary_Logo_Color_RGB.svg/512px-Wipro_Primary_Logo_Color_RGB.svg.png" },
   { name: "Accenture", src: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Accenture.svg/512px-Accenture.svg.png" },
   { name: "KPMG", src: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/KPMG_logo.svg/512px-KPMG_logo.svg.png" },
-  { name: "Deloitte", src: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Deloitte.svg/512px-Deloitte.svg.png" },
-  { name: "EY", src: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/EY_logo_2019.svg/512px-EY_logo_2019.svg.png" },
-  { name: "Amazon", src: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Amazon_logo.svg/512px-Amazon_logo.svg.png" },
-  { name: "Flipkart", src: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Flipkart_logo.svg/512px-Flipkart_logo.svg.png" },
-  { name: "Samsung", src: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Samsung_Logo.svg/512px-Samsung_Logo.svg.png" }
+  { name: "Deloitte", src: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Deloitte.svg/512px-Deloitte.svg.png" }
 ];
 
 const industries = [
@@ -42,10 +39,47 @@ const industries = [
 ];
 
 export default function CorporateLeasingPage() {
+  const navigate = useNavigate();
+  const contactFormRef = useRef(null);
+  
   const [leadForm, setLeadForm] = useState({ name: '', company: '', phone: '', email: '', requirements: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [properties, setProperties] = useState([]);
+  const [loadingProps, setLoadingProps] = useState(true);
 
-  // Connected to Real Backend
+  // Fetch Corporate Properties
+  useEffect(() => {
+    const fetchCorporateProperties = async () => {
+      try {
+        const res = await axios.get(`${API_BASE}/properties`);
+        // Filter properties that are specifically categorized as Client Project or Commercial
+        const corporateSpaces = res.data.filter(p => 
+          p.category === 'client-project' || 
+          p.property_type === 'commercial' || 
+          p.property_type === 'office'
+        );
+        setProperties(corporateSpaces);
+      } catch (error) {
+        console.error("Failed to fetch properties:", error);
+      } finally {
+        setLoadingProps(false);
+      }
+    };
+    fetchCorporateProperties();
+  }, []);
+
+  // Handle clicking "Inquire Now" on a specific property
+  const handleInquireClick = (propertyTitle) => {
+    setLeadForm(prev => ({ 
+      ...prev, 
+      requirements: `I am interested in leasing: ${propertyTitle}. Please provide more details.` 
+    }));
+    // Smooth scroll to the contact form
+    contactFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  // Connected to Real Backend CRM
   const handleLeadSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -57,7 +91,7 @@ export default function CorporateLeasingPage() {
         phone: leadForm.phone,
         email: leadForm.email,
         requirements: leadForm.requirements,
-        interest: 'Corporate Leasing' // Helps identify lead in CRM
+        interest: 'Corporate Leasing' // Tag for CRM
       });
       
       toast.success("Corporate inquiry sent successfully! Our leasing expert will contact you shortly.");
@@ -68,6 +102,13 @@ export default function CorporateLeasingPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const formatCurrency = (amount) => {
+    if (!amount) return 'Price on Request';
+    if (amount >= 10000000) return `₹ ${(amount / 10000000).toFixed(2)} Cr`;
+    if (amount >= 100000) return `₹ ${(amount / 100000).toFixed(2)} Lac`;
+    return `₹ ${amount.toLocaleString('en-IN')}`;
   };
 
   return (
@@ -81,14 +122,17 @@ export default function CorporateLeasingPage() {
         
         <div className="relative z-10 max-w-5xl mx-auto mt-8 animate-in slide-in-from-bottom-8 duration-700">
           <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#D4AF37]/10 backdrop-blur-md border border-[#D4AF37]/30 text-[#D4AF37] text-xs font-bold tracking-widest uppercase mb-6 shadow-[0_0_30px_rgba(212,175,55,0.15)]">
-            <Handshake className="w-4 h-4" /> Trusted Corporate Partner
+            <Handshake className="w-4 h-4" /> Premium Commercial Real Estate
           </div>
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-black mb-6 tracking-tight drop-shadow-lg leading-tight">
-            Our Esteemed <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-[#AA8000]">Clientele</span>
+            Corporate Leasing & <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-[#AA8000]">Workspaces</span>
           </h1>
-          <p className="text-lg md:text-xl text-slate-300 font-light leading-relaxed max-w-3xl mx-auto">
-            We take pride in representing top Indian enterprises, MNCs, and Fortune 500 companies, providing them with bespoke commercial leasing and real estate consulting solutions.
+          <p className="text-lg md:text-xl text-slate-300 font-light leading-relaxed max-w-3xl mx-auto mb-10">
+            We represent top Indian enterprises, MNCs, and Fortune 500 companies, providing bespoke commercial leasing, retail spaces, and real estate consulting solutions.
           </p>
+          <Button onClick={() => contactFormRef.current?.scrollIntoView({ behavior: 'smooth' })} className="bg-[#8B0000] hover:bg-[#600000] text-white font-bold h-14 px-8 rounded-full shadow-lg shadow-[#8B0000]/30 text-lg transition-transform hover:-translate-y-1">
+            Consult Our Experts <ArrowRight className="w-5 h-5 ml-2" />
+          </Button>
         </div>
       </section>
 
@@ -109,8 +153,88 @@ export default function CorporateLeasingPage() {
         </div>
       </section>
 
+      {/* --- FEATURED CORPORATE PROPERTIES (NEW SECTION) --- */}
+      <section className="py-24 px-6 bg-slate-50 border-b border-slate-200">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+            <div>
+              <p className="text-[#8B0000] font-bold uppercase tracking-[0.25em] text-xs mb-3 flex items-center gap-2"><Building2 className="w-4 h-4" /> Available Inventory</p>
+              <h2 className="text-3xl md:text-5xl font-black text-slate-900">Featured Corporate Spaces</h2>
+            </div>
+            <Link to="/properties">
+              <Button variant="outline" className="h-12 px-6 rounded-xl font-bold border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900">
+                View All Commercial <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
+          </div>
+
+          {loadingProps ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <Loader2 className="w-12 h-12 text-[#8B0000] animate-spin mb-4" />
+              <p className="text-slate-500 font-bold">Loading premium spaces...</p>
+            </div>
+          ) : properties.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {properties.slice(0, 6).map((property) => (
+                <div key={property.id} className="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-2 hover:border-[#D4AF37]/50 transition-all duration-300 group flex flex-col">
+                  
+                  {/* Image Section */}
+                  <div className="relative h-64 overflow-hidden bg-slate-100 cursor-pointer" onClick={() => navigate(`/property/${property.id}`)}>
+                    <div className="absolute top-4 left-4 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-lg text-xs font-black text-white shadow-lg z-10 tracking-widest uppercase">
+                      {property.property_type || 'Commercial'}
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent z-10 opacity-60 group-hover:opacity-80 transition-opacity" />
+                    <img 
+                      src={property.images?.[0] || 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80'} 
+                      alt={property.title} 
+                      className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                    />
+                    <div className="absolute bottom-4 left-4 z-20">
+                      <h3 className="text-xl font-black text-white mb-1 line-clamp-1 drop-shadow-md">{property.title}</h3>
+                      <p className="text-slate-300 text-sm flex items-center font-medium drop-shadow-md">
+                        <MapPin className="w-3.5 h-3.5 mr-1.5 text-[#D4AF37]"/> {property.location}, {property.city}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Details Section */}
+                  <div className="p-6 flex-1 flex flex-col">
+                    <div className="grid grid-cols-2 gap-4 mb-6">
+                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Area</p>
+                        <p className="font-black text-slate-800 flex items-center"><Maximize className="w-3.5 h-3.5 mr-1.5 text-[#8B0000]" /> {property.area ? `${property.area} Sq.Ft` : 'On Request'}</p>
+                      </div>
+                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Status</p>
+                        <p className="font-black text-slate-800 flex items-center"><Building className="w-3.5 h-3.5 mr-1.5 text-[#8B0000]" /> {property.furnishing || 'Bare Shell'}</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-auto pt-5 border-t border-slate-100 flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px] uppercase font-bold text-slate-400 mb-0.5">Lease Price</p>
+                        <span className="font-black text-[#003B30] text-lg">{formatCurrency(property.price)}</span>
+                      </div>
+                      <Button onClick={() => handleInquireClick(property.title)} className="bg-[#8B0000] hover:bg-[#600000] text-white font-bold rounded-xl shadow-md">
+                        Inquire Now
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16 bg-white rounded-3xl border border-dashed border-slate-300">
+              <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-slate-700 mb-2">No Corporate Spaces Listed</h3>
+              <p className="text-slate-500">Contact our advisory team directly for off-market premium inventory.</p>
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* --- CLIENT LOGO GRID --- */}
-      <section className="py-24 px-6 bg-slate-50">
+      <section className="py-24 px-6 bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <p className="text-[#8B0000] font-bold uppercase tracking-[0.25em] text-xs mb-3">Who We Work With</p>
@@ -118,7 +242,7 @@ export default function CorporateLeasingPage() {
             <p className="text-slate-500 mt-4 text-lg">We have successfully delivered commercial real estate solutions for the world's most demanding corporate teams.</p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {clients.map((client, index) => (
               <div key={index} className="bg-white h-32 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-center p-6 hover:border-[#D4AF37] hover:shadow-xl transition-all duration-300 group grayscale hover:grayscale-0 hover:-translate-y-1">
                 <img 
@@ -126,14 +250,8 @@ export default function CorporateLeasingPage() {
                   alt={`${client.name} Logo`} 
                   className="max-w-full max-h-full object-contain opacity-50 group-hover:opacity-100 transition-opacity duration-300"
                 />
-                {/* Fallback text if image fails to load nicely */}
-                <span className="hidden text-sm font-bold text-slate-400 group-hover:text-slate-800">{client.name}</span>
               </div>
             ))}
-          </div>
-          
-          <div className="text-center mt-12">
-            <p className="text-slate-400 font-medium italic text-lg">...and hundreds of other dynamic enterprises and startups.</p>
           </div>
         </div>
       </section>
@@ -169,7 +287,7 @@ export default function CorporateLeasingPage() {
       </section>
 
       {/* --- BUSINESS PROFILE & INQUIRY FORM --- */}
-      <section className="py-24 px-6 bg-slate-50 border-b border-slate-200">
+      <section ref={contactFormRef} className="py-24 px-6 bg-slate-50 border-b border-slate-200">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
           
           {/* Left Column: Info */}
@@ -246,7 +364,7 @@ export default function CorporateLeasingPage() {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Requirements / Size (Sq.Ft)</label>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Requirements / Space Details *</label>
                 <Textarea 
                   required placeholder="Briefly describe your workspace requirements..." rows={4}
                   value={leadForm.requirements} onChange={(e) => setLeadForm({...leadForm, requirements: e.target.value})}
