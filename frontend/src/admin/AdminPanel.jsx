@@ -1,177 +1,83 @@
-// src/admin/AdminPanel.jsx
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { toast } from 'sonner';
-import AdminLayout from './AdminLayout';
-import Dashboard from './Dashboard';
-import PropertyList from './PropertyList';
-import AddProperty from './AddProperty';
-import BlogList from './AddBlog'; 
-import YoutubeList from './AddVideo';
-import { useAuth } from '@/contexts/AuthContext';
+// src/admin/AdminLayout.jsx
+import React, { useState } from "react";
+import { LayoutDashboard, Building, Home, Key, PlusSquare, Users, FileText, Youtube, LogOut, Menu } from 'lucide-react';
 
-// Helper function to safely extract FastAPI error messages
-const getErrorMessage = (error) => {
-  if (error?.response?.data?.detail) {
-    const detail = error.response.data.detail;
-    if (typeof detail === 'string') return detail;
-    if (Array.isArray(detail) && detail.length > 0) {
-      // Pulls the exact field name that is failing
-      const fieldName = detail[0].loc ? detail[0].loc[detail[0].loc.length - 1] : 'Field';
-      return `Error in ${fieldName}: ${detail[0].msg}`;
-    }
+const NavButton = ({ icon: Icon, label, active, onClick }) => (
+  <button
+    onClick={onClick}
+    className={`flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl transition-all font-medium mb-1
+      ${active ? "bg-slate-900 text-white shadow-md" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"}`}
+  >
+    <Icon className="w-5 h-5" />
+    <span className="text-sm">{label}</span>
+  </button>
+);
+
+export default function AdminLayout({ children, page = "dashboard", setPage = () => {}, role = "broker" }) {
+  const [open, setOpen] = useState(true); 
+  const [mobileOpen, setMobileOpen] = useState(false); 
+  const isAdmin = role === "admin";
+
+  const allNavItems = [
+    { key: "dashboard", label: "Dashboard", adminOnly: false, icon: LayoutDashboard },
+    { key: "crm", label: "Lead CRM", adminOnly: false, icon: Users }, // NEW CRM TAB
+    { key: "buy", label: "Buy Properties", adminOnly: false, icon: Home },
+    { key: "resale", label: "Resale Properties", adminOnly: false, icon: Key },
+    { key: "client-project", label: "Corporate Leases", adminOnly: false, icon: Building }, // CORPORATE TAB
+    { key: "add-property", label: "Add Property", adminOnly: false, icon: PlusSquare },
+    { key: "blogs", label: "Manage Blogs", adminOnly: true, icon: FileText },
+    { key: "youtube", label: "YouTube Promos", adminOnly: true, icon: Youtube },
+  ];
+
+  const nav = allNavItems.filter(item => !item.adminOnly || isAdmin);
+
+  function handleLogout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    window.location.href = "/auth";
   }
-  return error?.message || 'An unexpected error occurred.';
-};
-
-export default function AdminPanel() {
-  const { user, api } = useAuth();
-  const userRole = user?.role || localStorage.getItem('role') || 'agent';
-  const isAdmin = userRole === 'admin';
-  
-  const [page, setPage] = useState('dashboard');
-  const [editing, setEditing] = useState(null);
-  const [loading, setLoading] = useState(false);
-  
-  const [properties, setProperties] = useState([]);
-  const [inquiries, setInquiries] = useState([]);
-  const [blogs, setBlogs] = useState([]);
-  const [youtubeVideos, setYoutubeVideos] = useState([]);
-
-  const fetchAllData = useCallback(async () => {
-    setLoading(true);
-    try {
-      if (isAdmin) {
-        let adminDashData = { pending_list: [] };
-        let propsData = [];
-        let inqData = [];
-        let blogData = [];
-        let videoData = [];
-
-        try { const res = await api.get('/dashboard/admin'); adminDashData = res.data || {}; } catch(e) { console.error(e); }
-        try { const res = await api.get('/properties?limit=100'); propsData = res.data || []; } catch(e) { console.error(e); }
-        try { const res = await api.get('/inquiries'); inqData = res.data || []; } catch(e) { console.error(e); }
-        try { const res = await api.get('/blogs'); blogData = res.data || []; } catch(e) { console.error(e); }
-        try { const res = await api.get('/youtube-videos'); videoData = res.data || []; } catch(e) { console.error(e); }
-        
-        const pendingList = adminDashData?.pending_list || [];
-        const merged = [...pendingList, ...(propsData || []).filter((item) => !pendingList.some((pending) => pending?.id === item?.id))];
-        
-        setProperties(merged);
-        setInquiries(inqData || []);
-        setBlogs(blogData || []);
-        setYoutubeVideos(videoData || []);
-
-      } else {
-        const agentDash = await api.get('/dashboard/agent');
-        setProperties(agentDash?.data?.properties || []);
-        setInquiries(agentDash?.data?.inquiries || []);
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to load dashboard data");
-    } finally {
-      setLoading(false);
-    }
-  }, [api, isAdmin]);
-
-  useEffect(() => { 
-    fetchAllData(); 
-  }, [fetchAllData]);
-
-  const filteredByPage = useMemo(() => {
-    const safeProperties = properties || [];
-    if (!['buy', 'resale', 'client-project'].includes(page)) return safeProperties;
-    return safeProperties.filter((item) => item?.category === page);
-  }, [page, properties]);
-
-  // --- SAVE PROPERTY ---
-  const saveProperty = async (payload) => {
-    try {
-      const config = {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      };
-
-      if (editing) {
-        await api.put(`/properties/${editing.id}`, payload, config);
-        toast.success('Property updated successfully.');
-      } else {
-        await api.post('/properties', payload, config);
-        toast.success('Property created successfully.');
-      }
-      setEditing(null);
-      setPage('dashboard');
-      fetchAllData();
-    } catch (error) {
-      console.error("Save Property Error:", error);
-      toast.error(getErrorMessage(error));
-    }
-  };
-
-  // --- DELETE PROPERTY ---
-  const deleteProperty = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this property? This action cannot be undone.")) return;
-    
-    try {
-      await api.delete(`/properties/${id}`);
-      toast.success("Property deleted successfully.");
-      fetchAllData(); // Refresh UI to remove the item instantly
-    } catch (error) {
-      console.error("Delete Error:", error);
-      toast.error(getErrorMessage(error));
-    }
-  };
-
-  // --- APPROVE/REJECT PROPERTY ---
-  const updatePropertyStatus = async (id, status) => {
-    if (!window.confirm(`Are you sure you want to mark this property as ${status}?`)) return;
-
-    try {
-      // FastAPI expects 'status' as a query parameter for this specific route
-      await api.put(`/admin/properties/${id}/status?status=${status}`);
-      toast.success(`Property marked as ${status}.`);
-      fetchAllData();
-    } catch (error) {
-      console.error("Status Update Error:", error);
-      toast.error(getErrorMessage(error));
-    }
-  };
-
-  const renderPage = () => {
-    if (page === 'dashboard') {
-      return <Dashboard properties={properties} inquiries={inquiries} role={userRole} loading={loading} onDelete={deleteProperty} />;
-    }
-    
-    if (page === 'add-property') {
-      return <AddProperty onSave={saveProperty} editing={editing} onCancel={() => { setEditing(null); setPage('dashboard'); }} />;
-    }
-    
-    if (['buy', 'resale', 'client-project'].includes(page)) {
-      const titleMap = { 'buy': 'Buy Properties', 'resale': 'Resale Properties', 'client-project': 'Client Projects' };
-      return (
-        <PropertyList 
-          title={titleMap[page]} 
-          listings={filteredByPage} 
-          loading={loading} 
-          onEdit={(item) => { setEditing(item); setPage('add-property'); }} 
-          onDelete={deleteProperty}
-          onApprove={(id) => updatePropertyStatus(id, 'approved')}
-          onReject={(id) => updatePropertyStatus(id, 'rejected')}
-          showModeration={isAdmin} 
-        />
-      );
-    }
-
-    if (page === 'blogs' && isAdmin) return <BlogList blogs={blogs} refreshData={fetchAllData} loading={loading} />;
-    if (page === 'youtube' && isAdmin) return <YoutubeList videos={youtubeVideos} refreshData={fetchAllData} loading={loading} />;
-
-    return <Dashboard properties={properties} inquiries={inquiries} role={userRole} loading={loading} onDelete={deleteProperty} />;
-  };
 
   return (
-    <AdminLayout page={page} setPage={(next) => { setEditing(null); setPage(next); }} role={userRole}>
-      {renderPage()}
-    </AdminLayout>
+    <div className="min-h-screen flex bg-slate-50 font-sans">
+      {/* Desktop Sidebar */}
+      <aside className={`hidden md:flex md:flex-col bg-white border-r border-slate-200 p-5 transition-all duration-300 ${open ? "w-72" : "w-0 overflow-hidden opacity-0 p-0"}`}>
+        <div className="flex items-center gap-3 mb-8 px-2">
+          <div className="bg-[#8B0000] text-white w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg shadow-md">A</div>
+          <div>
+            <div className="text-lg font-black text-slate-900 tracking-tight">ANK Realty</div>
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">{isAdmin ? "Admin Portal" : "Broker Portal"}</div>
+          </div>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+          <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 px-4">Menu</div>
+          {nav.filter(n => !n.adminOnly).map((n) => (
+            <NavButton key={n.key} icon={n.icon} label={n.label} active={page === n.key} onClick={() => setPage(n.key)} />
+          ))}
+
+          {isAdmin && (
+            <>
+              <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-8 mb-3 px-4">Marketing & Tools</div>
+              {nav.filter(n => n.adminOnly).map((n) => (
+                <NavButton key={n.key} icon={n.icon} label={n.label} active={page === n.key} onClick={() => setPage(n.key)} />
+              ))}
+            </>
+          )}
+        </nav>
+
+        <div className="mt-6 pt-6 border-t border-slate-100">
+          <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-colors">
+            <LogOut className="w-4 h-4" /> Secure Logout
+          </button>
+        </div>
+      </aside>
+
+      {/* Main content area */}
+      <main className="flex-1 p-6 lg:p-10 lg:pl-12 overflow-x-hidden">
+        <div className="max-w-7xl mx-auto">
+          {children}
+        </div>
+      </main>
+    </div>
   );
 }
