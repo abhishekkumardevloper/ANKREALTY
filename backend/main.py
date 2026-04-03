@@ -1,4 +1,3 @@
-# app.py
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, File, Form, UploadFile, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
@@ -145,6 +144,21 @@ class InquiryCreate(BaseModel):
 class FavoriteCreate(BaseModel):
     property_id: str
 
+# NEW: Unified Model for Contact Page & Corporate Leasing Form
+class ContactCreate(BaseModel):
+    # Standard Contact Page
+    firstName: Optional[str] = None
+    lastName: Optional[str] = None
+    email: str
+    phone: str
+    message: Optional[str] = None
+    interest: Optional[str] = None
+    
+    # Corporate Leasing Page
+    name: Optional[str] = None
+    company: Optional[str] = None
+    requirements: Optional[str] = None
+
 # --------------------------------
 # ROUTES: Authentication
 # --------------------------------
@@ -199,14 +213,20 @@ def get_admin_dashboard(current_user: dict = Depends(get_current_user)):
 
 @api_router.get("/dashboard/agent")
 def get_agent_dashboard(current_user: dict = Depends(get_current_user)):
+    # Properties mapped to this agent/admin
     prop_res = supabase.table("properties").select("*").eq("owner_id", current_user["id"]).execute()
     properties = prop_res.data or []
     
-    expr = f"from_user_id.eq.{current_user['id']},to_user_id.eq.{current_user['id']}"
-    inq_res = supabase.table("inquiries").select("*").or_(expr).execute()
-    inquiries = inq_res.data or []
-    
     total_views = sum(p.get("views", 0) for p in properties)
+
+    # Lead routing logic: Admins see ALL inquiries, Agents see only theirs
+    if current_user.get("role") == "admin":
+        inq_res = supabase.table("inquiries").select("*").order("created_at", desc=True).execute()
+    else:
+        expr = f"from_user_id.eq.{current_user['id']},to_user_id.eq.{current_user['id']}"
+        inq_res = supabase.table("inquiries").select("*").or_(expr).order("created_at", desc=True).execute()
+    
+    inquiries = inq_res.data or []
     
     return {
         "total_listings": len(properties),
@@ -215,6 +235,45 @@ def get_agent_dashboard(current_user: dict = Depends(get_current_user)):
         "properties": properties,
         "inquiries": inquiries
     }
+
+# --------------------------------
+# ROUTES: Public Contact Forms
+# --------------------------------
+@api_router.post("/contacts")
+def submit_contact_form(contact: ContactCreate):
+    """
+    Public endpoint: Receives data from ContactPage.js and CorporateLeasingPage.js
+    Routes it directly to the CRM (inquiries table).
+    """
+    # Consolidate Name
+    full_name = contact.name
+    if not full_name:
+        full_name = f"{contact.firstName or ''} {contact.lastName or ''}".strip()
+    
+    # Consolidate Message
+    msg_body = contact.message or contact.requirements or "No additional message."
+    formatted_message = f"Email: {contact.email} | Message: {msg_body}"
+    
+    # Determine Source/Interest
+    source = "Contact Form"
+    if contact.company:
+        source = f"Corporate Lead ({contact.company})"
+    elif contact.interest:
+        source = f"Interested in: {contact.interest}"
+
+    doc = {
+        "id": str(uuid.uuid4()),
+        "from_user_id": None, # Null because they are public/unauthenticated
+        "from_user_name": full_name or "Web Visitor",
+        "phone": contact.phone,
+        "to_user_id": "ADMIN", # Send directly to Admin pool
+        "property_id": source, # Misusing property_id slightly to show lead source in CRM
+        "message": formatted_message,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    
+    supabase.table("inquiries").insert(doc).execute()
+    return {"message": "Inquiry submitted successfully"}
 
 # --------------------------------
 # ROUTES: Properties
@@ -500,10 +559,11 @@ def delete_youtube_video(video_id: str, current_user: dict = Depends(get_current
     return {"message": "Deleted"}
 
 # --------------------------------
-# ROUTES: Inquiries / Leads
+# ROUTES: Inquiries / Leads (Authenticated)
 # --------------------------------
 @api_router.post("/inquiries")
 def create_inquiry(inq: InquiryCreate, current_user: dict = Depends(get_current_user)):
+    """Authenticated endpoint for logged-in users asking about specific properties."""
     prop_res = supabase.table("properties").select("owner_id").eq("id", inq.property_id).limit(1).execute()
     if not prop_res.data: raise HTTPException(status_code=404, detail="Property not found")
     
@@ -522,8 +582,11 @@ def create_inquiry(inq: InquiryCreate, current_user: dict = Depends(get_current_
 
 @api_router.get("/inquiries")
 def get_inquiries(current_user: dict = Depends(get_current_user)):
-    expr = f"from_user_id.eq.{current_user['id']},to_user_id.eq.{current_user['id']}"
-    res = supabase.table("inquiries").select("*").or_(expr).order("created_at", desc=True).execute()
+    if current_user.get("role") == "admin":
+        res = supabase.table("inquiries").select("*").order("created_at", desc=True).execute()
+    else:
+        expr = f"from_user_id.eq.{current_user['id']},to_user_id.eq.{current_user['id']}"
+        res = supabase.table("inquiries").select("*").or_(expr).order("created_at", desc=True).execute()
     return res.data or []
 
 # --------------------------------
