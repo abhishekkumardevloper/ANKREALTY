@@ -2,18 +2,20 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import axios from 'axios';
+import { toast } from 'sonner';
 import { 
   ArrowRight, Banknote, Bell, Briefcase, Building2, Calculator, ChevronRight, 
   Handshake, Instagram, Linkedin, Mail, MapPin, MessageCircle, Search, Users, Youtube,
   TrendingUp, Award, ShieldCheck, Home, Key, PieChart, Map, Sparkles, Building, FileSignature, 
-  Zap, LandPlot, RefreshCw, DollarSign, Phone 
+  Zap, LandPlot, RefreshCw, DollarSign, Phone, Loader2, Video, PlayCircle
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import RegisterPopup from './RegisterPopup';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { bankOffers, exploreLocalities, socialLinks } from '@/lib/siteData';
-import { WHATSAPP_URL, createPropertySearch } from '@/lib/api';
+import { WHATSAPP_URL } from '@/lib/api';
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://ankrealty.onrender.com/api"; 
 
@@ -33,13 +35,6 @@ const bottomRowLogos = [
 ];
 
 // DATA for Static Content Sections
-const localityHighlights = [
-  { name: 'Noida Sector 150', avgPrice: '₹8,500/sqft onwards', connectivity: 'Metro & Expressway', landmark: '9-hole golf course', tags: ['Residential Hub', 'Greenest Sector'] },
-  { name: 'Noida Extension', avgPrice: '₹4,200/sqft onwards', connectivity: 'Upcoming Metro', landmark: 'Gaur City Mall', tags: ['Affordable Housing', 'Rapid Development'] },
-  { name: 'Yamuna Expressway', avgPrice: '₹35L onwards (Plot)', connectivity: 'Airport & F1 Track', landmark: 'Jewar Airport Site', tags: ['High Plot Demand', 'Investment Hotspot'] },
-  { name: 'Sector 137, Noida', avgPrice: '₹6,800/sqft onwards', connectivity: 'Operational Metro', landmark: 'Logix Technova Park', tags: ['IT Corridor', 'Established Society'] },
-];
-
 const processSteps = [
   { title: "Search Property", desc: "Discover premium listings, plots, and projects with ease.", icon: Search },
   { title: "Book Site Visit", desc: "Our local experts coordinate viewings that fit your schedule.", icon: MapPin },
@@ -50,13 +45,6 @@ const processSteps = [
 const categoryOptions = [
   { label: 'Buy', value: 'buy' }, { label: 'Resale', value: 'resale' }, { label: 'Rent', value: 'rent' },
 ];
-
-const propertyTypeOptions = [
-  { label: 'Apartment', value: 'apartment' }, { label: 'Villa', value: 'villa' }, 
-  { label: 'Commercial', value: 'commercial' }, { label: 'Plot', value: 'plot' },
-];
-
-const socialIconMap = { instagram: Instagram, youtube: Youtube, linkedin: Linkedin, whatsapp: MessageCircle };
 
 // --- ANIMATION VARIANTS ---
 const fadeUp = {
@@ -69,51 +57,64 @@ const staggerContainer = {
   visible: { opacity: 1, transition: { staggerChildren: 0.15 } }
 };
 
+// Helper for YouTube IDs
+const getYouTubeID = (url) => {
+  if (!url) return null;
+  if (url.includes('youtube.com/watch')) return new URLSearchParams(new URL(url).search).get('v');
+  if (url.includes('youtu.be/')) return url.split('youtu.be/')[1]?.split('?')[0];
+  if (url.includes('youtube.com/embed/')) return url.split('youtube.com/embed/')[1]?.split('?')[0];
+  return null;
+};
+
 export default function HomePage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState({ category: 'buy', city: '', property_type: '', max_price: '' });
   const [searchFocused, setSearchFocused] = useState(false);
   const [newsletterEmail, setNewsletterEmail] = useState('');
-  const [loanLead, setLoanLead] = useState({ name: '', phone: '' });
-
+  
   // Dynamic Data States
   const [featuredProperties, setFeaturedProperties] = useState([]);
   const [resaleProperties, setResaleProperties] = useState([]);
+  const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Loan CRM Form State
+  const [loanLead, setLoanLead] = useState({ name: '', phone: '' });
+  const [isLoanSubmitting, setIsLoanSubmitting] = useState(false);
 
   // EMI Calculator State
   const [loanAmount, setLoanAmount] = useState(7500000); 
   const [interestRate, setInterestRate] = useState(8.5);
   const [loanTenure, setLoanTenure] = useState(20);
 
-  // Fetch Data from Backend
+  // Fetch Data from Backend (Properties & Videos)
   useEffect(() => {
-    const fetchProperties = async () => {
+    const fetchHomePageData = async () => {
       setLoading(true);
       try {
-        const [featuredRes, resaleRes] = await Promise.all([
-          fetch(`${API_BASE}/properties`), 
-          fetch(`${API_BASE}/properties?category=resale&limit=4`)
+        const [featuredRes, resaleRes, videoRes] = await Promise.allSettled([
+          axios.get(`${API_BASE}/properties`), 
+          axios.get(`${API_BASE}/properties?category=resale&limit=4`),
+          axios.get(`${API_BASE}/youtube-videos`)
         ]);
 
-        if (featuredRes.ok) {
-           const allProps = await featuredRes.json();
-           setFeaturedProperties(allProps.slice(0, 4));
+        if (featuredRes.status === 'fulfilled' && featuredRes.value.data) {
+           setFeaturedProperties(featuredRes.value.data.slice(0, 4));
         }
-        if (resaleRes.ok) setResaleProperties(await resaleRes.json());
+        if (resaleRes.status === 'fulfilled' && resaleRes.value.data) {
+           setResaleProperties(resaleRes.value.data.slice(0, 4));
+        }
+        if (videoRes.status === 'fulfilled' && videoRes.value.data) {
+           setVideos(videoRes.value.data.slice(0, 3)); // Take top 3 latest videos
+        }
       } catch (error) {
-        console.error("Failed to fetch property data:", error);
+        console.error("Failed to fetch homepage data:", error);
       } finally {
         setLoading(false);
       }
     };
     
-    if (API_BASE) {
-      fetchProperties();
-    } else {
-      console.warn("API_BASE is undefined. Please check your environment variables.");
-      setLoading(false);
-    }
+    fetchHomePageData();
   }, []);
 
   const suggestions = useMemo(() => {
@@ -122,16 +123,45 @@ export default function HomePage() {
     return exploreLocalities.filter((item) => item.name.toLowerCase().includes(query) || item.city.toLowerCase().includes(query));
   }, [search.city]);
 
-  const handleSearch = () => navigate(createPropertySearch(search));
+  // WORKING SEARCH HANDLER
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (search.category) params.append('category', search.category);
+    if (search.property_type) params.append('property_type', search.property_type);
+    if (search.city) params.append('location', search.city); // Or 'city' depending on your backend
+    if (search.max_price) params.append('max_price', search.max_price);
+    
+    navigate(`/properties?${params.toString()}`);
+  };
   
   const handleNewsletter = () => {
-    if (!newsletterEmail.includes('@')) return;
+    if (!newsletterEmail.includes('@')) return toast.error("Please enter a valid email address.");
     window.open(`${WHATSAPP_URL}?text=${encodeURIComponent(`Hi ANK Realty, subscribe me for property deals. My email is ${newsletterEmail}.`)}`, '_blank', 'noopener,noreferrer');
   };
   
-  const handleLoanLead = () => {
-    if (!loanLead.name || loanLead.phone.replace(/\D/g, '').length < 10) return;
-    window.open(`${WHATSAPP_URL}?text=${encodeURIComponent(`Hi ANK Realty, I want a home-loan comparison. Name: ${loanLead.name}, Phone: ${loanLead.phone}.`)}`, '_blank', 'noopener,noreferrer');
+  // FULLY FUNCTIONAL LOAN SUBMISSION TO CRM
+  const handleLoanLead = async () => {
+    if (!loanLead.name || loanLead.phone.replace(/\D/g, '').length < 10) {
+      return toast.error("Please enter a valid name and 10-digit phone number.");
+    }
+    
+    setIsLoanSubmitting(true);
+    try {
+      await axios.post(`${API_BASE}/contacts`, {
+        name: loanLead.name,
+        phone: loanLead.phone,
+        email: 'N/A',
+        interest: 'Home Loan Inquiry',
+        message: 'Client requested a callback regarding home loan and EMI consultation from the homepage.'
+      });
+      toast.success("Request received successfully! Our loan expert will call you shortly.");
+      setLoanLead({ name: '', phone: '' });
+    } catch (error) {
+      console.error("Loan Request Error:", error);
+      toast.error("Failed to submit request. Please try again.");
+    } finally {
+      setIsLoanSubmitting(false);
+    }
   };
 
   // EMI Calculation Logic
@@ -158,7 +188,7 @@ export default function HomePage() {
 
   // Dynamic Map URL generation based on search.city or a default location
   const mapLocation = search.city || "Noida, Uttar Pradesh";
-  const dynamicMapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(mapLocation)}&t=&z=12&ie=UTF8&iwloc=&output=embed`;
+  const dynamicMapSrc = `http://googleusercontent.com/maps.google.com/maps?q=${encodeURIComponent(mapLocation)}&t=&z=12&ie=UTF8&iwloc=&output=embed`;
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-[#D4AF37]/30 relative">
@@ -296,6 +326,33 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* --- CORPORATE LEASING BANNER (NEW) --- */}
+      <section className="py-20 px-6 bg-[#050505] text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-30 bg-[url('https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-[#050505]/80 to-transparent z-0" />
+        <div className="max-w-7xl mx-auto relative z-10 flex flex-col lg:flex-row items-center justify-between gap-10">
+          <div className="max-w-2xl">
+            <p className="text-[#D4AF37] font-bold uppercase tracking-widest text-xs mb-3 flex items-center gap-2"><Briefcase className="w-4 h-4"/> Commercial & Enterprise</p>
+            <h2 className="text-3xl md:text-5xl font-black mb-6">Premium Corporate Leasing Solutions</h2>
+            <p className="text-slate-300 text-lg leading-relaxed mb-6">
+              We represent Fortune 500 companies and growing enterprises, providing bespoke commercial leasing, retail spaces, and grade-A office solutions tailored for modern businesses.
+            </p>
+            <ul className="space-y-3 mb-8 hidden md:block">
+              {['Grade-A Office Spaces', 'Turnkey Interior Solutions', 'Pan-India Portfolio Management'].map((item, i) => (
+                <li key={i} className="flex items-center text-slate-200 font-bold text-sm"><CheckCircle className="w-4 h-4 text-[#D4AF37] mr-2"/> {item}</li>
+              ))}
+            </ul>
+          </div>
+          <div className="shrink-0 w-full lg:w-auto">
+            <Link to="/corporate-leasing">
+              <Button className="w-full lg:w-auto h-14 px-8 bg-[#D4AF37] hover:bg-[#c09b2e] text-slate-900 font-black rounded-xl text-base shadow-xl shadow-[#D4AF37]/20 transition-all hover:-translate-y-1">
+                Explore Corporate Spaces <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* --- FEATURED INVENTORY --- */}
       <section className="py-24 px-6 bg-slate-50">
         <div className="max-w-7xl mx-auto">
@@ -394,75 +451,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- DYNAMIC MAP LOCATION FINDER --- */}
-      <section className="py-24 px-6 bg-slate-50 border-t border-slate-200">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col lg:flex-row justify-between lg:items-end mb-12 gap-8 lg:gap-16 relative">
-            <div className="max-w-2xl">
-              <p className="text-[#8B0000] font-bold uppercase tracking-[0.25em] text-xs mb-3 flex items-center gap-2"><Map className="w-4 h-4"/> Location insights</p>
-              <h2 className="text-3xl md:text-5xl font-black text-slate-900 leading-tight">Explore {search.city || 'Top Corridors'} Visually</h2>
-              <p className="text-slate-600 text-lg md:text-xl mt-5 leading-relaxed">
-                Our interactive map view updates dynamically. Pan and zoom to discover the neighborhoods, connectivity hubs, and infrastructure shaping real estate.
-              </p>
-            </div>
-            <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 md:block hidden pointer-events-none text-[#D4AF37] opacity-20">
-                <MapPin className="w-48 h-48" />
-            </div>
-          </div>
-          
-          <div className="w-full h-[550px] md:h-[600px] rounded-[2rem] overflow-hidden shadow-2xl border-4 border-white relative bg-slate-200 group">
-            <iframe 
-              src={dynamicMapSrc}
-              width="100%" 
-              height="100%" 
-              style={{ border: 0 }} 
-              allowFullScreen="" 
-              loading="lazy" 
-              referrerPolicy="no-referrer-when-downgrade"
-              title="Real Estate Map View"
-              className="grayscale-[20%] hover:grayscale-0 transition-all duration-700 opacity-90 hover:opacity-100"
-            ></iframe>
-
-            {/* SLEEK MAP INFO CARD */}
-            <div className="absolute bottom-6 left-6 bg-white/95 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-slate-200 max-w-[320px] transition-all duration-300 group-hover:shadow-[#D4AF37]/20">
-              <div className="flex items-center gap-2.5 mb-3 border-b border-slate-100 pb-3">
-                 <div className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse shadow-lg" />
-                 <h3 className="font-black text-slate-900 text-base">Interactive Area Map</h3>
-              </div>
-              <p className="text-sm text-slate-600 mb-5 leading-relaxed">Currently viewing <span className="font-bold text-slate-900">{mapLocation}</span>. Use the map to gauge local connectivity and amenities.</p>
-              <Button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="w-full h-11 text-sm bg-[#8B0000] hover:bg-[#600000] text-white rounded-xl font-bold shadow-md shadow-[#8B0000]/30 transition-all hover:-translate-y-0.5">Change Area</Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* --- HOW IT WORKS --- */}
-      <section className="py-24 px-6 bg-slate-900 text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#8B0000]/10 to-transparent z-0 pointer-events-none"/>
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-             <p className="text-[#D4AF37] font-bold uppercase tracking-[0.25em] text-xs mb-3 flex items-center gap-2 justify-center"><Zap className="w-4 h-4"/> Step-by-step guidance</p>
-             <h2 className="text-3xl md:text-5xl font-black text-white">How ANK Realty Simplifies Buying</h2>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
-             <div className="absolute top-10 left-0 right-0 h-1 bg-white/5 md:block hidden" />
-             {processSteps.map((step, idx) => (
-                <div key={idx} className="relative group text-center flex flex-col items-center">
-                    <div className="w-20 h-20 rounded-full bg-[#8B0000] border-4 border-[#D4AF37]/50 flex items-center justify-center mb-6 z-10 transition-transform duration-300 group-hover:scale-110 shadow-xl shadow-[#8B0000]/50">
-                        <step.icon className="w-9 h-9 text-[#D4AF37]" />
-                        <span className="absolute -top-3 -right-3 w-8 h-8 bg-white text-[#8B0000] rounded-full flex items-center justify-center font-black text-lg shadow-lg border-2 border-[#8B0000]">0{idx+1}</span>
-                    </div>
-                    <h3 className="text-2xl font-black mb-3">{step.title}</h3>
-                    <p className="text-slate-400 text-base leading-relaxed">{step.desc}</p>
-                </div>
-             ))}
-          </div>
-        </div>
-      </section>
-
       {/* --- EMI CALCULATOR SECTION --- */}
-      <section className="py-24 px-6 bg-white border-b border-slate-200 relative overflow-hidden">
+      <section className="py-24 px-6 bg-white border-b border-slate-200 border-t relative overflow-hidden">
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-16 max-w-2xl mx-auto">
              <p className="text-[#8B0000] font-bold uppercase tracking-[0.25em] text-xs mb-3">Financial Planning Made Simple</p>
@@ -472,7 +462,7 @@ export default function HomePage() {
 
           <div className="bg-slate-50 rounded-[2.5rem] p-8 md:p-12 shadow-2xl border border-slate-100 max-w-5xl mx-auto grid md:grid-cols-2 gap-12 items-center relative group hover:border-[#D4AF37]/50 transition-colors">
             {/* Background Accent */}
-            <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 text-[#D4AF37]/10 group-hover:scale-110 transition-transform duration-1000">
+            <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 text-[#D4AF37]/10 group-hover:scale-110 transition-transform duration-1000 pointer-events-none">
                  <PieChart className="w-64 h-64" />
             </div>
 
@@ -528,7 +518,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- WHY INDIA & LOAN FORM --- */}
+      {/* --- WHY INDIA & LOAN FORM (Connected to CRM) --- */}
       <section className="py-24 px-6 bg-slate-50 border-b border-slate-100 relative overflow-hidden">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center relative z-10">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
@@ -581,30 +571,88 @@ export default function HomePage() {
             
             <div className="grid md:grid-cols-2 gap-4 mb-6 relative z-10">
               <Input value={loanLead.name} onChange={(e) => setLoanLead((prev) => ({ ...prev, name: e.target.value }))} placeholder="Your full name" className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-14 text-base rounded-xl focus:border-[#D4AF37]" />
-              <Input value={loanLead.phone} onChange={(e) => setLoanLead((prev) => ({ ...prev, phone: e.target.value }))} placeholder="Phone number" className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-14 text-base rounded-xl focus:border-[#D4AF37]" />
+              <Input value={loanLead.phone} onChange={(e) => setLoanLead((prev) => ({ ...prev, phone: e.target.value }))} placeholder="Phone number" type="tel" className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-14 text-base rounded-xl focus:border-[#D4AF37]" />
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4 relative z-10">
-              <Button onClick={handleLoanLead} className="bg-[#D4AF37] hover:bg-[#c09b2e] text-slate-900 h-14 rounded-xl text-base px-8 font-black flex-1 shadow-lg shadow-[#D4AF37]/30 transition-all hover:-translate-y-0.5">Request callback</Button>
+              <Button onClick={handleLoanLead} disabled={isLoanSubmitting} className="bg-[#D4AF37] hover:bg-[#c09b2e] text-slate-900 h-14 rounded-xl text-base px-8 font-black flex-1 shadow-lg shadow-[#D4AF37]/30 transition-all hover:-translate-y-0.5">
+                {isLoanSubmitting ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Request Callback"}
+              </Button>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* --- NEWSLETTER CTA --- */}
-      <section className="py-24 px-6 bg-slate-900 text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#8B0000]/80 to-slate-900/90 mix-blend-multiply z-0" />
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2000&auto=format&fit=crop')] opacity-20 bg-cover bg-center mix-blend-overlay" />
-        <div className="max-w-4xl mx-auto text-center relative z-10 flex flex-col items-center">
-          <div className="bg-[#D4AF37]/20 w-20 h-20 rounded-full flex items-center justify-center mb-8 backdrop-blur-sm border border-[#D4AF37]/50 shadow-[0_0_30px_rgba(212,175,55,0.3)]">
-            <Bell className="w-10 h-10 text-[#D4AF37]" />
+      {/* --- PROMOTIONAL VIDEOS FROM ADMIN (NEW SECTION) --- */}
+      {videos.length > 0 && (
+        <section className="py-24 px-6 bg-slate-50 border-b border-slate-200">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-16 max-w-2xl mx-auto">
+               <p className="text-[#8B0000] font-bold uppercase tracking-[0.25em] text-xs mb-3">Property Tours & Insights</p>
+               <h2 className="text-3xl md:text-5xl font-black text-slate-900 leading-tight">Featured Real Estate Videos</h2>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {videos.map((vid) => {
+                const ytId = getYouTubeID(vid.videoUrl);
+                return (
+                  <div key={vid.id} className="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl hover:border-[#D4AF37]/50 transition-all duration-300 group flex flex-col">
+                    <div className="relative aspect-video bg-slate-900">
+                      {ytId ? (
+                         <iframe 
+                           src={`https://www.youtube.com/embed/${ytId}?rel=0`} 
+                           title={vid.title} 
+                           className="w-full h-full absolute inset-0" 
+                           allowFullScreen 
+                         />
+                      ) : (
+                         <div className="w-full h-full flex items-center justify-center text-slate-500"><Video className="w-10 h-10"/></div>
+                      )}
+                    </div>
+                    <div className="p-6 flex-1 flex flex-col">
+                      <div className="text-[10px] font-black uppercase tracking-widest text-[#8B0000] mb-2 flex items-center gap-1.5"><PlayCircle className="w-3.5 h-3.5"/> Video Tour</div>
+                      <h3 className="font-black text-slate-900 text-lg mb-2 line-clamp-2 group-hover:text-[#8B0000] transition-colors">{vid.title}</h3>
+                      <p className="text-sm text-slate-500 line-clamp-2 mt-auto">{vid.description || 'Watch our latest property tour and market insights directly from our experts.'}</p>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            
+            <div className="text-center mt-12">
+              <Link to="/videos">
+                 <Button variant="outline" className="border-slate-300 font-bold hover:bg-[#8B0000] hover:text-white transition-colors h-12 px-8 rounded-xl text-base">View All Videos <ArrowRight className="w-4 h-4 ml-2"/></Button>
+              </Link>
+            </div>
           </div>
-          <h2 className="text-4xl md:text-6xl font-black mb-6 tracking-tight">Never Miss a Property Deal</h2>
-          <p className="text-slate-300 text-lg md:text-xl mb-12 max-w-2xl mx-auto font-medium leading-relaxed">Get pre-launch alerts, price updates, and curated property matches directly to your inbox and WhatsApp.</p>
+        </section>
+      )}
+
+      {/* --- DYNAMIC MAP LOCATION FINDER --- */}
+      <section className="py-24 px-6 bg-slate-50 border-t border-slate-200">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col lg:flex-row justify-between lg:items-end mb-12 gap-8 lg:gap-16 relative">
+            <div className="max-w-2xl">
+              <p className="text-[#8B0000] font-bold uppercase tracking-[0.25em] text-xs mb-3 flex items-center gap-2"><Map className="w-4 h-4"/> Location insights</p>
+              <h2 className="text-3xl md:text-5xl font-black text-slate-900 leading-tight">Explore {search.city || 'Top Corridors'} Visually</h2>
+              <p className="text-slate-600 text-lg md:text-xl mt-5 leading-relaxed">
+                Our interactive map view updates dynamically. Pan and zoom to discover the neighborhoods, connectivity hubs, and infrastructure shaping real estate.
+              </p>
+            </div>
+          </div>
           
-          <div className="flex flex-col sm:flex-row gap-4 max-w-2xl mx-auto w-full">
-            <input type="email" value={newsletterEmail} onChange={(e) => setNewsletterEmail(e.target.value)} placeholder="Enter your email address" className="flex-1 h-16 rounded-xl px-6 bg-white/10 border border-white/20 text-white placeholder-slate-400 focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-all text-base" />
-            <Button onClick={handleNewsletter} className="h-16 px-10 bg-[#D4AF37] hover:bg-[#c09b2e] text-slate-900 font-black rounded-xl text-base shadow-xl shadow-[#D4AF37]/30 transition-all hover:-translate-y-0.5">Subscribe Now</Button>
+          <div className="w-full h-[550px] md:h-[600px] rounded-[2rem] overflow-hidden shadow-2xl border-4 border-white relative bg-slate-200 group">
+            <iframe 
+              src={dynamicMapSrc}
+              width="100%" 
+              height="100%" 
+              style={{ border: 0 }} 
+              allowFullScreen="" 
+              loading="lazy" 
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Real Estate Map View"
+              className="grayscale-[20%] hover:grayscale-0 transition-all duration-700 opacity-90 hover:opacity-100"
+            ></iframe>
           </div>
         </div>
       </section>
@@ -619,12 +667,10 @@ export default function HomePage() {
                 Premium property discovery, verified advisory, corporate leasing help, and owner-first listing support across major hubs. Your Trusted Partner.
               </p>
               <div className="flex space-x-3 pt-2">
-                <div className="w-10 h-10 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all cursor-pointer">
-                  <Mail className="w-4 h-4"/>
-                </div>
-                <div className="w-10 h-10 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all cursor-pointer">
-                  <Phone className="w-4 h-4"/>
-                </div>
+                <a href="#" className="w-10 h-10 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all cursor-pointer"><Linkedin className="w-4 h-4"/></a>
+                <a href="#" className="w-10 h-10 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all cursor-pointer"><Twitter className="w-4 h-4"/></a>
+                <a href="#" className="w-10 h-10 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all cursor-pointer"><Facebook className="w-4 h-4"/></a>
+                <a href="#" className="w-10 h-10 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all cursor-pointer"><Instagram className="w-4 h-4"/></a>
               </div>
             </div>
             
@@ -642,9 +688,9 @@ export default function HomePage() {
               <h4 className="font-bold text-lg mb-8 text-white uppercase tracking-widest text-sm">Categories</h4>
               <ul className="space-y-5 text-slate-400 font-medium text-base">
                 <li><Link to="/properties?property_type=plot" className="hover:text-[#D4AF37] transition-colors flex items-center"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Premium Plots</Link></li>
-                <li><Link to="/buy" className="hover:text-[#D4AF37] transition-colors flex items-center"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Residential Homes</Link></li>
-                <li><Link to="/properties?property_type=commercial" className="hover:text-[#D4AF37] transition-colors flex items-center"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Commercial Spaces</Link></li>
-                <li><Link to="/rent" className="hover:text-[#D4AF37] transition-colors flex items-center"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Rental Homes</Link></li>
+                <li><Link to="/properties?category=buy" className="hover:text-[#D4AF37] transition-colors flex items-center"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Residential Homes</Link></li>
+                <li><Link to="/corporate-leasing" className="hover:text-[#D4AF37] transition-colors flex items-center"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Corporate Leasing</Link></li>
+                <li><Link to="/properties?category=rent" className="hover:text-[#D4AF37] transition-colors flex items-center"><ChevronRight className="w-3.5 h-3.5 mr-2 text-[#8B0000]"/> Rental Homes</Link></li>
               </ul>
             </div>
             
@@ -653,7 +699,7 @@ export default function HomePage() {
               <div className="space-y-5 text-slate-400 font-medium text-base">
                 <div className="flex items-start bg-slate-900/50 p-4 rounded-xl border border-slate-800 hover:border-[#D4AF37]/50 transition-colors">
                   <MapPin className="w-6 h-6 mr-4 text-[#D4AF37] shrink-0" /> 
-                  <p className="text-sm">Tapasya Corp Heights, Sector 126, Noida, UP 201301</p>
+                  <p className="text-sm">Sector 62, Noida, Uttar Pradesh 201309</p>
                 </div>
                 <div className="flex items-center bg-slate-900/50 p-4 rounded-xl border border-slate-800 hover:border-[#D4AF37]/50 transition-colors">
                   <Mail className="w-6 h-6 mr-4 text-[#D4AF37] shrink-0" /> 
