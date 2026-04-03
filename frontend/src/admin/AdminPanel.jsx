@@ -1,83 +1,91 @@
-// src/admin/AdminLayout.jsx
-import React, { useState } from "react";
-import { LayoutDashboard, Building, Home, Key, PlusSquare, Users, FileText, Youtube, LogOut, Menu } from 'lucide-react';
+// src/admin/BlogManager.jsx
+import React, { useState, useEffect } from 'react';
+import { FileText, Plus, Trash2, X, Image as ImageIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
-const NavButton = ({ icon: Icon, label, active, onClick }) => (
-  <button
-    onClick={onClick}
-    className={`flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl transition-all font-medium mb-1
-      ${active ? "bg-slate-900 text-white shadow-md" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"}`}
-  >
-    <Icon className="w-5 h-5" />
-    <span className="text-sm">{label}</span>
-  </button>
-);
+export default function BlogManager() {
+  const { api } = useAuth();
+  const [blogs, setBlogs] = useState([]);
+  const [isAdding, setIsAdding] = useState(false);
+  const [form, setForm] = useState({ title: '', excerpt: '', content: '' });
+  const [image, setImage] = useState(null);
 
-export default function AdminLayout({ children, page = "dashboard", setPage = () => {}, role = "broker" }) {
-  const [open, setOpen] = useState(true); 
-  const [mobileOpen, setMobileOpen] = useState(false); 
-  const isAdmin = role === "admin";
+  const fetchBlogs = async () => {
+    try {
+      const res = await api.get('/blogs');
+      setBlogs(res.data || []);
+    } catch (e) {}
+  };
 
-  const allNavItems = [
-    { key: "dashboard", label: "Dashboard", adminOnly: false, icon: LayoutDashboard },
-    { key: "crm", label: "Lead CRM", adminOnly: false, icon: Users }, // NEW CRM TAB
-    { key: "buy", label: "Buy Properties", adminOnly: false, icon: Home },
-    { key: "resale", label: "Resale Properties", adminOnly: false, icon: Key },
-    { key: "client-project", label: "Corporate Leases", adminOnly: false, icon: Building }, // CORPORATE TAB
-    { key: "add-property", label: "Add Property", adminOnly: false, icon: PlusSquare },
-    { key: "blogs", label: "Manage Blogs", adminOnly: true, icon: FileText },
-    { key: "youtube", label: "YouTube Promos", adminOnly: true, icon: Youtube },
-  ];
+  useEffect(() => { fetchBlogs(); }, []);
 
-  const nav = allNavItems.filter(item => !item.adminOnly || isAdmin);
+  const handleSave = async (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('title', form.title);
+    formData.append('excerpt', form.excerpt);
+    formData.append('content', form.content);
+    if (image) formData.append('image', image);
 
-  function handleLogout() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    window.location.href = "/auth";
+    try {
+      await api.post('/blogs', formData, { headers: { 'Content-Type': 'multipart/form-data' }});
+      toast.success("Blog published!");
+      setIsAdding(false);
+      setForm({ title: '', excerpt: '', content: '' }); setImage(null);
+      fetchBlogs();
+    } catch (e) { toast.error("Failed to publish."); }
+  };
+
+  const handleDelete = async (id) => {
+    if(!window.confirm("Delete this blog?")) return;
+    try {
+      await api.delete(`/blogs/${id}`);
+      toast.success("Deleted.");
+      fetchBlogs();
+    } catch (e) {}
+  };
+
+  if (isAdding) {
+    return (
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm max-w-3xl mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-black text-slate-900">Write New Blog</h2>
+          <button onClick={() => setIsAdding(false)}><X className="w-5 h-5 text-slate-400 hover:text-red-500" /></button>
+        </div>
+        <form onSubmit={handleSave} className="space-y-4">
+          <div><label className="text-xs font-bold text-slate-500">Title</label><input required value={form.title} onChange={e=>setForm({...form, title: e.target.value})} className="w-full h-11 px-4 border rounded-xl" /></div>
+          <div><label className="text-xs font-bold text-slate-500">Short Excerpt</label><input required value={form.excerpt} onChange={e=>setForm({...form, excerpt: e.target.value})} className="w-full h-11 px-4 border rounded-xl" /></div>
+          <div>
+            <label className="text-xs font-bold text-slate-500">Cover Image</label>
+            <input type="file" accept="image/*" onChange={(e) => setImage(e.target.files[0])} className="w-full p-2 border rounded-xl text-sm" />
+          </div>
+          <div><label className="text-xs font-bold text-slate-500">Full Content</label><textarea required value={form.content} onChange={e=>setForm({...form, content: e.target.value})} className="w-full p-4 border rounded-xl" rows={8} /></div>
+          <Button type="submit" className="w-full bg-[#003B30] hover:bg-[#00261c] text-white font-bold h-12 rounded-xl">Publish Blog</Button>
+        </form>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen flex bg-slate-50 font-sans">
-      {/* Desktop Sidebar */}
-      <aside className={`hidden md:flex md:flex-col bg-white border-r border-slate-200 p-5 transition-all duration-300 ${open ? "w-72" : "w-0 overflow-hidden opacity-0 p-0"}`}>
-        <div className="flex items-center gap-3 mb-8 px-2">
-          <div className="bg-[#8B0000] text-white w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg shadow-md">A</div>
-          <div>
-            <div className="text-lg font-black text-slate-900 tracking-tight">ANK Realty</div>
-            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">{isAdmin ? "Admin Portal" : "Broker Portal"}</div>
+    <div className="space-y-6">
+      <div className="bg-white rounded-2xl border border-slate-200 p-5 flex justify-between items-center shadow-sm">
+        <h2 className="text-2xl font-black text-slate-900">Blog Posts</h2>
+        <Button onClick={() => setIsAdding(true)} className="bg-[#003B30] hover:bg-[#00261c] text-white font-bold rounded-xl"><Plus className="w-4 h-4 mr-2" /> Write Post</Button>
+      </div>
+      <div className="grid md:grid-cols-3 gap-6">
+        {blogs.map(b => (
+          <div key={b.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+            {b.imageUrl ? <img src={b.imageUrl} className="w-full h-40 object-cover" /> : <div className="w-full h-40 bg-slate-100 flex items-center justify-center"><ImageIcon className="text-slate-300" /></div>}
+            <div className="p-5">
+              <h3 className="font-bold text-slate-900 truncate mb-1">{b.title}</h3>
+              <p className="text-xs text-slate-500 line-clamp-2 mb-4">{b.excerpt}</p>
+              <button onClick={() => handleDelete(b.id)} className="text-xs font-bold text-red-500 flex items-center"><Trash2 className="w-3 h-3 mr-1" /> Delete</button>
+            </div>
           </div>
-        </div>
-
-        <nav className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-          <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 px-4">Menu</div>
-          {nav.filter(n => !n.adminOnly).map((n) => (
-            <NavButton key={n.key} icon={n.icon} label={n.label} active={page === n.key} onClick={() => setPage(n.key)} />
-          ))}
-
-          {isAdmin && (
-            <>
-              <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-8 mb-3 px-4">Marketing & Tools</div>
-              {nav.filter(n => n.adminOnly).map((n) => (
-                <NavButton key={n.key} icon={n.icon} label={n.label} active={page === n.key} onClick={() => setPage(n.key)} />
-              ))}
-            </>
-          )}
-        </nav>
-
-        <div className="mt-6 pt-6 border-t border-slate-100">
-          <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-colors">
-            <LogOut className="w-4 h-4" /> Secure Logout
-          </button>
-        </div>
-      </aside>
-
-      {/* Main content area */}
-      <main className="flex-1 p-6 lg:p-10 lg:pl-12 overflow-x-hidden">
-        <div className="max-w-7xl mx-auto">
-          {children}
-        </div>
-      </main>
+        ))}
+      </div>
     </div>
   );
 }
