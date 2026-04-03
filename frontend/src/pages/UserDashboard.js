@@ -1,7 +1,11 @@
 // src/pages/UserDashboard.jsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Heart, Calendar, MessageSquare, MapPin, Trash2, ArrowRight, Loader2, Building, Clock } from 'lucide-react';
+import { 
+  Heart, Calendar, MessageSquare, MapPin, Trash2, 
+  ArrowRight, Loader2, Building, Clock, User,
+  CheckCircle, ChevronRight
+} from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
@@ -16,37 +20,31 @@ export default function UserDashboard() {
   const [inquiries, setInquiries] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Safely extract error messages
-  const getErrorMessage = (error) => {
-    if (error.response?.data?.detail) {
-      const detail = error.response.data.detail;
-      return typeof detail === 'string' ? detail : "Something went wrong";
-    }
-    return error.message || 'An unexpected error occurred.';
-  };
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 17) return "Good Afternoon";
+    return "Good Evening";
+  }, []);
 
   const fetchDashboardData = useCallback(async () => {
+    if (!api) return;
     setLoading(true);
     try {
-      // Using Promise.allSettled to ensure one failing endpoint doesn't break the whole dashboard
-      const [favResult, dashResult, inqResult] = await Promise.allSettled([
+      const [favResult, inqResult] = await Promise.allSettled([
         api.get('/favorites'),
-        api.get('/dashboard/user'), // Assuming you have this or will add it
         api.get('/inquiries')
       ]);
 
-      const favData = favResult.status === 'fulfilled' ? favResult.value.data : [];
-      const dashData = dashResult.status === 'fulfilled' ? dashResult.value.data : {};
-      const inqData = inqResult.status === 'fulfilled' ? inqResult.value.data : [];
-
-      // Map the data safely
-      setFavorites(Array.isArray(favData) ? favData : []);
-      setAppointments(dashData?.appointments || []);
-      setInquiries(Array.isArray(inqData) ? inqData : []);
+      setFavorites(favResult.status === 'fulfilled' ? favResult.value.data : []);
+      setInquiries(inqResult.status === 'fulfilled' ? inqResult.value.data : []);
+      
+      // Simulated appointments if backend endpoint doesn't exist yet
+      setAppointments([]); 
 
     } catch (error) {
-      console.error('Error fetching dashboard:', error);
-      toast.error('Failed to load some dashboard data.');
+      console.error('Dashboard Error:', error);
+      toast.error('Unable to sync your latest activity.');
     } finally {
       setLoading(false);
     }
@@ -59,225 +57,201 @@ export default function UserDashboard() {
   const removeFavorite = async (propertyId) => {
     try {
       await api.delete(`/favorites/${propertyId}`);
-      setFavorites((prev) => prev.filter((p) => p.property_id !== propertyId && p.id !== propertyId));
-      toast.success('Property removed from favorites');
+      setFavorites((prev) => prev.filter((p) => (p.property_id !== propertyId && p.id !== propertyId)));
+      toast.success('Removed from your collection');
     } catch (error) {
-      toast.error(getErrorMessage(error));
+      toast.error("Could not remove property.");
     }
   };
 
   const formatCurrency = (amount) => {
     if (!amount) return 'Price on Request';
-    const num = Number(amount);
-    if (num >= 10000000) return `₹${(num / 10000000).toFixed(2)} Cr`;
-    if (num >= 100000) return `₹${(num / 100000).toFixed(2)} Lac`;
-    return `₹${num.toLocaleString('en-IN')}`;
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0
+    }).format(amount);
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans selection:bg-[#D4AF37]/30 flex flex-col">
+    <div className="min-h-screen bg-[#F8FAFC] font-sans selection:bg-[#D4AF37]/30 flex flex-col">
       <Navbar />
 
-      {/* HEADER SECTION */}
-      <section className="bg-slate-900 pt-32 pb-16 px-6 relative overflow-hidden shadow-md">
-        <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] pointer-events-none"></div>
-        <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/10 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
+      {/* REFINED HEADER */}
+      <section className="bg-slate-900 pt-32 pb-20 px-6 relative">
+        <div className="absolute inset-0 opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] pointer-events-none"></div>
         
-        <div className="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div>
-            <h1 className="text-4xl md:text-5xl font-black text-white mb-2 tracking-tight">
-              My <span className="text-[#D4AF37]">Portfolio</span>
-            </h1>
-            <p className="text-slate-400 text-lg font-medium">
-              Welcome back, <span className="text-white font-bold">{user?.name || 'Valued Client'}</span>! Manage your real estate journey here.
-            </p>
-          </div>
-          <div className="flex gap-4">
-             <button onClick={() => navigate('/properties')} className="bg-[#8B0000] hover:bg-[#600000] text-white font-bold px-6 py-3 rounded-xl shadow-lg shadow-[#8B0000]/20 transition-all hover:-translate-y-0.5 flex items-center">
-               Explore Properties <ArrowRight className="w-4 h-4 ml-2" />
-             </button>
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3 text-[#D4AF37] font-bold text-sm uppercase tracking-[0.2em] mb-2">
+                <div className="h-px w-8 bg-[#D4AF37]"></div>
+                Client Dashboard
+              </div>
+              <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight">
+                {greeting}, <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400">{user?.name?.split(' ')[0] || 'Guest'}</span>
+              </h1>
+              <p className="text-slate-400 font-medium max-w-xl">
+                Manage your saved properties, track your site visit schedules, and review your communication with our advisory team.
+              </p>
+            </div>
+            
+            {/* QUICK STATS SUMMARY */}
+            <div className="flex gap-4 md:gap-8">
+              <div className="text-center">
+                <p className="text-2xl font-black text-white">{favorites.length}</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Saved</p>
+              </div>
+              <div className="w-px h-10 bg-white/10 hidden md:block"></div>
+              <div className="text-center">
+                <p className="text-2xl font-black text-white">{inquiries.length}</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Inquiries</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* MAIN CONTENT */}
-      <div className="max-w-7xl mx-auto px-6 py-12 w-full flex-1">
-        
-        {/* CUSTOM TABS NAVIGATION */}
-        <div className="flex overflow-x-auto hide-scrollbar gap-2 mb-8 bg-white p-2 rounded-2xl shadow-sm border border-slate-200 w-fit">
-          <button 
-            onClick={() => setActiveTab('favorites')}
-            className={`flex items-center px-6 py-3 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${
-              activeTab === 'favorites' ? 'bg-[#8B0000] text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            <Heart className="w-4 h-4 mr-2" /> Saved Properties ({favorites.length})
-          </button>
-          <button 
-            onClick={() => setActiveTab('appointments')}
-            className={`flex items-center px-6 py-3 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${
-              activeTab === 'appointments' ? 'bg-[#8B0000] text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            <Calendar className="w-4 h-4 mr-2" /> Site Visits ({appointments.length})
-          </button>
-          <button 
-            onClick={() => setActiveTab('inquiries')}
-            className={`flex items-center px-6 py-3 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${
-              activeTab === 'inquiries' ? 'bg-[#8B0000] text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            <MessageSquare className="w-4 h-4 mr-2" /> My Inquiries ({inquiries.length})
-          </button>
-        </div>
-
-        {/* LOADING STATE */}
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-[2rem] border border-slate-100 shadow-sm">
-             <Loader2 className="w-12 h-12 text-[#8B0000] animate-spin mb-4" />
-             <p className="text-slate-500 font-bold tracking-wider uppercase text-sm">Loading your data...</p>
+      {/* MAIN LAYOUT */}
+      <div className="max-w-7xl mx-auto px-6 -mt-10 w-full flex-1 pb-20">
+        <div className="grid lg:grid-cols-4 gap-8">
+          
+          {/* SIDE NAVIGATION */}
+          <div className="lg:col-span-1 space-y-2">
+            <div className="bg-white p-2 rounded-2xl shadow-sm border border-slate-200 sticky top-24">
+              {[
+                { id: 'favorites', label: 'Saved Collection', icon: Heart },
+                { id: 'appointments', label: 'Site Visits', icon: Calendar },
+                { id: 'inquiries', label: 'Message History', icon: MessageSquare },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center justify-between w-full px-4 py-3.5 rounded-xl font-bold text-sm transition-all group ${
+                    activeTab === tab.id 
+                      ? 'bg-slate-900 text-white shadow-lg' 
+                      : 'text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="flex items-center gap-3">
+                    <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-[#D4AF37]' : 'text-slate-400'}`} />
+                    {tab.label}
+                  </span>
+                  <ChevronRight className={`w-4 h-4 transition-transform ${activeTab === tab.id ? 'translate-x-0' : '-translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0'}`} />
+                </button>
+              ))}
+            </div>
           </div>
-        ) : (
-          <div className="animate-in fade-in duration-500">
-            
-            {/* FAVORITES TAB */}
-            {activeTab === 'favorites' && (
-              <div>
-                {favorites.length === 0 ? (
-                  <div className="text-center py-24 bg-white rounded-[2.5rem] border border-dashed border-slate-300 shadow-sm">
-                    <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-5 border border-slate-100">
-                      <Heart className="h-8 w-8 text-slate-300" />
-                    </div>
-                    <h3 className="text-2xl font-black text-slate-900 mb-2">No saved properties yet</h3>
-                    <p className="text-slate-500 mb-6 max-w-md mx-auto font-medium">Keep track of homes you love by clicking the heart icon on any property listing.</p>
-                    <Link to="/properties" className="inline-flex items-center justify-center bg-[#D4AF37] hover:bg-[#c09b2e] text-slate-900 font-black px-8 h-12 rounded-xl shadow-lg shadow-[#D4AF37]/20 transition-all hover:-translate-y-0.5">
-                      Start Browsing
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {favorites.map((fav) => {
-                      const property = fav.property || fav; // Handle nested structure depending on backend
-                      return (
-                        <div key={property.id} className="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 group flex flex-col">
-                          <Link to={`/property/${property.property_id || property.id}`} className="block h-56 relative overflow-hidden p-2 pb-0">
-                            <div className="w-full h-full rounded-2xl overflow-hidden relative">
-                              <img
-                                src={property.images?.[0] || property.imageUrl || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80'}
-                                alt={property.title || 'Property'}
-                                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                              />
-                            </div>
-                          </Link>
-                          <div className="p-6 flex-1 flex flex-col">
-                            <h3 className="font-black text-xl text-slate-900 mb-2 line-clamp-1 group-hover:text-[#8B0000] transition-colors">
-                              {property.title || 'Premium Property'}
-                            </h3>
-                            <p className="text-slate-500 text-sm flex items-center mb-5 font-medium">
-                              <MapPin className="h-4 w-4 mr-1.5 text-slate-400" />
-                              {property.city || property.location || 'Location unavailable'}
-                            </p>
-                            <div className="mt-auto pt-4 border-t border-slate-100 flex justify-between items-center">
-                              <span className="text-[#003B30] font-black text-xl">
-                                {formatCurrency(property.price)}
-                              </span>
-                              <button
-                                onClick={() => removeFavorite(property.property_id || property.id)}
-                                className="w-10 h-10 rounded-full bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors"
-                                title="Remove from favorites"
-                              >
+
+          {/* CONTENT AREA */}
+          <div className="lg:col-span-3">
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-32 bg-white rounded-[2rem] border border-slate-200 shadow-sm">
+                <Loader2 className="w-10 h-10 text-slate-900 animate-spin mb-4" />
+                <p className="text-slate-400 font-bold tracking-widest uppercase text-[10px]">Synchronizing Account</p>
+              </div>
+            ) : (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                
+                {/* FAVORITES VIEW */}
+                {activeTab === 'favorites' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {favorites.length === 0 ? <EmptyState icon={Heart} title="Your collection is empty" desc="Save properties you're interested in to track price changes and availability." /> : (
+                      favorites.map((fav) => {
+                        const property = fav.property || fav;
+                        return (
+                          <div key={property.id} className="bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-sm group hover:shadow-xl hover:border-[#D4AF37]/30 transition-all duration-500">
+                            <div className="relative h-48 overflow-hidden">
+                              <img src={property.images?.[0] || property.imageUrl} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="" />
+                              <button onClick={() => removeFavorite(property.property_id || property.id)} className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-md text-red-500 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-md">
                                 <Trash2 className="w-4 h-4" />
                               </button>
                             </div>
+                            <div className="p-6">
+                              <h3 className="font-black text-slate-900 text-lg mb-1 truncate">{property.title}</h3>
+                              <p className="flex items-center text-slate-400 text-sm font-medium mb-4"><MapPin className="w-3.5 h-3.5 mr-1" /> {property.city}</p>
+                              <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+                                <span className="text-xl font-black text-[#003B30]">{formatCurrency(property.price)}</span>
+                                <Link to={`/property/${property.property_id || property.id}`} className="text-[10px] font-black uppercase tracking-widest text-[#8B0000] flex items-center hover:gap-2 transition-all">
+                                  View Details <ArrowRight className="w-3 h-3 ml-1" />
+                                </Link>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                    )}
                   </div>
                 )}
-              </div>
-            )}
 
-            {/* APPOINTMENTS TAB */}
-            {activeTab === 'appointments' && (
-              <div>
-                {appointments.length === 0 ? (
-                  <div className="text-center py-24 bg-white rounded-[2.5rem] border border-dashed border-slate-300 shadow-sm">
-                    <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-5 border border-slate-100">
-                      <Calendar className="h-8 w-8 text-slate-300" />
-                    </div>
-                    <h3 className="text-2xl font-black text-slate-900 mb-2">No site visits scheduled</h3>
-                    <p className="text-slate-500 mb-6 font-medium">You don't have any upcoming property tours. Schedule one from a property's detail page.</p>
-                  </div>
-                ) : (
-                  <div className="grid md:grid-cols-2 gap-6">
-                    {appointments.map((a) => (
-                      <div key={a.id} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-start gap-4 hover:border-[#D4AF37]/50 transition-colors">
-                        <div className="w-12 h-12 rounded-full bg-[#D4AF37]/10 flex items-center justify-center shrink-0">
-                          <Calendar className="w-5 h-5 text-[#D4AF37]" />
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Upcoming Visit</p>
-                          <h3 className="font-black text-slate-900 text-lg mb-2">{a.property_title || 'Property Tour'}</h3>
-                          <div className="flex flex-wrap gap-3 mb-3">
-                            <span className="flex items-center text-sm font-bold text-slate-600 bg-slate-50 px-3 py-1 rounded-lg border border-slate-100">
-                              <Calendar className="w-4 h-4 mr-1.5 text-slate-400"/> {a.date}
-                            </span>
-                            <span className="flex items-center text-sm font-bold text-slate-600 bg-slate-50 px-3 py-1 rounded-lg border border-slate-100">
-                              <Clock className="w-4 h-4 mr-1.5 text-slate-400"/> {a.time}
-                            </span>
+                {/* APPOINTMENTS VIEW */}
+                {activeTab === 'appointments' && (
+                  <div className="space-y-4">
+                    {appointments.length === 0 ? <EmptyState icon={Calendar} title="No visits scheduled" desc="Ready to see a property in person? Book a visit from the property details page." /> : (
+                      appointments.map((a) => (
+                        <div key={a.id} className="bg-white p-6 rounded-3xl border border-slate-200 flex items-center justify-between group">
+                          <div className="flex items-center gap-5">
+                            <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 group-hover:bg-[#D4AF37]/10 transition-colors">
+                              <Clock className="w-6 h-6 text-slate-400 group-hover:text-[#D4AF37]" />
+                            </div>
+                            <div>
+                              <h4 className="font-black text-slate-900">{a.property_title}</h4>
+                              <p className="text-slate-500 text-sm font-medium">{a.date} at {a.time}</p>
+                            </div>
                           </div>
-                          {a.message && <p className="text-sm text-slate-500 font-medium bg-slate-50 p-3 rounded-xl border border-slate-100">"{a.message}"</p>}
+                          <span className="px-4 py-1.5 bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase rounded-full border border-emerald-100">Confirmed</span>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
                 )}
-              </div>
-            )}
 
-            {/* INQUIRIES TAB */}
-            {activeTab === 'inquiries' && (
-              <div>
-                {inquiries.length === 0 ? (
-                  <div className="text-center py-24 bg-white rounded-[2.5rem] border border-dashed border-slate-300 shadow-sm">
-                    <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-5 border border-slate-100">
-                      <MessageSquare className="h-8 w-8 text-slate-300" />
-                    </div>
-                    <h3 className="text-2xl font-black text-slate-900 mb-2">No inquiries sent</h3>
-                    <p className="text-slate-500 mb-6 font-medium">When you contact a seller or agent, your messages will appear here.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4 max-w-4xl mx-auto">
-                    {inquiries.map((i) => (
-                      <div key={i.id} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-start gap-4">
-                        <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center shrink-0 border border-blue-100 mt-1">
-                          <Building className="w-4 h-4 text-blue-600" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex justify-between items-start mb-2">
-                            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-                              Ref ID: {i.property_id || 'General Inquiry'}
-                            </p>
-                            <p className="text-xs font-bold text-slate-400">
-                              {new Date(i.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                            </p>
+                {/* INQUIRIES VIEW */}
+                {activeTab === 'inquiries' && (
+                  <div className="space-y-4">
+                    {inquiries.length === 0 ? <EmptyState icon={MessageSquare} title="No active inquiries" desc="Your conversations with property owners and our support team will appear here." /> : (
+                      inquiries.map((inq) => (
+                        <div key={inq.id} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 bg-[#8B0000]/10 rounded-full flex items-center justify-center">
+                                <Building className="w-4 h-4 text-[#8B0000]" />
+                              </div>
+                              <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">Ref: {inq.property_id || 'General'}</span>
+                            </div>
+                            <span className="text-[10px] font-bold text-slate-400">{new Date(inq.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
                           </div>
-                          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-slate-700 font-medium text-sm leading-relaxed">
-                            {i.message}
+                          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-slate-700 text-sm font-medium leading-relaxed italic">
+                            "{inq.message}"
+                          </div>
+                          <div className="mt-4 flex items-center gap-2 text-emerald-600 font-bold text-[10px] uppercase tracking-widest">
+                            <CheckCircle className="w-3 h-3" /> Delivered to Agent
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
                 )}
+
               </div>
             )}
-
           </div>
-        )}
+        </div>
       </div>
-
     </div>
   );
 }
+
+// Reusable Professional Empty State Component
+const EmptyState = ({ icon: Icon, title, desc }) => (
+  <div className="w-full text-center py-20 bg-white rounded-[2.5rem] border border-dashed border-slate-300">
+    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-5">
+      <Icon className="h-6 w-6 text-slate-300" />
+    </div>
+    <h3 className="text-xl font-black text-slate-900 mb-2">{title}</h3>
+    <p className="text-slate-400 mb-8 max-w-xs mx-auto text-sm font-medium leading-relaxed">{desc}</p>
+    <Link to="/properties" className="inline-flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-[#8B0000] transition-all">
+      Browse Listings <ArrowRight className="w-4 h-4" />
+    </Link>
+  </div>
+);
