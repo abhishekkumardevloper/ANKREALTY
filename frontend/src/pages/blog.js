@@ -1,46 +1,187 @@
-import React, { useMemo, useState } from 'react';
+// src/pages/BlogPage.jsx
+import React, { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 import Navbar from '../components/Navbar';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Search, TrendingUp } from 'lucide-react';
-import { newsArticles } from '@/lib/siteData';
+import { BookOpen, Search, TrendingUp, ArrowRight, Loader2, FileText, Calendar } from 'lucide-react';
 
-const categories = ['All', ...new Set(newsArticles.map((item) => item.category))];
+const API_BASE = import.meta.env.VITE_API_URL || "https://ankrealty.onrender.com/api";
 
 export default function BlogPage() {
-  const [activeCategory, setActiveCategory] = useState('All');
+  const [blogs, setBlogs] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredBlogs = useMemo(() => newsArticles.filter((post) => {
-    const matchesCategory = activeCategory === 'All' || post.category === activeCategory;
-    const searchTerm = searchQuery.toLowerCase();
-    const matchesSearch = post.title.toLowerCase().includes(searchTerm) || post.excerpt.toLowerCase().includes(searchTerm);
-    return matchesCategory && matchesSearch;
-  }), [activeCategory, searchQuery]);
+  // Fetch blogs from your real backend
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        const response = await axios.get(`${API_BASE}/blogs`);
+        setBlogs(response.data || []);
+      } catch (error) {
+        console.error("Failed to fetch blogs:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBlogs();
+  }, []);
 
-  const featuredPost = filteredBlogs.find((post) => post.featured) || filteredBlogs[0];
+  // Filter based on search query
+  const filteredBlogs = useMemo(() => {
+    return blogs.filter((post) => {
+      const searchTerm = searchQuery.toLowerCase();
+      const titleMatch = post.title?.toLowerCase().includes(searchTerm);
+      const excerptMatch = post.excerpt?.toLowerCase().includes(searchTerm);
+      return titleMatch || excerptMatch;
+    });
+  }, [blogs, searchQuery]);
+
+  // Automatically feature the newest post
+  const featuredPost = filteredBlogs.length > 0 ? filteredBlogs[0] : null;
   const regularPosts = filteredBlogs.filter((post) => post.id !== featuredPost?.id);
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans">
+    <div className="min-h-screen bg-slate-50 font-sans selection:bg-[#D4AF37]/30">
       <Navbar />
-      <section className="bg-slate-900 text-white pt-32 pb-24 px-6">
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-10 items-center">
-          <div>
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-600/20 border border-red-500/30 text-red-400 text-sm font-bold tracking-widest uppercase mb-6"><BookOpen className="w-4 h-4" /> Resource Center</div>
-            <h1 className="text-5xl md:text-6xl font-black mb-6 leading-tight">News, insights, and buying guidance.</h1>
-            <p className="text-lg text-slate-400 mb-8 max-w-lg">A dynamic editorial feed for investors, owners, and end users. Search and filter instantly.</p>
-            <div className="relative max-w-md"><Search className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" /><input type="text" placeholder="Search articles..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full bg-slate-800 border border-slate-700 text-white rounded-full h-12 pl-12 pr-4 outline-none focus:border-red-500" /></div>
+      
+      {/* --- HERO SECTION --- */}
+      <section className="bg-[#050505] text-white pt-32 pb-24 px-6 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-20 mix-blend-overlay" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=2000&q=80')`, backgroundSize: 'cover', backgroundPosition: 'center' }}></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#050505]/40 via-[#050505]/80 to-[#050505] z-0" />
+        
+        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center relative z-10">
+          <div className="animate-in slide-in-from-bottom-8 duration-700">
+            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#8B0000]/20 border border-[#8B0000]/40 text-red-400 text-xs font-bold tracking-widest uppercase mb-6 shadow-[0_0_30px_rgba(139,0,0,0.2)]">
+              <BookOpen className="w-4 h-4" /> Resource Center
+            </div>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black mb-6 leading-tight tracking-tight">
+              News, insights, and <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-[#AA8000]">buying guidance.</span>
+            </h1>
+            <p className="text-lg text-slate-300 mb-8 max-w-lg leading-relaxed font-light">
+              A dynamic editorial feed for investors, owners, and end users. Search and explore the latest real estate trends instantly.
+            </p>
+            
+            {/* Search Bar */}
+            <div className="relative max-w-md group">
+              <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-[#D4AF37] transition-colors" />
+              <input 
+                type="text" 
+                placeholder="Search articles, keywords..." 
+                value={searchQuery} 
+                onChange={(e) => setSearchQuery(e.target.value)} 
+                className="w-full bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-full h-14 pl-14 pr-6 outline-none focus:border-[#D4AF37] focus:bg-white/20 transition-all font-medium placeholder:text-slate-400 shadow-xl" 
+              />
+            </div>
           </div>
-          {featuredPost && <img src={featuredPost.image} alt={featuredPost.title} className="rounded-[2rem] shadow-2xl w-full h-[320px] object-cover" />}
+
+          {/* Hero Image (Pulls from Featured Post) */}
+          <div className="hidden md:block">
+            {featuredPost && (
+              <div className="relative rounded-[2rem] shadow-2xl shadow-[#8B0000]/20 overflow-hidden group">
+                <div className="absolute inset-0 bg-slate-900/20 group-hover:bg-transparent transition-colors z-10" />
+                <img 
+                  src={featuredPost.imageUrl || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80'} 
+                  alt={featuredPost.title} 
+                  className="w-full h-[400px] object-cover group-hover:scale-105 transition-transform duration-700" 
+                />
+              </div>
+            )}
+          </div>
         </div>
       </section>
-      <section className="border-b border-slate-200 bg-white sticky top-0 z-40 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 flex overflow-x-auto hide-scrollbar py-4 gap-2">{categories.map((category) => <button key={category} onClick={() => setActiveCategory(category)} className={`px-5 py-2 rounded-full whitespace-nowrap text-sm font-bold ${activeCategory === category ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{category}</button>)}</div>
-      </section>
+
+      {/* --- CONTENT SECTION --- */}
       <section className="max-w-7xl mx-auto px-6 py-16">
-        {featuredPost && <div className="mb-12 bg-white rounded-[2rem] p-8 border border-slate-200 shadow-sm"><p className="text-red-600 font-bold uppercase tracking-[0.25em] text-xs mb-3 flex items-center gap-2"><TrendingUp className="w-4 h-4" /> Featured</p><h2 className="text-3xl font-black mb-3">{featuredPost.title}</h2><p className="text-slate-600 mb-4 max-w-3xl">{featuredPost.excerpt}</p><div className="text-sm text-slate-400">{featuredPost.date} • {featuredPost.readTime}</div></div>}
-        {filteredBlogs.length === 0 ? <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300"><h3 className="text-xl font-bold text-slate-700">No articles found</h3><Button onClick={() => { setSearchQuery(''); setActiveCategory('All'); }} className="mt-4 bg-red-50 text-red-600 hover:bg-red-100">Clear Search</Button></div> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">{regularPosts.map((post) => <Link key={post.id} to="/insights" className="bg-white rounded-[2rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl transition-all"><img src={post.image} alt={post.title} className="h-56 w-full object-cover" /><div className="p-6"><div className="text-xs font-bold uppercase tracking-[0.25em] text-red-600 mb-3">{post.category}</div><h3 className="text-xl font-black text-slate-900 mb-3">{post.title}</h3><p className="text-slate-500 text-sm leading-7">{post.excerpt}</p></div></Link>)}</div>}
+        
+        {loading ? (
+           <div className="flex flex-col items-center justify-center py-20">
+             <Loader2 className="w-12 h-12 text-[#8B0000] animate-spin mb-4" />
+             <h3 className="text-lg font-bold text-slate-600">Loading Articles...</h3>
+           </div>
+        ) : (
+          <>
+            {/* FEATURED POST BAR */}
+            {featuredPost && (
+              <Link to={`/blog/${featuredPost.id}`} className="block mb-16 bg-white rounded-[2rem] p-8 border border-slate-200 shadow-sm hover:shadow-xl hover:border-[#D4AF37]/50 transition-all group">
+                <p className="text-[#8B0000] font-bold uppercase tracking-[0.25em] text-xs mb-4 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4" /> Featured Story
+                </p>
+                <div className="flex flex-col lg:flex-row gap-8 items-start justify-between">
+                  <div className="max-w-3xl">
+                    <h2 className="text-3xl md:text-4xl font-black mb-4 text-slate-900 group-hover:text-[#8B0000] transition-colors leading-tight">
+                      {featuredPost.title}
+                    </h2>
+                    <p className="text-slate-600 mb-6 text-lg leading-relaxed">
+                      {featuredPost.excerpt}
+                    </p>
+                    <div className="flex items-center gap-4 text-sm font-bold text-slate-500">
+                      <span className="flex items-center bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                        <Calendar className="w-4 h-4 mr-2 text-[#D4AF37]" />
+                        {new Date(featuredPost.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      </span>
+                      <span className="text-[#8B0000] flex items-center opacity-0 group-hover:opacity-100 transition-opacity -translate-x-4 group-hover:translate-x-0 duration-300">
+                        Read Article <ArrowRight className="w-4 h-4 ml-1" />
+                      </span>
+                    </div>
+                  </div>
+                  {/* Mobile only image, hidden on desktop since it's in the hero */}
+                  <img src={featuredPost.imageUrl || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80'} className="w-full h-48 object-cover rounded-xl md:hidden" alt="Featured" />
+                </div>
+              </Link>
+            )}
+
+            {/* BLOG GRID */}
+            {filteredBlogs.length === 0 ? (
+              <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300 shadow-sm">
+                <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                <h3 className="text-2xl font-black text-slate-800 mb-2">No articles found</h3>
+                <p className="text-slate-500 mb-6">We couldn't find any news matching your search criteria.</p>
+                <Button onClick={() => setSearchQuery('')} className="bg-[#8B0000] hover:bg-[#600000] text-white font-bold h-12 px-8 rounded-xl shadow-lg transition-transform hover:-translate-y-0.5">
+                  Clear Search
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {regularPosts.map((post) => (
+                  <Link key={post.id} to={`/blog/${post.id}`} className="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-[#D4AF37]/40 transition-all duration-300 group flex flex-col">
+                    
+                    <div className="relative h-56 overflow-hidden">
+                      <div className="absolute inset-0 bg-slate-900/10 group-hover:bg-transparent transition-colors z-10" />
+                      <img 
+                        src={post.imageUrl || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80'} 
+                        alt={post.title} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                      />
+                    </div>
+                    
+                    <div className="p-6 md:p-8 flex flex-col flex-1">
+                      <div className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37] mb-3">
+                        {new Date(post.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </div>
+                      
+                      <h3 className="text-xl font-black text-slate-900 mb-3 leading-snug group-hover:text-[#8B0000] transition-colors line-clamp-2">
+                        {post.title}
+                      </h3>
+                      
+                      <p className="text-slate-500 text-sm leading-relaxed line-clamp-3 mb-6">
+                        {post.excerpt}
+                      </p>
+                      
+                      <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
+                        <span className="text-sm font-bold text-slate-900 group-hover:text-[#8B0000] transition-colors">Read Full Story</span>
+                        <div className="w-8 h-8 rounded-full bg-slate-50 group-hover:bg-[#8B0000] flex items-center justify-center transition-colors">
+                          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white" />
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </>
+        )}
       </section>
     </div>
   );
