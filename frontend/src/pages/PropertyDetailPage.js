@@ -453,7 +453,7 @@ export default function PropertyDetailPage() {
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs font-bold text-slate-300 uppercase tracking-widest pl-1">Phone Number</Label>
-                    <Input placeholder="+91 98765 43210" type="tel" className="h-14 bg-white/10 border-white/20 text-white placeholder:text-slate-500 rounded-xl focus:border-[#D4AF37]" value={leadForm.phone} onChange={(e)=>setLeadForm({...leadForm, phone: e.target.value})} required/>
+                    <Input placeholder="+91 92664 58945" type="tel" className="h-14 bg-white/10 border-white/20 text-white placeholder:text-slate-500 rounded-xl focus:border-[#D4AF37]" value={leadForm.phone} onChange={(e)=>setLeadForm({...leadForm, phone: e.target.value})} required/>
                   </div>
                   <div className="pt-4">
                     <Button type="submit" className="w-full h-14 bg-[#D4AF37] hover:bg-[#c09b2e] text-slate-900 font-black rounded-xl text-lg transition-all shadow-lg shadow-[#D4AF37]/20 hover:-translate-y-0.5">
@@ -548,7 +548,7 @@ export default function PropertyDetailPage() {
                 </div>
                 <div className="flex items-center bg-slate-900/50 p-3 rounded-xl border border-slate-800">
                   <Phone className="w-5 h-5 mr-3 text-[#D4AF37] shrink-0" /> 
-                  <p className="text-xs">+91 98765 43210</p>
+                  <p className="text-xs">+91 92664 58945</p>
                 </div>
               </div>
             </div>
