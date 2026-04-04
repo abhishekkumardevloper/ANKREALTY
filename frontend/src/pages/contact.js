@@ -17,7 +17,7 @@ const LOCATIONS = [
     id: "mumbai",
     name: "Mumbai (HQ)",
     address: "123 Business Avenue, Tech Park, Andheri East, Mumbai 400001",
-    phone: "+91 98765 43210",
+    phone: "+91 92664 58945",
     email: "mumbai@ankrealty.com",
     mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d120638.06452274488!2d72.77443180415306!3d19.11364501235122!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be7c6306644edc1%3A0x5da4ed8f8d648c69!2sMumbai%2C%20Maharashtra!5e0!3m2!1sen!2sin!4v1709999999999!5m2!1sen!2sin"
   },
@@ -25,7 +25,7 @@ const LOCATIONS = [
     id: "delhi",
     name: "Delhi NCR",
     address: "Level 4, DLF Cyber City, Gurugram, Haryana 122002",
-    phone: "+91 98765 43211",
+    phone: "+91 92664 58945",
     email: "delhi@ankrealty.com",
     mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d224346.5400499692!2d77.04417336214959!3d28.527218141381393!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390cfd5b347eb62d%3A0x52c2b7494e204dce!2sNew%20Delhi%2C%20Delhi!5e0!3m2!1sen!2sin!4v1709999999999!5m2!1sen!2sin"
   },
@@ -33,7 +33,7 @@ const LOCATIONS = [
     id: "bangalore",
     name: "Bangalore",
     address: "Prestige Trade Tower, Palace Road, Bangalore 560001",
-    phone: "+91 98765 43212",
+    phone: "+91 92664 58945",
     email: "bangalore@ankrealty.com",
     mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d124411.45041793774!2d77.50284451000963!3d12.954280237731776!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bae1670c9b44e6d%3A0xf8dfc3e8517e4fe0!2sBengaluru%2C%20Karnataka!5e0!3m2!1sen!2sin!4v1709999999999!5m2!1sen!2sin"
   }
