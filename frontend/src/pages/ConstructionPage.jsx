@@ -291,7 +291,7 @@ export default function ConstructionPage() {
                   <div>
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Phone Number *</label>
                     <Input 
-                      required type="tel" placeholder="+91 98765 43210"
+                      required type="tel" placeholder="+91 92664 58945"
                       value={form.phone} onChange={(e) => setForm({...form, phone: e.target.value})}
                       className="h-14 bg-slate-50 border-slate-200 focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 rounded-xl font-medium text-base"
                     />
@@ -390,7 +390,7 @@ export default function ConstructionPage() {
                 </div>
                 <div className="flex items-center bg-slate-900/50 p-3 rounded-xl border border-slate-800 hover:border-[#D4AF37]/50 transition-colors">
                   <Phone className="w-5 h-5 mr-3 text-[#D4AF37] shrink-0" />
-                  <a href="tel:+919732300007" className="text-xs hover:text-[#D4AF37] transition-colors">+91 97323 00007</a>
+                  <a href="tel:+919732300007" className="text-xs hover:text-[#D4AF37] transition-colors">+91 92664 58945</a>
                 </div>
               </div>
             </div>
