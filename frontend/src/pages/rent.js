@@ -322,7 +322,7 @@ export default function RentPage() {
                 The Red Carpet of Real Estate. We are India's most trusted property portal, committed to providing transparency, verified listings, and end-to-end property solutions.
               </p>
               <div className="space-y-3 pt-2">
-                <p className="flex items-center text-slate-300"><Phone className="w-5 h-5 mr-3 text-[#D4AF37]"/> Toll Free: 1800-123-4567</p>
+                <p className="flex items-center text-slate-300"><Phone className="w-5 h-5 mr-3 text-[#D4AF37]"/> Toll Free: 92664 58945</p>
                 <p className="flex items-center text-slate-300"><Mail className="w-5 h-5 mr-3 text-[#D4AF37]"/> support@ankrealty.com</p>
               </div>
             </div>
