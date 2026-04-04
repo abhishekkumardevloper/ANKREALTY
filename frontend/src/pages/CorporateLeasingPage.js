@@ -348,7 +348,7 @@ export default function CorporateLeasingPage() {
                 <div>
                   <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Phone Number *</label>
                   <Input 
-                    required type="tel" placeholder="+91 98765 43210"
+                    required type="tel" placeholder="+91 92664 58945"
                     value={leadForm.phone} onChange={(e) => setLeadForm({...leadForm, phone: e.target.value})}
                     className="h-12 bg-slate-50 border-slate-200 focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 rounded-xl font-medium transition-all"
                   />
@@ -393,7 +393,7 @@ export default function CorporateLeasingPage() {
            </div>
            <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
               <a href="tel:+919732300007" className="flex-1 md:flex-none flex items-center justify-center bg-white/10 hover:bg-white/20 border border-white/20 px-6 py-3.5 rounded-xl font-bold transition-colors">
-                 <Phone className="w-5 h-5 mr-3 text-[#D4AF37]" /> +91 97323 00007
+                 <Phone className="w-5 h-5 mr-3 text-[#D4AF37]" /> +91 92664 58945
               </a>
               <a href="mailto:contact@ankrealty.com" className="flex-1 md:flex-none flex items-center justify-center bg-white/10 hover:bg-white/20 border border-white/20 px-6 py-3.5 rounded-xl font-bold transition-colors">
                  <Mail className="w-5 h-5 mr-3 text-[#D4AF37]" /> contact@ankrealty.com
@@ -448,7 +448,7 @@ export default function CorporateLeasingPage() {
                 </div>
                 <div className="flex items-center bg-slate-900/50 p-3 rounded-xl border border-slate-800 hover:border-[#D4AF37]/50 transition-colors">
                   <Phone className="w-5 h-5 mr-3 text-[#D4AF37] shrink-0" />
-                  <a href="tel:+919732300007" className="text-xs hover:text-[#D4AF37] transition-colors">+91 97323 00007</a>
+                  <a href="tel: 92664 58945" className="text-xs hover:text-[#D4AF37] transition-colors">+91 97323 00007</a>
                 </div>
               </div>
             </div>
