@@ -50,7 +50,7 @@ import { Input } from '@/components/ui/input';
 import * as siteData from '@/lib/siteData';
 import { WHATSAPP_URL } from '@/lib/api';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://ankrealty.onrender.com/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'ankrealty.up.railway.app';
 
 const exploreLocalities = Array.isArray(siteData?.exploreLocalities) ? siteData.exploreLocalities : [];
 const bankOffers = Array.isArray(siteData?.bankOffers) ? siteData.bankOffers : [];
