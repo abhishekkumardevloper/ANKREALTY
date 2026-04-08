@@ -29,6 +29,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "ank-realty-secret-key-change-in-produ
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", 60 * 24 * 7))
 DEBUG = os.environ.get("DEBUG", "false").lower() in ("1", "true", "yes")
+MAX_UPLOAD_SIZE = 50 * 1024 * 1024  # 50 MB limit to prevent server memory crashes
 
 # --------------------------------
 # 2. Supabase Initialization
@@ -91,27 +92,37 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
     return user
 
 # --------------------------------
-# 4. Storage Helper
+# 4. Storage Helper (With Memory Limit)
 # --------------------------------
 async def upload_file_to_supabase(file: UploadFile, folder: str) -> str:
     if not supabase or not file or not file.filename: return ""
     try:
+        contents = await file.read()
+        
+        # Prevent huge files (e.g. massive videos) from crashing the server RAM
+        if len(contents) > MAX_UPLOAD_SIZE:
+            logger.warning(f"File upload rejected: {file.filename} exceeds 50MB limit.")
+            return ""
+            
         file_ext = file.filename.split(".")[-1]
         file_name = f"{folder}/{uuid.uuid4()}.{file_ext}"
-        contents = await file.read()
         res = supabase.storage.from_("media").upload(file_name, contents)
+        
         if getattr(res, "error", None): return ""
         return supabase.storage.from_("media").get_public_url(file_name)
-    except Exception:
+    except Exception as e:
+        logger.error(f"Error uploading file: {e}")
         return ""
 
 # --------------------------------
-# 5. FastAPI App & CORS
+# 5. FastAPI App & CORS Fix
 # --------------------------------
 app = FastAPI(title="ANK Realty API")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    # Replaced "*" with specific localhost ports. Add your production domain here later!
+    allow_origins=["http://localhost:3000", "http://localhost:3001"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -144,7 +155,6 @@ class InquiryCreate(BaseModel):
 class FavoriteCreate(BaseModel):
     property_id: str
 
-# NEW: Unified Model for Contact Page & Corporate Leasing Form
 class ContactCreate(BaseModel):
     # Standard Contact Page
     firstName: Optional[str] = None
@@ -213,13 +223,11 @@ def get_admin_dashboard(current_user: dict = Depends(get_current_user)):
 
 @api_router.get("/dashboard/agent")
 def get_agent_dashboard(current_user: dict = Depends(get_current_user)):
-    # Properties mapped to this agent/admin
     prop_res = supabase.table("properties").select("*").eq("owner_id", current_user["id"]).execute()
     properties = prop_res.data or []
     
     total_views = sum(p.get("views", 0) for p in properties)
 
-    # Lead routing logic: Admins see ALL inquiries, Agents see only theirs
     if current_user.get("role") == "admin":
         inq_res = supabase.table("inquiries").select("*").order("created_at", desc=True).execute()
     else:
@@ -241,20 +249,13 @@ def get_agent_dashboard(current_user: dict = Depends(get_current_user)):
 # --------------------------------
 @api_router.post("/contacts")
 def submit_contact_form(contact: ContactCreate):
-    """
-    Public endpoint: Receives data from ContactPage.js and CorporateLeasingPage.js
-    Routes it directly to the CRM (inquiries table).
-    """
-    # Consolidate Name
     full_name = contact.name
     if not full_name:
         full_name = f"{contact.firstName or ''} {contact.lastName or ''}".strip()
     
-    # Consolidate Message
     msg_body = contact.message or contact.requirements or "No additional message."
     formatted_message = f"Email: {contact.email} | Message: {msg_body}"
     
-    # Determine Source/Interest
     source = "Contact Form"
     if contact.company:
         source = f"Corporate Lead ({contact.company})"
@@ -263,11 +264,11 @@ def submit_contact_form(contact: ContactCreate):
 
     doc = {
         "id": str(uuid.uuid4()),
-        "from_user_id": None, # Null because they are public/unauthenticated
+        "from_user_id": None, 
         "from_user_name": full_name or "Web Visitor",
         "phone": contact.phone,
-        "to_user_id": "ADMIN", # Send directly to Admin pool
-        "property_id": source, # Misusing property_id slightly to show lead source in CRM
+        "to_user_id": "ADMIN", 
+        "property_id": source, 
         "message": formatted_message,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
@@ -286,7 +287,7 @@ async def create_property(
     try:
         form_data = await request.form()
         
-        # Safely extract all text fields (defaults to empty string or 0 if missing)
+        # Safely extract all text fields
         title = form_data.get("title", "")
         description = form_data.get("description", "")
         price = form_data.get("price", "0")
@@ -313,10 +314,10 @@ async def create_property(
         
         try:
             parsed_amenities = json.loads(amenities)
-        except:
+        except json.JSONDecodeError:
             parsed_amenities = []
 
-        # Process Media Uploads SAFELY
+        # Process Media Uploads
         image_urls = []
         for img in form_data.getlist("new_images"):
             if hasattr(img, "filename") and img.filename:
@@ -334,29 +335,29 @@ async def create_property(
         if brochure and hasattr(brochure, "filename") and brochure.filename:
             brochure_url = await upload_file_to_supabase(brochure, "properties/brochures")
 
-        # Assemble Document
+        # Assemble Document (Removed redundant str() casting)
         property_doc = {
             "id": str(uuid.uuid4()),
             "owner_id": current_user["id"],
             "owner_name": current_user.get("name"),
             "owner_phone": current_user.get("phone"),
-            "title": str(title),
-            "description": str(description),
+            "title": title,
+            "description": description,
             "price": parsed_price,
-            "location": str(location),
-            "city": str(city),
-            "state": str(state),
-            "property_type": str(property_type),
-            "category": str(category),
+            "location": location,
+            "city": city,
+            "state": state,
+            "property_type": property_type,
+            "category": category,
             "area": parsed_area,
             "bhk": parsed_bhk,
             "bathrooms": parsed_bathrooms,
-            "furnishing": str(furnishing),
+            "furnishing": furnishing,
             "amenities": parsed_amenities,
-            "builder": str(builder),
-            "rera": str(rera),
-            "project_status": str(project_status),
-            "possession": str(possession),
+            "builder": builder,
+            "rera": rera,
+            "project_status": project_status,
+            "possession": possession,
             "images": image_urls,
             "videos": video_urls,
             "brochure": brochure_url,
@@ -390,19 +391,19 @@ async def update_property(
     form_data = await request.form()
     update_data = {}
     
-    # Safely extract incoming fields to update
-    if "title" in form_data: update_data["title"] = str(form_data.get("title", ""))
-    if "description" in form_data: update_data["description"] = str(form_data.get("description", ""))
-    if "location" in form_data: update_data["location"] = str(form_data.get("location", ""))
-    if "city" in form_data: update_data["city"] = str(form_data.get("city", ""))
-    if "state" in form_data: update_data["state"] = str(form_data.get("state", ""))
-    if "property_type" in form_data: update_data["property_type"] = str(form_data.get("property_type", ""))
-    if "category" in form_data: update_data["category"] = str(form_data.get("category", ""))
-    if "furnishing" in form_data: update_data["furnishing"] = str(form_data.get("furnishing", ""))
-    if "builder" in form_data: update_data["builder"] = str(form_data.get("builder", ""))
-    if "rera" in form_data: update_data["rera"] = str(form_data.get("rera", ""))
-    if "projectStatus" in form_data: update_data["project_status"] = str(form_data.get("projectStatus", ""))
-    if "possession" in form_data: update_data["possession"] = str(form_data.get("possession", ""))
+    # Safely extract incoming fields to update (Removed redundant str() casting)
+    if "title" in form_data: update_data["title"] = form_data.get("title", "")
+    if "description" in form_data: update_data["description"] = form_data.get("description", "")
+    if "location" in form_data: update_data["location"] = form_data.get("location", "")
+    if "city" in form_data: update_data["city"] = form_data.get("city", "")
+    if "state" in form_data: update_data["state"] = form_data.get("state", "")
+    if "property_type" in form_data: update_data["property_type"] = form_data.get("property_type", "")
+    if "category" in form_data: update_data["category"] = form_data.get("category", "")
+    if "furnishing" in form_data: update_data["furnishing"] = form_data.get("furnishing", "")
+    if "builder" in form_data: update_data["builder"] = form_data.get("builder", "")
+    if "rera" in form_data: update_data["rera"] = form_data.get("rera", "")
+    if "projectStatus" in form_data: update_data["project_status"] = form_data.get("projectStatus", "")
+    if "possession" in form_data: update_data["possession"] = form_data.get("possession", "")
 
     if "price" in form_data:
         p = form_data.get("price")
@@ -423,14 +424,14 @@ async def update_property(
     if "amenities" in form_data:
         try:
             update_data["amenities"] = json.loads(form_data.get("amenities"))
-        except:
+        except json.JSONDecodeError:
             pass
 
     # Handle Images
     ex_img = form_data.get("existing_images")
     try:
         image_urls = json.loads(ex_img) if ex_img else existing_prop.get("images", [])
-    except:
+    except json.JSONDecodeError:
         image_urls = existing_prop.get("images", [])
         
     for img in form_data.getlist("new_images"):
@@ -459,10 +460,14 @@ async def update_property(
     return updated_res.data[0]
 
 @api_router.get("/properties")
-def get_properties(category: Optional[str] = None, property_type: Optional[str] = None, limit: int = 100):
-    query = supabase.table("properties").select("*").order("created_at", desc=True).limit(limit)
+def get_properties(category: Optional[str] = None, property_type: Optional[str] = None, skip: int = 0, limit: int = 20):
+    query = supabase.table("properties").select("*").order("created_at", desc=True)
     if category: query = query.eq("category", category)
     if property_type: query = query.eq("property_type", property_type)
+    
+    # Added proper pagination to prevent fetching too much data at once
+    query = query.range(skip, skip + limit - 1)
+    
     res = query.execute()
     return res.data or []
 
@@ -563,7 +568,6 @@ def delete_youtube_video(video_id: str, current_user: dict = Depends(get_current
 # --------------------------------
 @api_router.post("/inquiries")
 def create_inquiry(inq: InquiryCreate, current_user: dict = Depends(get_current_user)):
-    """Authenticated endpoint for logged-in users asking about specific properties."""
     prop_res = supabase.table("properties").select("owner_id").eq("id", inq.property_id).limit(1).execute()
     if not prop_res.data: raise HTTPException(status_code=404, detail="Property not found")
     
@@ -607,3 +611,14 @@ def add_favorite(fav: FavoriteCreate, current_user: dict = Depends(get_current_u
     return {"message": "Added to favorites"}
 
 app.include_router(api_router)
+
+# --------------------------------
+# 6. Health Check Route (Fixes the container startup issue)
+# --------------------------------
+@app.get("/")
+def read_root():
+    return {
+        "status": "healthy",
+        "service": "ANK Realty API",
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
