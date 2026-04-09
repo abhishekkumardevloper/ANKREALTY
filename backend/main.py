@@ -11,7 +11,6 @@ from typing import List, Optional, Any
 import uuid
 import json
 from datetime import datetime, timezone
-from jose import JWTError, jwt
 
 # --------------------------------
 # 1. Logging & Environment
@@ -24,11 +23,7 @@ load_dotenv(ROOT_DIR / ".env")
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
-SUPABASE_JWT_SECRET = os.environ.get("SUPABASE_JWT_SECRET") 
 DEBUG = os.environ.get("DEBUG", "false").lower() in ("1", "true", "yes")
-
-if not SUPABASE_JWT_SECRET:
-    logger.warning("SUPABASE_JWT_SECRET is missing. Authentication will fail.")
 
 # --------------------------------
 # 2. Supabase Initialization
@@ -55,25 +50,25 @@ security = HTTPBearer()
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """
-    Verifies the Supabase Auth JWT and fetches the user's public profile.
+    Verifies the Supabase Auth JWT natively and fetches the user's public profile.
+    This natively supports Supabase's new ECC (P-256) keys.
     """
     token = credentials.credentials
+    
+    # Let the Supabase client verify the token automatically
     try:
-        payload = jwt.decode(
-            token, 
-            SUPABASE_JWT_SECRET, 
-            algorithms=["HS256"], 
-            options={"verify_aud": False}
-        )
-        user_id: str = payload.get("sub")
-        if not user_id:
+        auth_response = supabase.auth.get_user(token)
+        if not auth_response or not getattr(auth_response, 'user', None):
             raise HTTPException(status_code=401, detail="Invalid token structure")
-    except JWTError:
+        user_id = auth_response.user.id
+    except Exception as e:
+        logger.error(f"Token verification failed: {str(e)}")
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     
     if supabase is None:
         raise HTTPException(status_code=500, detail="Database not configured")
     
+    # Fetch the custom profile data from our public.users table
     res = supabase.table("users").select("*").eq("id", user_id).limit(1).execute()
     check_res_or_raise(res, "fetching current user profile")
     user = res.data[0] if res.data else None
