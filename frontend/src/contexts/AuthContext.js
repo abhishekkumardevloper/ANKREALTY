@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { apiClient } from '@/lib/api';
+import { supabase } from '@/lib/supabase'; // Make sure you have this file (see below)
 
 const AuthContext = createContext();
 
@@ -22,7 +23,7 @@ export function AuthProvider({ children }) {
       delete apiClient.defaults.headers.common.Authorization;
     }
 
-    // ✅ ROLE STORE (IMPORTANT FIX)
+    // ✅ ROLE STORE
     if (userData?.role) {
       localStorage.setItem('role', userData.role);
     } else if (!newToken) {
@@ -32,7 +33,9 @@ export function AuthProvider({ children }) {
     setToken(newToken);
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    // Also sign out from Supabase client to clear local session
+    await supabase.auth.signOut();
     setAuthToken(null);
     setUser(null);
   }, [setAuthToken]);
@@ -43,11 +46,9 @@ export function AuthProvider({ children }) {
       const response = await apiClient.get('/auth/me');
       setUser(response.data);
 
-      // ensure role sync
       if (response.data?.role) {
         localStorage.setItem('role', response.data.role);
       }
-
     } catch (error) {
       console.error('Fetch user failed:', error.response?.data || error.message);
       logout();
@@ -57,6 +58,7 @@ export function AuthProvider({ children }) {
   }, [logout]);
 
   useEffect(() => {
+    // 1. Initialize standard auth from local storage
     const initializeAuth = async () => {
       if (token) {
         setAuthToken(token);
@@ -65,11 +67,33 @@ export function AuthProvider({ children }) {
         setLoading(false);
       }
     };
-
     initializeAuth();
+
+    // 2. NEW: Listen for Supabase OAuth redirects (Google Login)
+    // When Google redirects back to the app, this listener catches the new session.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        const newToken = session.access_token;
+        // Fetch profile from public users table or fallback to Google metadata
+        const userData = {
+          id: session.user.id,
+          email: session.user.email,
+          name: session.user.user_metadata?.name || 'Google User',
+          role: 'client' // Default role for OAuth
+        };
+        
+        setAuthToken(newToken, userData);
+        setUser(userData);
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [token, fetchUser, setAuthToken]);
 
-  // ✅ LOGIN FIXED (STEP 3 APPLIED HERE)
+  // ✅ LOGIN (Email/Password)
   const login = async (email, password) => {
     const response = await apiClient.post('/auth/login', { email, password });
 
@@ -78,14 +102,13 @@ export function AuthProvider({ children }) {
 
     if (!newToken) throw new Error('Token missing from backend');
 
-    // 🔥 MAIN FIX
     setAuthToken(newToken, userData);
     setUser(userData);
 
     return userData;
   };
 
-  // ✅ REGISTER FIXED
+  // ✅ REGISTER (Email/Password)
   const register = async (name, email, password, phone, role = 'client') => {
     const response = await apiClient.post('/auth/register', {
       name,
@@ -100,11 +123,28 @@ export function AuthProvider({ children }) {
 
     if (!newToken) throw new Error('Token missing from backend');
 
-    // 🔥 SAME FIX HERE
     setAuthToken(newToken, userData);
     setUser(userData);
 
     return userData;
+  };
+
+  // ✅ NEW: GOOGLE LOGIN
+  const loginWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        // Redirects back to the current page or specific dashboard
+        redirectTo: window.location.origin + '/' 
+      }
+    });
+
+    if (error) {
+      console.error('Google Auth Error:', error.message);
+      throw error;
+    }
+    // Note: The browser will redirect away from your site here. 
+    // When it returns, the onAuthStateChange listener above will handle setting the user.
   };
 
   return (
@@ -114,6 +154,7 @@ export function AuthProvider({ children }) {
         token,
         login,
         register,
+        loginWithGoogle,
         logout,
         loading,
         api: apiClient
