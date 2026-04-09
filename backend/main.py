@@ -24,7 +24,6 @@ load_dotenv(ROOT_DIR / ".env")
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
-# NEW: We use the Supabase JWT secret to verify tokens issued by Supabase Auth
 SUPABASE_JWT_SECRET = os.environ.get("SUPABASE_JWT_SECRET") 
 DEBUG = os.environ.get("DEBUG", "false").lower() in ("1", "true", "yes")
 
@@ -60,8 +59,6 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
     """
     token = credentials.credentials
     try:
-        # Supabase issues HS256 tokens. We decode it using your project's JWT secret.
-        # We disable audience verification because Supabase uses "authenticated" as the role, not standard aud.
         payload = jwt.decode(
             token, 
             SUPABASE_JWT_SECRET, 
@@ -71,13 +68,12 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
         user_id: str = payload.get("sub")
         if not user_id:
             raise HTTPException(status_code=401, detail="Invalid token structure")
-    except JWTError as e:
+    except JWTError:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     
     if supabase is None:
         raise HTTPException(status_code=500, detail="Database not configured")
     
-    # Fetch the custom profile data from our public.users table (populated by the SQL trigger)
     res = supabase.table("users").select("*").eq("id", user_id).limit(1).execute()
     check_res_or_raise(res, "fetching current user profile")
     user = res.data[0] if res.data else None
@@ -129,6 +125,9 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
 class YoutubeVideoCreate(BaseModel):
     title: str
     videoUrl: str
@@ -154,13 +153,11 @@ class ContactCreate(BaseModel):
     requirements: Optional[str] = None
 
 # --------------------------------
-# ROUTES: Authentication (Using Native Supabase Auth)
+# ROUTES: Authentication
 # --------------------------------
 @api_router.post("/auth/register")
 def register(user_data: UserRegister):
     try:
-        # Supabase auth.sign_up creates the user in auth.users
-        # The SQL trigger we created will automatically copy the metadata into public.users
         res = supabase.auth.sign_up({
             "email": user_data.email,
             "password": user_data.password,
@@ -173,7 +170,6 @@ def register(user_data: UserRegister):
             }
         })
         
-        # If email confirmation is turned on in Supabase, session will be None until verified
         if not res.session:
             return {"message": "Registration successful. Please check your email to verify your account."}
             
@@ -192,7 +188,6 @@ def login(credentials: UserLogin):
             "password": credentials.password
         })
         
-        # Fetch profile from public table to return to frontend
         profile_res = supabase.table("users").select("*").eq("id", res.user.id).limit(1).execute()
         user_profile = profile_res.data[0] if profile_res.data else res.user.user_metadata
         
@@ -202,6 +197,17 @@ def login(credentials: UserLogin):
         }
     except Exception as e:
         raise HTTPException(status_code=401, detail="Invalid email or password")
+
+@api_router.post("/auth/forgot-password")
+def forgot_password(req: ForgotPasswordRequest):
+    try:
+        # Supabase natively handles sending the secure reset email
+        supabase.auth.reset_password_email(req.email)
+        # Return generic success to prevent email enumeration
+        return {"message": "If that email is registered, a password reset link has been sent."}
+    except Exception as e:
+        logger.error(f"Error sending reset email: {str(e)}")
+        return {"message": "If that email is registered, a password reset link has been sent."}
 
 @api_router.get("/auth/me")
 def get_me(current_user: dict = Depends(get_current_user)):
