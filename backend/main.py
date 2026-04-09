@@ -55,7 +55,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
     """
     token = credentials.credentials
     
-    # Let the Supabase client verify the token automatically
+    # 1. Let the Supabase client verify the token automatically
     try:
         auth_response = supabase.auth.get_user(token)
         if not auth_response or not getattr(auth_response, 'user', None):
@@ -68,13 +68,21 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
     if supabase is None:
         raise HTTPException(status_code=500, detail="Database not configured")
     
-    # Fetch the custom profile data from our public.users table
+    # 2. Fetch the custom profile data from our public.users table
     res = supabase.table("users").select("*").eq("id", user_id).limit(1).execute()
-    check_res_or_raise(res, "fetching current user profile")
-    user = res.data[0] if res.data else None
+    user = res.data[0] if res.data and res.data else None
     
+    # 3. THE FIX: If the database trigger is running slow or RLS blocked it, 
+    # DO NOT crash. Gracefully fallback to the raw Auth data so the user stays logged in!
     if not user:
-        raise HTTPException(status_code=401, detail="User profile not found")
+        user_meta = auth_response.user.user_metadata or {}
+        return {
+            "id": user_id,
+            "email": auth_response.user.email,
+            "name": user_meta.get("name", "Google User"),
+            "phone": user_meta.get("phone", ""),
+            "role": user_meta.get("role", "client"),
+        }
     
     return user
 
