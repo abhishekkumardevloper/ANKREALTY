@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { apiClient } from '@/lib/api';
-import { supabase } from '@/lib/supabase'; // Make sure you have this file (see below)
+import { supabase } from '@/lib/supabase'; 
 
 const AuthContext = createContext();
 
@@ -51,7 +51,12 @@ export function AuthProvider({ children }) {
       }
     } catch (error) {
       console.error('Fetch user failed:', error.response?.data || error.message);
-      logout();
+      
+      // 🔥 THE FIX: Only log out if the backend strictly rejects the token (401)
+      // This prevents the 2-second flash-logout race condition!
+      if (error.response?.status === 401) {
+        logout();
+      }
     } finally {
       setLoading(false);
     }
@@ -79,7 +84,7 @@ export function AuthProvider({ children }) {
           id: session.user.id,
           email: session.user.email,
           name: session.user.user_metadata?.name || 'Google User',
-          role: 'client' // Default role for OAuth
+          role: session.user.user_metadata?.role || 'client' // Fallback to client if not set
         };
         
         setAuthToken(newToken, userData);
@@ -143,8 +148,6 @@ export function AuthProvider({ children }) {
       console.error('Google Auth Error:', error.message);
       throw error;
     }
-    // Note: The browser will redirect away from your site here. 
-    // When it returns, the onAuthStateChange listener above will handle setting the user.
   };
 
   return (
