@@ -10,8 +10,7 @@ from pydantic import BaseModel, EmailStr
 from typing import List, Optional, Any
 import uuid
 import json
-from datetime import datetime, timezone, timedelta
-from passlib.context import CryptContext
+from datetime import datetime, timezone
 from jose import JWTError, jwt
 
 # --------------------------------
@@ -25,10 +24,12 @@ load_dotenv(ROOT_DIR / ".env")
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
-SECRET_KEY = os.environ.get("SECRET_KEY", "ank-realty-secret-key-change-in-production")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", 60 * 24 * 7))
+# NEW: We use the Supabase JWT secret to verify tokens issued by Supabase Auth
+SUPABASE_JWT_SECRET = os.environ.get("SUPABASE_JWT_SECRET") 
 DEBUG = os.environ.get("DEBUG", "false").lower() in ("1", "true", "yes")
+
+if not SUPABASE_JWT_SECRET:
+    logger.warning("SUPABASE_JWT_SECRET is missing. Authentication will fail.")
 
 # --------------------------------
 # 2. Supabase Initialization
@@ -51,43 +52,39 @@ def check_res_or_raise(res: Any, action: str = "database operation"):
 # --------------------------------
 # 3. Security & Authentication
 # --------------------------------
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer()
 
-def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    try:
-        return pwd_context.verify(plain_password, hashed_password)
-    except Exception:
-        return False
-
-def create_access_token(data: dict) -> str:
-    to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": int(expire.timestamp())})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """
+    Verifies the Supabase Auth JWT and fetches the user's public profile.
+    """
     token = credentials.credentials
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub") or payload.get("id")
+        # Supabase issues HS256 tokens. We decode it using your project's JWT secret.
+        # We disable audience verification because Supabase uses "authenticated" as the role, not standard aud.
+        payload = jwt.decode(
+            token, 
+            SUPABASE_JWT_SECRET, 
+            algorithms=["HS256"], 
+            options={"verify_aud": False}
+        )
+        user_id: str = payload.get("sub")
         if not user_id:
-            raise HTTPException(status_code=401, detail="Invalid token")
-    except JWTError:
+            raise HTTPException(status_code=401, detail="Invalid token structure")
+    except JWTError as e:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     
     if supabase is None:
         raise HTTPException(status_code=500, detail="Database not configured")
     
+    # Fetch the custom profile data from our public.users table (populated by the SQL trigger)
     res = supabase.table("users").select("*").eq("id", user_id).limit(1).execute()
-    check_res_or_raise(res, "fetching current user")
+    check_res_or_raise(res, "fetching current user profile")
     user = res.data[0] if res.data else None
     
     if not user:
-        raise HTTPException(status_code=401, detail="User not found")
+        raise HTTPException(status_code=401, detail="User profile not found")
+    
     return user
 
 # --------------------------------
@@ -144,9 +141,7 @@ class InquiryCreate(BaseModel):
 class FavoriteCreate(BaseModel):
     property_id: str
 
-# NEW: Unified Model for Contact Page & Corporate Leasing Form
 class ContactCreate(BaseModel):
-    # Standard Contact Page
     firstName: Optional[str] = None
     lastName: Optional[str] = None
     email: str
@@ -154,41 +149,59 @@ class ContactCreate(BaseModel):
     message: Optional[str] = None
     interest: Optional[str] = None
     
-    # Corporate Leasing Page
     name: Optional[str] = None
     company: Optional[str] = None
     requirements: Optional[str] = None
 
 # --------------------------------
-# ROUTES: Authentication
+# ROUTES: Authentication (Using Native Supabase Auth)
 # --------------------------------
 @api_router.post("/auth/register")
 def register(user_data: UserRegister):
-    res = supabase.table("users").select("id").eq("email", user_data.email).limit(1).execute()
-    if res.data: raise HTTPException(status_code=400, detail="Email already registered")
-    
-    user_id = str(uuid.uuid4())
-    user_doc = {
-        "id": user_id,
-        "email": user_data.email.lower(),
-        "password": hash_password(user_data.password),
-        "name": user_data.name,
-        "phone": user_data.phone,
-        "role": user_data.role,
-        "created_at": datetime.now(timezone.utc).isoformat()
-    }
-    supabase.table("users").insert(user_doc).execute()
-    return {"token": create_access_token({"sub": user_id}), "user": user_doc}
+    try:
+        # Supabase auth.sign_up creates the user in auth.users
+        # The SQL trigger we created will automatically copy the metadata into public.users
+        res = supabase.auth.sign_up({
+            "email": user_data.email,
+            "password": user_data.password,
+            "options": {
+                "data": {
+                    "name": user_data.name,
+                    "phone": user_data.phone,
+                    "role": user_data.role
+                }
+            }
+        })
+        
+        # If email confirmation is turned on in Supabase, session will be None until verified
+        if not res.session:
+            return {"message": "Registration successful. Please check your email to verify your account."}
+            
+        return {
+            "token": res.session.access_token, 
+            "user": res.user.user_metadata
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @api_router.post("/auth/login")
 def login(credentials: UserLogin):
-    res = supabase.table("users").select("*").eq("email", credentials.email.lower()).limit(1).execute()
-    user = res.data[0] if res.data else None
-    
-    if not user or not verify_password(credentials.password, user.get("password", "")):
-        raise HTTPException(status_code=401, detail="Invalid email or password")
+    try:
+        res = supabase.auth.sign_in_with_password({
+            "email": credentials.email,
+            "password": credentials.password
+        })
         
-    return {"token": create_access_token({"sub": user["id"]}), "user": user}
+        # Fetch profile from public table to return to frontend
+        profile_res = supabase.table("users").select("*").eq("id", res.user.id).limit(1).execute()
+        user_profile = profile_res.data[0] if profile_res.data else res.user.user_metadata
+        
+        return {
+            "token": res.session.access_token, 
+            "user": user_profile
+        }
+    except Exception as e:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
 
 @api_router.get("/auth/me")
 def get_me(current_user: dict = Depends(get_current_user)):
@@ -213,13 +226,11 @@ def get_admin_dashboard(current_user: dict = Depends(get_current_user)):
 
 @api_router.get("/dashboard/agent")
 def get_agent_dashboard(current_user: dict = Depends(get_current_user)):
-    # Properties mapped to this agent/admin
     prop_res = supabase.table("properties").select("*").eq("owner_id", current_user["id"]).execute()
     properties = prop_res.data or []
     
     total_views = sum(p.get("views", 0) for p in properties)
 
-    # Lead routing logic: Admins see ALL inquiries, Agents see only theirs
     if current_user.get("role") == "admin":
         inq_res = supabase.table("inquiries").select("*").order("created_at", desc=True).execute()
     else:
@@ -241,38 +252,33 @@ def get_agent_dashboard(current_user: dict = Depends(get_current_user)):
 # --------------------------------
 @api_router.post("/contacts")
 def submit_contact_form(contact: ContactCreate):
-    """
-    Public endpoint: Receives data from ContactPage.js and CorporateLeasingPage.js
-    Routes it directly to the CRM (inquiries table).
-    """
-    # Consolidate Name
     full_name = contact.name
     if not full_name:
         full_name = f"{contact.firstName or ''} {contact.lastName or ''}".strip()
     
-    # Consolidate Message
     msg_body = contact.message or contact.requirements or "No additional message."
-    formatted_message = f"Email: {contact.email} | Message: {msg_body}"
     
-    # Determine Source/Interest
     source = "Contact Form"
     if contact.company:
         source = f"Corporate Lead ({contact.company})"
     elif contact.interest:
         source = f"Interested in: {contact.interest}"
 
+    formatted_message = f"[Source: {source}] | Email: {contact.email} | Message: {msg_body}"
+
     doc = {
         "id": str(uuid.uuid4()),
-        "from_user_id": None, # Null because they are public/unauthenticated
+        "from_user_id": None, 
         "from_user_name": full_name or "Web Visitor",
         "phone": contact.phone,
-        "to_user_id": "ADMIN", # Send directly to Admin pool
-        "property_id": source, # Misusing property_id slightly to show lead source in CRM
+        "to_user_id": None,
+        "property_id": None,
         "message": formatted_message,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     
-    supabase.table("inquiries").insert(doc).execute()
+    res = supabase.table("inquiries").insert(doc).execute()
+    check_res_or_raise(res, "submitting contact form")
     return {"message": "Inquiry submitted successfully"}
 
 # --------------------------------
@@ -286,7 +292,6 @@ async def create_property(
     try:
         form_data = await request.form()
         
-        # Safely extract all text fields (defaults to empty string or 0 if missing)
         title = form_data.get("title", "")
         description = form_data.get("description", "")
         price = form_data.get("price", "0")
@@ -305,7 +310,6 @@ async def create_property(
         project_status = form_data.get("projectStatus", "New Launch")
         possession = form_data.get("possession", "")
 
-        # Safely convert number fields
         parsed_price = float(price) if isinstance(price, str) and price.strip() else 0.0
         parsed_area = float(area) if isinstance(area, str) and area.strip() else 0.0
         parsed_bhk = int(bhk) if isinstance(bhk, str) and bhk.strip() else 0
@@ -316,7 +320,6 @@ async def create_property(
         except:
             parsed_amenities = []
 
-        # Process Media Uploads SAFELY
         image_urls = []
         for img in form_data.getlist("new_images"):
             if hasattr(img, "filename") and img.filename:
@@ -334,7 +337,6 @@ async def create_property(
         if brochure and hasattr(brochure, "filename") and brochure.filename:
             brochure_url = await upload_file_to_supabase(brochure, "properties/brochures")
 
-        # Assemble Document
         property_doc = {
             "id": str(uuid.uuid4()),
             "owner_id": current_user["id"],
@@ -390,7 +392,6 @@ async def update_property(
     form_data = await request.form()
     update_data = {}
     
-    # Safely extract incoming fields to update
     if "title" in form_data: update_data["title"] = str(form_data.get("title", ""))
     if "description" in form_data: update_data["description"] = str(form_data.get("description", ""))
     if "location" in form_data: update_data["location"] = str(form_data.get("location", ""))
@@ -426,7 +427,6 @@ async def update_property(
         except:
             pass
 
-    # Handle Images
     ex_img = form_data.get("existing_images")
     try:
         image_urls = json.loads(ex_img) if ex_img else existing_prop.get("images", [])
@@ -439,7 +439,6 @@ async def update_property(
             if url: image_urls.append(url)
     update_data["images"] = image_urls
     
-    # Handle Videos
     video_urls = existing_prop.get("videos", [])
     for vid in form_data.getlist("new_videos"):
         if hasattr(vid, "filename") and vid.filename:
@@ -448,7 +447,6 @@ async def update_property(
     if video_urls:
         update_data["videos"] = video_urls
         
-    # Handle PDF Brochure
     brochure = form_data.get("brochure")
     if brochure and hasattr(brochure, "filename") and brochure.filename:
         brochure_url = await upload_file_to_supabase(brochure, "properties/brochures")
@@ -563,7 +561,6 @@ def delete_youtube_video(video_id: str, current_user: dict = Depends(get_current
 # --------------------------------
 @api_router.post("/inquiries")
 def create_inquiry(inq: InquiryCreate, current_user: dict = Depends(get_current_user)):
-    """Authenticated endpoint for logged-in users asking about specific properties."""
     prop_res = supabase.table("properties").select("owner_id").eq("id", inq.property_id).limit(1).execute()
     if not prop_res.data: raise HTTPException(status_code=404, detail="Property not found")
     
