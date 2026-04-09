@@ -7,8 +7,6 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/lib/api';
-// Import your supabase client if using Supabase Auth natively:
-// import { supabase } from '@/lib/supabase'; 
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const phoneRegex = /^[0-9]{10,14}$/;
@@ -31,7 +29,9 @@ const GoogleIcon = () => (
 
 export default function AuthPage() {
   const navigate = useNavigate();
-  const { login, register } = useAuth();
+  
+  // FIX 1: We added loginWithGoogle here
+  const { login, register, loginWithGoogle } = useAuth(); 
   
   const [activeTab, setActiveTab] = useState('login');
   const [loading, setLoading] = useState(false);
@@ -106,27 +106,15 @@ export default function AuthPage() {
     }
   };
 
-  // Google Authentication Handler
+  // FIX 2: Updated Google handler to use the context function
   const handleGoogleAuth = async () => {
     setGoogleLoading(true);
     try {
-      // IF USING SUPABASE NATIVE AUTH, UNCOMMENT THIS:
-      /*
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin + '/'
-        }
-      });
-      if (error) throw error;
-      */
-      
-      // Placeholder toast until integrated
-      toast.info('Google Auth integration pending.');
-      
+      await loginWithGoogle();
+      // Notice we do NOT set loading to false here on success, 
+      // because the page will redirect to Google!
     } catch (error) {
       toast.error('Failed to authenticate with Google.');
-    } finally {
       setGoogleLoading(false);
     }
   };
@@ -332,7 +320,7 @@ export default function AuthPage() {
             </form>
           )}
 
-          {/* SOCIAL LOGIN DIVIDER & BUTTON (Applies to both Login and Register) */}
+          {/* SOCIAL LOGIN DIVIDER & BUTTON */}
           <div className="mt-8 mb-6 relative">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-slate-200"></div>
