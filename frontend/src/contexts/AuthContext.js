@@ -40,20 +40,21 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, [setAuthToken]);
 
-  // ✅ FETCH USER (AUTO LOGIN)
+  // ✅ FETCH USER (AUTO LOGIN / PAGE REFRESH)
   const fetchUser = useCallback(async () => {
     try {
       const response = await apiClient.get('/auth/me');
-      setUser(response.data);
+      
+      // 🔥 FIX 1: Safely extract user object to prevent payload mismatch on refresh
+      const userData = response.data.user || response.data;
+      setUser(userData);
 
-      if (response.data?.role) {
-        localStorage.setItem('role', response.data.role);
+      if (userData?.role) {
+        localStorage.setItem('role', userData.role);
       }
     } catch (error) {
       console.error('Fetch user failed:', error.response?.data || error.message);
       
-      // 🔥 THE FIX: Only log out if the backend strictly rejects the token (401)
-      // This prevents the 2-second flash-logout race condition!
       if (error.response?.status === 401) {
         logout();
       }
@@ -74,29 +75,43 @@ export function AuthProvider({ children }) {
     };
     initializeAuth();
 
-    // 2. NEW: Listen for Supabase OAuth redirects (Google Login)
-    // When Google redirects back to the app, this listener catches the new session.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    // 2. Listen for Supabase OAuth redirects (Google Login)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
         const newToken = session.access_token;
-        // Fetch profile from public users table or fallback to Google metadata
-        const userData = {
-          id: session.user.id,
-          email: session.user.email,
-          name: session.user.user_metadata?.name || 'Google User',
-          role: session.user.user_metadata?.role || 'client' // Fallback to client if not set
-        };
         
-        setAuthToken(newToken, userData);
-        setUser(userData);
-        setLoading(false);
+        // Set token immediately so the API call below is authorized
+        setAuthToken(newToken); 
+
+        try {
+          // 🔥 FIX 3: Fetch the real role from your backend instead of defaulting to "client"
+          const response = await apiClient.get('/auth/me');
+          const realUserData = response.data.user || response.data;
+          
+          setAuthToken(newToken, realUserData);
+          setUser(realUserData);
+        } catch (err) {
+          console.error("Failed to fetch user after Google Login", err);
+          // Fallback if the user doesn't exist in the backend DB yet
+          const fallbackData = {
+            id: session.user.id,
+            email: session.user.email,
+            name: session.user.user_metadata?.name || 'Google User',
+            role: session.user.user_metadata?.role || 'client' 
+          };
+          setAuthToken(newToken, fallbackData);
+          setUser(fallbackData);
+        } finally {
+          setLoading(false);
+        }
       }
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [token, fetchUser, setAuthToken]);
+    // 🔥 FIX 2: Removed 'token' from dependency array to prevent infinite re-renders
+  }, [fetchUser, setAuthToken]); 
 
   // ✅ LOGIN (Email/Password)
   const login = async (email, password) => {
@@ -134,12 +149,11 @@ export function AuthProvider({ children }) {
     return userData;
   };
 
-  // ✅ NEW: GOOGLE LOGIN
+  // ✅ GOOGLE LOGIN
   const loginWithGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        // Redirects back to the current page or specific dashboard
         redirectTo: window.location.origin + '/' 
       }
     });
