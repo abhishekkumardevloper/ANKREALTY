@@ -45,7 +45,7 @@ export function AuthProvider({ children }) {
     try {
       const response = await apiClient.get('/auth/me');
       
-      // 🔥 FIX 1: Safely extract user object to prevent payload mismatch on refresh
+      // Safely extract user object to prevent payload mismatch on refresh
       const userData = response.data.user || response.data;
       setUser(userData);
 
@@ -84,7 +84,7 @@ export function AuthProvider({ children }) {
         setAuthToken(newToken); 
 
         try {
-          // 🔥 FIX 3: Fetch the real role from your backend instead of defaulting to "client"
+          // Fetch the real role from your backend instead of defaulting to "client"
           const response = await apiClient.get('/auth/me');
           const realUserData = response.data.user || response.data;
           
@@ -110,7 +110,10 @@ export function AuthProvider({ children }) {
     return () => {
       subscription.unsubscribe();
     };
-    // 🔥 FIX 2: Removed 'token' from dependency array to prevent infinite re-renders
+    
+    // 🔥 FIX: Tells Vercel's strict linter to ignore the missing 'token' dependency 
+    // so it doesn't crash the build.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchUser, setAuthToken]); 
 
   // ✅ LOGIN (Email/Password)
