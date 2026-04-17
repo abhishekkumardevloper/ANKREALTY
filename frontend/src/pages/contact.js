@@ -143,7 +143,7 @@ export default function ContactPage() {
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Phone Number</label>
-                    <input type="tel" name="phone" value={formData.phone} onChange={handleChange} required placeholder="+91 98765 43210" className="w-full p-4 bg-slate-50 rounded-xl border border-slate-200 focus:border-[#D4AF37] focus:bg-white focus:ring-4 focus:ring-[#D4AF37]/10 outline-none transition-all font-medium" />
+                    <input type="tel" name="phone" value={formData.phone} onChange={handleChange} required placeholder="+91 92664 58945" className="w-full p-4 bg-slate-50 rounded-xl border border-slate-200 focus:border-[#D4AF37] focus:bg-white focus:ring-4 focus:ring-[#D4AF37]/10 outline-none transition-all font-medium" />
                   </div>
                 </div>
 
