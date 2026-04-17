@@ -1,4 +1,3 @@
-// src/admin/AddProperty.jsx
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Save, X, Image as ImageIcon, Video, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,7 +8,8 @@ import { toast } from 'sonner';
 const emptyForm = {
   title: '', description: '', price: '', category: 'buy', property_type: 'apartment',
   city: '', state: '', location: '', area: '', bhk: '', bathrooms: '', furnishing: 'unfurnished', 
-  amenities: '', builder: '', rera: '', projectStatus: 'New Launch', possession: ''
+  amenities: '', builder: '', rera: '', projectStatus: 'New Launch', possession: '',
+  youtube_link: '' // Added youtube_link to initial state
 };
 
 export default function AddProperty({ onSave, editing, onCancel }) {
@@ -17,13 +17,23 @@ export default function AddProperty({ onSave, editing, onCancel }) {
   
   // States for handling actual file uploads
   const [media, setMedia] = useState({
-    images: [], // New File objects
-    videos: [], // New File objects
-    pdf: null,  // New File object
-    existingImages: [], // Strings (URLs) from editing
-    existingVideos: [], // Strings (URLs) from editing
-    existingPdf: null   // String (URL) from editing
+    images: [], 
+    videos: [], 
+    pdf: null,  
+    existingImages: [], 
+    existingVideos: [], 
+    existingPdf: null   
   });
+
+  // Helper function to safely extract YouTube video ID and create an embed URL
+  const getYoutubeEmbedUrl = (url) => {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}` : null;
+  };
+
+  const embedUrl = getYoutubeEmbedUrl(form.youtube_link);
 
   useEffect(() => {
     if (editing) {
@@ -44,7 +54,8 @@ export default function AddProperty({ onSave, editing, onCancel }) {
         builder: editing.builder || '',
         rera: editing.rera || '',
         projectStatus: editing.projectStatus || 'New Launch',
-        possession: editing.possession || ''
+        possession: editing.possession || '',
+        youtube_link: editing.youtube_link || '' // Pre-fill if editing
       });
       setMedia({
         images: [],
@@ -83,7 +94,7 @@ export default function AddProperty({ onSave, editing, onCancel }) {
       }
       setMedia({ ...media, videos: [...media.videos, ...files] });
     } else if (type === 'pdf') {
-      setMedia({ ...media, pdf: files[0], existingPdf: null }); // New PDF overrides existing
+      setMedia({ ...media, pdf: files[0], existingPdf: null }); 
     }
   };
 
@@ -111,10 +122,9 @@ export default function AddProperty({ onSave, editing, onCancel }) {
     // Prepare FormData
     const formData = new FormData();
     
-    // Append all text fields securely
+    // Append all text fields securely (youtube_link is included here automatically)
     Object.keys(form).forEach(key => {
       if (key === 'amenities') {
-        // Backend handles amenities as list or JSON string depending on your implementation
         const amArray = form.amenities.split(',').map(i => i.trim()).filter(Boolean);
         formData.append('amenities', JSON.stringify(amArray)); 
       } else {
@@ -173,7 +183,6 @@ export default function AddProperty({ onSave, editing, onCancel }) {
                     <option value="buy">Buy</option>
                     <option value="resale">Resale</option>
                     <option value="rent">Rent</option>
-                    {/* UPDATED THIS LINE TO SHOW CORPORATE LEASE CLEARLY */}
                     <option value="client-project">Corporate Lease</option>
                   </select>
                 </div>
@@ -239,6 +248,40 @@ export default function AddProperty({ onSave, editing, onCancel }) {
                 <label className="text-xs font-bold text-slate-700 mb-1 block">Amenities (Comma Separated)</label>
                 <Input name="amenities" value={form.amenities} onChange={handleChange} placeholder="e.g. Grade-A Office, Cafeteria, Power Backup, Security" className="focus:border-[#D4AF37]" />
               </div>
+
+              {/* YOUTUBE LINK & PREVIEW SECTION */}
+              <div className="md:col-span-2 mt-2 pt-4 border-t border-slate-100">
+                <label className="text-xs font-bold text-slate-700 mb-1 block">YouTube Video Link</label>
+                <Input 
+                  name="youtube_link" 
+                  value={form.youtube_link} 
+                  onChange={handleChange} 
+                  placeholder="e.g. https://www.youtube.com/watch?v=..." 
+                  className="focus:border-[#D4AF37]" 
+                />
+
+                {form.youtube_link && (
+                  <div className="mt-4">
+                    <h4 className="text-xs font-bold text-slate-700 mb-2">Video Preview</h4>
+                    {embedUrl ? (
+                      <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-slate-100 border border-slate-200">
+                        <iframe
+                          className="absolute top-0 left-0 w-full h-full"
+                          src={embedUrl}
+                          title="YouTube Preview"
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        ></iframe>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-red-500 font-medium">Invalid YouTube URL. Please provide a valid link to preview.</p>
+                    )}
+                  </div>
+                )}
+              </div>
+              {/* END YOUTUBE SECTION */}
+
             </div>
           </div>
         </div>
