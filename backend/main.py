@@ -217,6 +217,19 @@ def get_me(current_user: dict = Depends(get_current_user)):
     return current_user
 
 # --------------------------------
+# ROUTES: Users CRM (Admin Only)
+# --------------------------------
+@api_router.get("/users")
+def get_all_users(current_user: dict = Depends(get_current_user)):
+    """Fetches all registered users for the Admin CRM Page."""
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    # Assuming you have a trigger that copies auth.users to public.users
+    res = supabase.table("users").select("*").order("created_at", desc=True).execute()
+    return res.data or []
+
+# --------------------------------
 # ROUTES: Dashboard (Admin & Agent)
 # --------------------------------
 @api_router.get("/dashboard/admin")
@@ -257,10 +270,11 @@ def get_agent_dashboard(current_user: dict = Depends(get_current_user)):
     }
 
 # --------------------------------
-# ROUTES: Public Contact Forms
+# ROUTES: Public Contact Forms (General Website Leads)
 # --------------------------------
 @api_router.post("/contacts")
 def submit_contact_form(contact: ContactCreate):
+    """Handles public contact forms and saves them as Leads in the CRM."""
     full_name = contact.name
     if not full_name:
         full_name = f"{contact.firstName or ''} {contact.lastName or ''}".strip()
@@ -566,10 +580,11 @@ def delete_youtube_video(video_id: str, current_user: dict = Depends(get_current
     return {"message": "Deleted"}
 
 # --------------------------------
-# ROUTES: Inquiries / Leads (Authenticated)
+# ROUTES: Inquiries / Leads (Authenticated CRM Data)
 # --------------------------------
 @api_router.post("/inquiries")
 def create_inquiry(inq: InquiryCreate, current_user: dict = Depends(get_current_user)):
+    """Handles property-specific leads from logged-in users."""
     prop_res = supabase.table("properties").select("owner_id").eq("id", inq.property_id).limit(1).execute()
     if not prop_res.data: raise HTTPException(status_code=404, detail="Property not found")
     
@@ -588,6 +603,7 @@ def create_inquiry(inq: InquiryCreate, current_user: dict = Depends(get_current_
 
 @api_router.get("/inquiries")
 def get_inquiries(current_user: dict = Depends(get_current_user)):
+    """This route serves as your Lead CRM. Admin sees all leads, agents see their own."""
     if current_user.get("role") == "admin":
         res = supabase.table("inquiries").select("*").order("created_at", desc=True).execute()
     else:
