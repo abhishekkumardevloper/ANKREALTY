@@ -7,7 +7,7 @@ import {
   Heart, ShieldCheck, Share2, CheckCircle, Info, ChevronRight, 
   Image as ImageIcon, Download, FileText, Check, Building,
   TrendingUp, Coffee, Zap, ArrowUpDown, Shield, Dumbbell, Droplets, Wind,
-  Star, Lock, Zap as ZapIcon, MessageSquare, Map, DollarSign, Sparkles
+  Star, Lock, Zap as ZapIcon, MessageSquare, Map, DollarSign, Sparkles, PlayCircle
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { Button } from '@/components/ui/button';
@@ -101,6 +101,16 @@ export default function PropertyDetailPage() {
 
   if (!property) return null;
 
+  // --- Helper to extract YouTube Embed URL ---
+  const getYoutubeEmbedUrl = (url) => {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}` : null;
+  };
+  
+  const embedUrl = getYoutubeEmbedUrl(property.youtube_link);
+
   const mapQuery = encodeURIComponent(`${property.title}, ${property.location || property.area || ''}, ${property.city || ''}`);
   const mapEmbedUrl = `https://maps.google.com/maps?q=${mapQuery}&output=embed`;
   const mapOpenUrl = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
@@ -128,7 +138,6 @@ export default function PropertyDetailPage() {
       : `₹ ${(property.price / 100000).toFixed(2)} Lac`
     : 'Price on Request';
 
-  // Generate dynamic floor plans based on real property data
   const dynamicFloorPlans = property.floorPlans && property.floorPlans.length > 0 
     ? property.floorPlans 
     : [
@@ -136,12 +145,16 @@ export default function PropertyDetailPage() {
           type: property.bhk ? `${property.bhk} BHK` : property.configurations || property.property_type || "Premium Unit",
           size: property.area ? `${property.area} Sq.ft.` : "Size on Request",
           price: formattedPrice,
-          // Calculate Per Sq Ft if both price and area are available
           perSqFt: (property.price && property.area && !isNaN(property.price) && !isNaN(property.area)) 
             ? `₹ ${Math.round(property.price / property.area).toLocaleString('en-IN')}/sq.ft.` 
             : null
         }
       ];
+
+  // Dynamic Navigation Tabs
+  const navTabs = ['Overview'];
+  if (embedUrl) navTabs.push('Video Tour');
+  navTabs.push('Price List', 'Amenities', 'Location', 'About');
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans selection:bg-[#D4AF37]/30 text-slate-800 pb-0 relative">
@@ -151,7 +164,7 @@ export default function PropertyDetailPage() {
       <div className="sticky top-16 md:top-20 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-6">
           <ul className="flex overflow-x-auto hide-scrollbar space-x-8 text-sm font-bold text-slate-500 uppercase tracking-widest">
-            {['Overview', 'Price List', 'Amenities', 'Location', 'About'].map((item) => (
+            {navTabs.map((item) => (
               <li key={item} className="whitespace-nowrap pt-5 pb-4 cursor-pointer hover:text-[#8B0000] border-b-[3px] border-transparent hover:border-[#8B0000] transition-all"
                   onClick={() => scrollToSection(item.toLowerCase().replace(' ', '-'))}>
                 {item}
@@ -163,25 +176,25 @@ export default function PropertyDetailPage() {
 
       <div className="pt-10 px-6 max-w-7xl mx-auto pb-24">
         
-        {/* TITLE & LOCATION */}
-        <div className="mb-8 flex flex-col md:flex-row md:items-start justify-between gap-6">
+        {/* TITLE & LOCATION - PREMIUM REDESIGN */}
+        <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-slate-200/60">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#D4AF37]/10 text-[#8B0000] text-[10px] font-black uppercase tracking-widest mb-3 border border-[#D4AF37]/20">
-               {property.property_type || 'Property'} • {property.category || 'Sale'}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#8B0000]/10 to-[#D4AF37]/10 text-[#8B0000] text-[10px] font-black uppercase tracking-widest mb-4 border border-[#D4AF37]/30 shadow-sm">
+               <Sparkles className="w-3 h-3 text-[#D4AF37]" /> {property.property_type || 'Property'} • {property.category || 'Sale'}
             </div>
-            <h1 className="text-3xl md:text-5xl font-black text-slate-900 mb-3 tracking-tight">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-slate-900 via-slate-800 to-slate-600 mb-4 tracking-tight leading-tight">
               {property.title}
             </h1>
-            <p className="text-slate-500 font-medium flex items-center text-base">
-              <MapPin className="w-5 h-5 mr-2 text-slate-400"/> 
+            <p className="text-slate-600 font-medium flex items-center text-lg">
+              <MapPin className="w-5 h-5 mr-2 text-[#D4AF37]"/> 
               {property.location}, {property.city} {property.state ? `, ${property.state}` : ''}
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 pb-2">
             <Button variant="outline" className="shrink-0 h-12 border-slate-200 text-slate-700 hover:bg-slate-100 font-bold rounded-xl shadow-sm">
               <Share2 className="w-4 h-4 mr-2" /> Share
             </Button>
-            <Button variant="outline" onClick={addToFavorites} className="shrink-0 h-12 border-slate-200 text-[#8B0000] hover:bg-red-50 hover:border-red-200 font-bold rounded-xl shadow-sm">
+            <Button variant="outline" onClick={addToFavorites} className="shrink-0 h-12 border-[#8B0000]/20 text-[#8B0000] hover:bg-red-50 hover:border-red-300 font-bold rounded-xl shadow-sm">
               <Heart className="w-4 h-4 mr-2" /> Save
             </Button>
           </div>
@@ -300,9 +313,8 @@ export default function PropertyDetailPage() {
                  <h2 className="text-2xl md:text-3xl font-black text-slate-900">Property Overview</h2>
               </div>
               
-              {/* FIXED ALIGNMENT FOR DESCRIPTION */}
               <div className="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-2 h-full bg-[#D4AF37]"></div>
+                <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-[#8B0000] to-[#D4AF37]"></div>
                 <p className="text-slate-700 leading-relaxed md:leading-loose text-justify whitespace-pre-line text-base md:text-lg font-medium">
                   {property.description || `${property.title} is a premium ${property.property_type || 'property'} located in the prime area of ${property.location}, ${property.city}. \n\nDesigned with modern architecture and exceptional space planning, it offers an unparalleled lifestyle. Enjoy seamless connectivity to major commercial hubs, renowned schools, and top-tier hospitals. The property is equipped with top-of-the-line amenities ensuring absolute comfort, security, and convenience for you and your family.`}
                 </p>
@@ -331,6 +343,26 @@ export default function PropertyDetailPage() {
               </div>
             </section>
 
+            {/* --- YOUTUBE VIDEO TOUR SECTION --- */}
+            {embedUrl && (
+              <section id="video-tour" className="mt-16">
+                <div className="flex items-center gap-3 mb-8">
+                   <PlayCircle className="w-6 h-6 text-[#D4AF37]" />
+                   <h2 className="text-2xl md:text-3xl font-black text-slate-900">Virtual Property Tour</h2>
+                </div>
+                <div className="relative w-full aspect-video rounded-[2rem] overflow-hidden shadow-2xl border-[6px] border-white bg-slate-900 group">
+                  <iframe
+                    className="absolute top-0 left-0 w-full h-full opacity-95 group-hover:opacity-100 transition-opacity duration-500"
+                    src={embedUrl}
+                    title="Property Video Tour"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  ></iframe>
+                </div>
+              </section>
+            )}
+
             {/* Pricing & Floor Plans Section */}
             <section id="price-list">
               <div className="flex items-center gap-3 mb-8">
@@ -338,7 +370,6 @@ export default function PropertyDetailPage() {
                  <h2 className="text-2xl md:text-3xl font-black text-slate-900">Pricing & Floor Plans</h2>
               </div>
               
-              {/* DYNAMIC REAL DATA RENDERING */}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
                 {dynamicFloorPlans.map((item, idx) => (
                   <div key={idx} className="bg-white border border-slate-200 rounded-3xl p-6 hover:border-[#D4AF37] hover:shadow-xl transition-all flex flex-col group cursor-pointer relative overflow-hidden">
@@ -383,7 +414,7 @@ export default function PropertyDetailPage() {
               {property.amenities && property.amenities.length > 0 ? (
                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                    {property.amenities.map((item, i) => (
-                      <div key={i} className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-center text-center shadow-sm">
+                      <div key={i} className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-center text-center shadow-sm hover:shadow-md transition-shadow">
                         <span className="text-sm font-bold text-slate-700">{item}</span>
                       </div>
                    ))}
