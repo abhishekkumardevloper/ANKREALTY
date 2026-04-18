@@ -332,6 +332,7 @@ async def create_property(
         rera = form_data.get("rera", "")
         project_status = form_data.get("projectStatus", "New Launch")
         possession = form_data.get("possession", "")
+        youtube_link = form_data.get("youtube_link", "")
 
         parsed_price = float(price) if isinstance(price, str) and price.strip() else 0.0
         parsed_area = float(area) if isinstance(area, str) and area.strip() else 0.0
@@ -382,6 +383,7 @@ async def create_property(
             "rera": str(rera),
             "project_status": str(project_status),
             "possession": str(possession),
+            "youtube_link": str(youtube_link) if youtube_link else None,
             "images": image_urls,
             "videos": video_urls,
             "brochure": brochure_url,
@@ -427,6 +429,7 @@ async def update_property(
     if "rera" in form_data: update_data["rera"] = str(form_data.get("rera", ""))
     if "projectStatus" in form_data: update_data["project_status"] = str(form_data.get("projectStatus", ""))
     if "possession" in form_data: update_data["possession"] = str(form_data.get("possession", ""))
+    if "youtube_link" in form_data: update_data["youtube_link"] = str(form_data.get("youtube_link", ""))
 
     if "price" in form_data:
         p = form_data.get("price")
@@ -616,6 +619,7 @@ def get_inquiries(current_user: dict = Depends(get_current_user)):
 # --------------------------------
 @api_router.post("/favorites")
 def add_favorite(fav: FavoriteCreate, current_user: dict = Depends(get_current_user)):
+    # Check if already favorited
     exist = supabase.table("favorites").select("id").eq("user_id", current_user["id"]).eq("property_id", fav.property_id).execute()
     if exist.data: return {"message": "Already favorited"}
     
@@ -627,5 +631,29 @@ def add_favorite(fav: FavoriteCreate, current_user: dict = Depends(get_current_u
     }
     supabase.table("favorites").insert(doc).execute()
     return {"message": "Added to favorites"}
+
+@api_router.get("/favorites")
+def get_favorites(current_user: dict = Depends(get_current_user)):
+    """
+    CRITICAL FIX for User Dashboard:
+    By adding 'properties(*)', Supabase automatically performs a SQL JOIN.
+    This ensures the frontend receives the full property details (images, price, title)
+    instead of just the favorite ID.
+    """
+    res = supabase.table("favorites").select("*, properties(*)").eq("user_id", current_user["id"]).order("created_at", desc=True).execute()
+    return res.data or []
+
+@api_router.delete("/favorites/{favorite_id}")
+def delete_favorite(favorite_id: str, current_user: dict = Depends(get_current_user)):
+    """Allows users to remove a property from their dashboard."""
+    # Ensure they own the favorite record before deleting
+    res = supabase.table("favorites").delete().eq("id", favorite_id).eq("user_id", current_user["id"]).execute()
+    
+    # If no data was returned/affected, it might mean they tried to delete by property_id instead of favorite_id.
+    # Fallback to check by property_id just in case the frontend sends that.
+    if not getattr(res, 'data', None) and not getattr(res, 'count', 0):
+       supabase.table("favorites").delete().eq("property_id", favorite_id).eq("user_id", current_user["id"]).execute()
+       
+    return {"message": "Removed from favorites"}
 
 app.include_router(api_router)
