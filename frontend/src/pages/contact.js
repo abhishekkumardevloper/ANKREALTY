@@ -8,39 +8,32 @@ import {
   Loader2, CheckCircle, Plus, Building, User, Target,
   ArrowRight, ChevronRight, Facebook, Twitter, Instagram, Linkedin
 } from "lucide-react";
+import { toast } from "sonner"; 
 
 // API Configuration
 const API_BASE = import.meta.env.VITE_API_URL || "https://ankrealty.onrender.com/api";
 
 const LOCATIONS = [
   {
-    id: "mumbai",
-    name: "Mumbai (HQ)",
-    address: "123 Business Avenue, Tech Park, Andheri East, Mumbai 400001",
+    id: "noida",
+    name: "Noida (HQ)",
+    address: "Tapasya Corp Heights, Sector 126, Noida, UP 201303",
     phone: "+91 92664 58945",
-    email: "mumbai@ankrealty.com",
-    mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d120638.06452274488!2d72.77443180415306!3d19.11364501235122!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be7c6306644edc1%3A0x5da4ed8f8d648c69!2sMumbai%2C%20Maharashtra!5e0!3m2!1sen!2sin!4v1709999999999!5m2!1sen!2sin"
-  },
-  {
-    id: "delhi",
-    name: "Delhi NCR",
-    address: "Level 4, DLF Cyber City, Gurugram, Haryana 122002",
-    phone: "+91 92664 58945",
-    email: "delhi@ankrealty.com",
-    mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d224346.5400499692!2d77.04417336214959!3d28.527218141381393!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390cfd5b347eb62d%3A0x52c2b7494e204dce!2sNew%20Delhi%2C%20Delhi!5e0!3m2!1sen!2sin!4v1709999999999!5m2!1sen!2sin"
-  },
-  {
-    id: "bangalore",
-    name: "Bangalore",
-    address: "Prestige Trade Tower, Palace Road, Bangalore 560001",
-    phone: "+91 92664 58945",
-    email: "bangalore@ankrealty.com",
-    mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d124411.45041793774!2d77.50284451000963!3d12.954280237731776!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bae1670c9b44e6d%3A0xf8dfc3e8517e4fe0!2sBengaluru%2C%20Karnataka!5e0!3m2!1sen!2sin!4v1709999999999!5m2!1sen!2sin"
+    email: "info@ankrealty.com",
+    mapUrl: "https://maps.google.com/maps?q=Tapasya+Corp+Heights,+Sector+126,+Noida&t=&z=15&ie=UTF8&iwloc=&output=embed"
   }
 ];
 
 export default function ContactPage() {
-  const [formData, setFormData] = useState({ firstName: "", lastName: "", email: "", phone: "", message: "", interest: "buy" });
+  const [formData, setFormData] = useState({ 
+    firstName: "", 
+    lastName: "", 
+    email: "", 
+    phone: "", 
+    message: "", 
+    interest: "buy" 
+  });
+  
   const [status, setStatus] = useState("idle"); 
   const [error, setError] = useState(null);
   const [activeFaq, setActiveFaq] = useState(null);
@@ -53,14 +46,17 @@ export default function ContactPage() {
 
     try {
       await axios.post(`${API_BASE}/contacts`, formData); 
+      
       setStatus("success");
       setFormData({ firstName: "", lastName: "", email: "", phone: "", message: "", interest: "buy" });
+      
       setTimeout(() => setStatus("idle"), 4000);
     } catch (err) {
-      console.error(err);
-      // Fallback for UI demo
-      setStatus("success");
-      setTimeout(() => setStatus("idle"), 4000);
+      console.error("Contact Form Error:", err);
+      const errorMsg = err.response?.data?.detail || "Failed to send message. Please try again later.";
+      setError(errorMsg);
+      setStatus("idle");
+      toast.error(errorMsg);
     }
   };
 
@@ -180,22 +176,21 @@ export default function ContactPage() {
             <div className="absolute top-0 right-0 w-80 h-80 bg-[#D4AF37]/10 rounded-full blur-[80px] -mr-20 -mt-20 pointer-events-none"></div>
 
             <div className="p-8 md:p-12 relative z-10 flex-1">
-              <h2 className="text-3xl font-black mb-2 text-white">Our Offices</h2>
-              <p className="text-slate-400 mb-8 text-sm">Select a location to view details.</p>
+              <h2 className="text-3xl font-black mb-2 text-white">Our Office</h2>
+              <p className="text-slate-400 mb-8 text-sm">Visit us at our headquarters.</p>
               
-              {/* Location Selector Tabs */}
+              {/* Location Selector Tabs (Only one now) */}
               <div className="flex flex-col gap-3 mb-8">
                 {LOCATIONS.map((loc) => (
                   <button 
                     key={loc.id}
-                    onClick={() => setActiveLocation(loc)}
-                    className={`text-left px-5 py-4 rounded-xl border transition-all flex items-center justify-between group ${activeLocation.id === loc.id ? 'bg-[#8B0000] border-[#8B0000] shadow-lg shadow-[#8B0000]/30' : 'bg-slate-800/50 border-slate-700 hover:bg-slate-800 hover:border-slate-600'}`}
+                    className={`text-left px-5 py-4 rounded-xl border transition-all flex items-center justify-between group bg-[#8B0000] border-[#8B0000] shadow-lg shadow-[#8B0000]/30 cursor-default`}
                   >
                     <div className="flex items-center gap-3">
-                      <Building className={`w-5 h-5 ${activeLocation.id === loc.id ? 'text-[#D4AF37]' : 'text-slate-400 group-hover:text-[#D4AF37]'}`} />
+                      <Building className="w-5 h-5 text-[#D4AF37]" />
                       <span className="font-bold text-lg text-white">{loc.name}</span>
                     </div>
-                    {activeLocation.id === loc.id && <CheckCircle className="w-5 h-5 text-[#D4AF37]/50" />}
+                    <CheckCircle className="w-5 h-5 text-[#D4AF37]/50" />
                   </button>
                 ))}
               </div>
@@ -308,11 +303,11 @@ export default function ContactPage() {
               <div className="space-y-4 text-slate-400 font-medium text-sm">
                 <div className="flex items-start bg-slate-900/50 p-3 rounded-xl border border-slate-800 hover:border-[#D4AF37]/50 transition-colors">
                   <MapPin className="w-5 h-5 mr-3 text-[#D4AF37] shrink-0" />
-                  <p className="text-xs">Sector 62, Noida,<br />Uttar Pradesh 201309</p>
+                  <p className="text-xs">Tapasya Corp Heights, Sector 126, Noida, UP 201303</p>
                 </div>
                 <div className="flex items-center bg-slate-900/50 p-3 rounded-xl border border-slate-800 hover:border-[#D4AF37]/50 transition-colors">
                   <Phone className="w-5 h-5 mr-3 text-[#D4AF37] shrink-0" />
-                  <a href="tel:+919732300007" className="text-xs hover:text-[#D4AF37] transition-colors">+91 92664 58945</a>
+                  <a href="tel:+919266458945" className="text-xs hover:text-[#D4AF37] transition-colors">+91 92664 58945</a>
                 </div>
                 <div className="flex items-center bg-slate-900/50 p-3 rounded-xl border border-slate-800 hover:border-[#D4AF37]/50 transition-colors">
                   <Mail className="w-5 h-5 mr-3 text-[#D4AF37] shrink-0" />
