@@ -9,7 +9,7 @@ const emptyForm = {
   title: '', description: '', price: '', category: 'buy', property_type: 'apartment',
   city: '', state: '', location: '', area: '', bhk: '', bathrooms: '', furnishing: 'unfurnished', 
   amenities: '', builder: '', rera: '', projectStatus: 'New Launch', possession: '',
-  youtube_link: '' // Added youtube_link to initial state
+  youtube_link: ''
 };
 
 export default function AddProperty({ onSave, editing, onCancel }) {
@@ -55,7 +55,7 @@ export default function AddProperty({ onSave, editing, onCancel }) {
         rera: editing.rera || '',
         projectStatus: editing.projectStatus || 'New Launch',
         possession: editing.possession || '',
-        youtube_link: editing.youtube_link || '' // Pre-fill if editing
+        youtube_link: editing.youtube_link || '' 
       });
       setMedia({
         images: [],
@@ -71,12 +71,10 @@ export default function AddProperty({ onSave, editing, onCancel }) {
     }
   }, [editing]);
 
-  // Handle Text/Select Inputs
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Handle File Uploads (With Limits)
   const handleFileUpload = (e, type) => {
     const files = Array.from(e.target.files);
     
@@ -122,7 +120,7 @@ export default function AddProperty({ onSave, editing, onCancel }) {
     // Prepare FormData
     const formData = new FormData();
     
-    // Append all text fields securely (youtube_link is included here automatically)
+    // Append all text fields securely
     Object.keys(form).forEach(key => {
       if (key === 'amenities') {
         const amArray = form.amenities.split(',').map(i => i.trim()).filter(Boolean);
@@ -132,24 +130,20 @@ export default function AddProperty({ onSave, editing, onCancel }) {
       }
     });
 
-    // Handle existing media state for PUT request
     if (editing) {
       formData.append('existing_images', JSON.stringify(media.existingImages));
     }
 
-    // Append new files using the EXACT keys your FastAPI expects
+    // Append new files
     media.images.forEach(img => formData.append('new_images', img));
     media.videos.forEach(vid => formData.append('new_videos', vid));
     if (media.pdf) formData.append('brochure', media.pdf);
 
-    // Pass FormData to parent (AdminPanel)
     onSave(formData);
   };
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-12">
-      
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
         <div>
           <button type="button" onClick={onCancel} className="text-slate-500 hover:text-[#8B0000] mb-2 flex items-center text-sm font-bold transition-colors">
@@ -280,8 +274,6 @@ export default function AddProperty({ onSave, editing, onCancel }) {
                   </div>
                 )}
               </div>
-              {/* END YOUTUBE SECTION */}
-
             </div>
           </div>
         </div>
@@ -305,16 +297,13 @@ export default function AddProperty({ onSave, editing, onCancel }) {
                 <input type="file" multiple accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'images')} />
               </label>
               
-              {/* Image Previews */}
               <div className="flex flex-wrap gap-2 mt-3">
-                {/* Existing Images from API */}
                 {media.existingImages.map((img, idx) => (
                   <div key={`ext-${idx}`} className="relative w-16 h-16 bg-slate-100 rounded-lg overflow-hidden border border-slate-200">
                     <img src={img} alt="existing" className="object-cover w-full h-full opacity-80" />
                     <button type="button" onClick={() => removeMedia(idx, 'existingImages')} className="absolute top-1 right-1 bg-white/90 text-red-600 rounded-full p-0.5 hover:bg-red-600 hover:text-white transition-colors shadow-sm"><X className="w-3 h-3" /></button>
                   </div>
                 ))}
-                {/* New Image Uploads */}
                 {media.images.map((img, idx) => (
                   <div key={`new-${idx}`} className="relative w-16 h-16 bg-slate-100 rounded-lg overflow-hidden border-2 border-[#D4AF37]">
                     <img src={URL.createObjectURL(img)} alt="preview" className="object-cover w-full h-full" />
@@ -339,14 +328,12 @@ export default function AddProperty({ onSave, editing, onCancel }) {
               </label>
               
               <div className="space-y-2 mt-3">
-                {/* Existing Videos */}
                 {media.existingVideos.map((vid, idx) => (
                   <div key={`ev-${idx}`} className="flex items-center justify-between bg-slate-50 p-2 rounded-lg border border-slate-100 text-xs">
                     <span className="truncate max-w-[180px] font-medium text-slate-700">Existing Video {idx + 1}</span>
                     <button type="button" onClick={() => removeMedia(idx, 'existingVideos')} className="text-red-500 hover:bg-red-50 p-1 rounded"><X className="w-3 h-3" /></button>
                   </div>
                 ))}
-                {/* New Videos */}
                 {media.videos.map((vid, idx) => (
                   <div key={`nv-${idx}`} className="flex items-center justify-between bg-slate-50 p-2 rounded-lg border border-[#D4AF37]/40 text-xs">
                     <span className="truncate max-w-[180px] font-medium text-slate-700">{vid.name}</span>
