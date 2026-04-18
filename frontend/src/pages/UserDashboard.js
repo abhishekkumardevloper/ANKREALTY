@@ -3,8 +3,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   Heart, Calendar, MessageSquare, MapPin, Trash2, 
-  ArrowRight, Loader2, Building, Clock, User,
-  CheckCircle, ChevronRight 
+  ArrowRight, Loader2, Building, Clock, 
+  CheckCircle, ChevronRight, ExternalLink
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../contexts/AuthContext';
@@ -31,7 +31,6 @@ export default function UserDashboard() {
     if (!api) return;
     setLoading(true);
     try {
-      // fetching data from your backend endpoints
       const [favResult, inqResult] = await Promise.allSettled([
         api.get('/favorites'),
         api.get('/inquiries')
@@ -40,7 +39,7 @@ export default function UserDashboard() {
       setFavorites(favResult.status === 'fulfilled' ? (Array.isArray(favResult.value.data) ? favResult.value.data : []) : []);
       setInquiries(inqResult.status === 'fulfilled' ? (Array.isArray(inqResult.value.data) ? inqResult.value.data : []) : []);
       
-      // Site visits placeholder
+      // Future feature: Site visits
       setAppointments([]); 
 
     } catch (error) {
@@ -55,11 +54,12 @@ export default function UserDashboard() {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
-  const removeFavorite = async (propertyId) => {
+  const removeFavorite = async (favoriteId) => {
     try {
-      await api.delete(`/favorites/${propertyId}`);
-      setFavorites((prev) => prev.filter((p) => p.property_id !== propertyId && p.id !== propertyId));
-      toast.success('Removed from your collection');
+      // Assuming your backend delete route uses the favorite's primary key ID
+      await api.delete(`/favorites/${favoriteId}`);
+      setFavorites((prev) => prev.filter((fav) => fav.id !== favoriteId));
+      toast.success('Property removed from your collection');
     } catch (error) {
       toast.error("Action failed. Try again.");
     }
@@ -79,25 +79,26 @@ export default function UserDashboard() {
       <Navbar />
 
       {/* PROFESSIONAL WELCOME HEADER */}
-      <section className="bg-[#0F172A] pt-32 pb-24 px-6 relative">
+      <section className="bg-[#0F172A] pt-32 pb-24 px-6 relative overflow-hidden">
         <div className="absolute inset-0 opacity-[0.05] bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] pointer-events-none"></div>
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#D4AF37]/10 rounded-full blur-[100px] pointer-events-none -translate-y-1/2 translate-x-1/3"></div>
         
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div className="space-y-3">
               <div className="flex items-center gap-3 text-[#D4AF37] font-bold text-xs uppercase tracking-[0.3em]">
                 <div className="h-[2px] w-10 bg-[#D4AF37]"></div>
-                Exclusive Access
+                Client Portal
               </div>
               <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight">
-                {greeting}, <span className="text-[#D4AF37]">{user?.name?.split(' ')[0] || 'Member'}</span>
+                {greeting}, <span className="text-[#D4AF37]">{user?.name?.split(' ')[0] || 'Guest'}</span>
               </h1>
               <p className="text-slate-400 font-medium max-w-xl text-lg">
-                Your central hub for saved properties, site visit schedules, and advisory communication.
+                Manage your saved luxury properties, site visit schedules, and advisory communications in one place.
               </p>
             </div>
             
-            <div className="flex gap-6 md:gap-10 bg-white/5 backdrop-blur-md p-6 rounded-3xl border border-white/10">
+            <div className="flex gap-6 md:gap-10 bg-white/5 backdrop-blur-md p-6 rounded-3xl border border-white/10 shadow-2xl">
               <div className="text-center">
                 <p className="text-3xl font-black text-white">{favorites.length}</p>
                 <p className="text-[10px] font-bold text-[#D4AF37] uppercase tracking-widest mt-1">Shortlisted</p>
@@ -113,7 +114,7 @@ export default function UserDashboard() {
       </section>
 
       {/* CONTENT GRID */}
-      <div className="max-w-7xl mx-auto px-6 -mt-12 w-full flex-1 pb-20">
+      <div className="max-w-7xl mx-auto px-6 -mt-12 w-full flex-1 pb-20 relative z-20">
         <div className="grid lg:grid-cols-4 gap-8">
           
           {/* NAVIGATION DRAWER */}
@@ -122,14 +123,14 @@ export default function UserDashboard() {
               {[
                 { id: 'favorites', label: 'My Shortlist', icon: Heart },
                 { id: 'appointments', label: 'Site Visits', icon: Calendar },
-                { id: 'inquiries', label: 'Messages', icon: MessageSquare },
+                { id: 'inquiries', label: 'My Inquiries', icon: MessageSquare },
               ].map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center justify-between w-full px-5 py-4 rounded-2xl font-bold text-sm transition-all group mb-1 ${
                     activeTab === tab.id 
-                      ? 'bg-[#0F172A] text-white shadow-lg' 
+                      ? 'bg-[#0F172A] text-white shadow-lg shadow-slate-900/20' 
                       : 'text-slate-600 hover:bg-slate-50'
                   }`}
                 >
@@ -141,8 +142,8 @@ export default function UserDashboard() {
                 </button>
               ))}
               <div className="mt-6 pt-6 border-t border-slate-100 px-2">
-                 <button onClick={() => navigate('/properties')} className="w-full bg-[#8B0000] text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-black transition-colors shadow-lg shadow-red-900/20">
-                    Find Properties
+                 <button onClick={() => navigate('/properties')} className="w-full bg-[#8B0000] text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#600000] transition-colors shadow-lg shadow-[#8B0000]/20 flex justify-center items-center gap-2">
+                   Find More Properties <ArrowRight className="w-4 h-4" />
                  </button>
               </div>
             </div>
@@ -153,33 +154,53 @@ export default function UserDashboard() {
             {loading ? (
               <div className="flex flex-col items-center justify-center py-40 bg-white rounded-[2.5rem] border border-slate-200 shadow-sm">
                 <Loader2 className="w-12 h-12 text-[#8B0000] animate-spin mb-4" />
-                <p className="text-slate-400 font-bold tracking-[0.2em] uppercase text-[11px]">Encrypting Dashboard</p>
+                <p className="text-slate-400 font-bold tracking-[0.2em] uppercase text-[11px]">Syncing Dashboard</p>
               </div>
             ) : (
               <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
                 
+                {/* FAVORITES TAB */}
                 {activeTab === 'favorites' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {favorites.length === 0 ? (
                       <div className="md:col-span-2"><EmptyState icon={Heart} title="Collection Empty" desc="Save your favorite luxury properties to track their current status and market price." /></div>
                     ) : (
                       favorites.map((fav) => {
-                        const property = fav.property || fav;
+                        // Handle Supabase Joined Data Structure safely
+                        const property = fav.properties || fav.property || fav;
+                        
                         return (
-                          <div key={property.id} className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-200 shadow-sm group hover:shadow-2xl hover:border-[#D4AF37]/40 transition-all duration-500">
-                            <div className="relative h-56 overflow-hidden">
-                              <img src={property.images?.[0] || property.imageUrl || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80'} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="" />
-                              <button onClick={() => removeFavorite(property.property_id || property.id)} className="absolute top-5 right-5 w-11 h-11 bg-white/90 backdrop-blur-md text-red-500 rounded-full flex items-center justify-center hover:bg-red-600 hover:text-white transition-all shadow-xl">
+                          <div key={fav.id} className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-200 shadow-sm group hover:shadow-2xl hover:border-[#D4AF37]/40 transition-all duration-500 flex flex-col">
+                            <div className="relative h-56 overflow-hidden bg-slate-100">
+                              {property.images && property.images.length > 0 ? (
+                                <img src={property.images[0]} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt={property.title} />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-slate-300"><Building className="w-12 h-12" /></div>
+                              )}
+                              
+                              <button 
+                                onClick={(e) => { e.preventDefault(); removeFavorite(fav.id); }} 
+                                className="absolute top-5 right-5 w-11 h-11 bg-white/90 backdrop-blur-md text-red-500 rounded-full flex items-center justify-center hover:bg-red-600 hover:text-white transition-all shadow-xl z-10"
+                                title="Remove from favorites"
+                              >
                                 <Trash2 className="w-5 h-5" />
                               </button>
                             </div>
-                            <div className="p-8">
-                              <h3 className="font-black text-slate-900 text-xl mb-2 truncate leading-tight">{property.title}</h3>
-                              <p className="flex items-center text-slate-500 text-sm font-medium mb-6"><MapPin className="w-4 h-4 mr-2 text-[#D4AF37]" /> {property.city || property.location}</p>
-                              <div className="flex items-center justify-between pt-6 border-t border-slate-50">
-                                <span className="text-2xl font-black text-[#0F172A]">{formatCurrency(property.price)}</span>
-                                <Link to={`/property/${property.property_id || property.id}`} className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center hover:bg-[#8B0000] transition-colors">
-                                  <ArrowRight className="w-5 h-5" />
+                            <div className="p-8 flex-1 flex flex-col">
+                              <div className="flex-1">
+                                <h3 className="font-black text-slate-900 text-xl mb-2 line-clamp-1 leading-tight">{property.title || 'Property Unavailable'}</h3>
+                                <p className="flex items-center text-slate-500 text-sm font-medium mb-6">
+                                  <MapPin className="w-4 h-4 mr-2 text-[#D4AF37]" /> 
+                                  {property.location ? `${property.location}, ${property.city}` : 'Location unknown'}
+                                </p>
+                              </div>
+                              <div className="flex items-center justify-between pt-6 border-t border-slate-100 mt-auto">
+                                <div>
+                                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">Listed Price</span>
+                                  <span className="text-2xl font-black text-[#0F172A]">{formatCurrency(property.price)}</span>
+                                </div>
+                                <Link to={`/property/${property.id}`} className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700 flex items-center justify-center hover:bg-[#8B0000] hover:text-white hover:border-[#8B0000] transition-all shadow-sm hover:shadow-md">
+                                  <ExternalLink className="w-5 h-5" />
                                 </Link>
                               </div>
                             </div>
@@ -190,6 +211,7 @@ export default function UserDashboard() {
                   </div>
                 )}
 
+                {/* APPOINTMENTS TAB */}
                 {activeTab === 'appointments' && (
                   <div className="space-y-6">
                     {appointments.length === 0 ? <EmptyState icon={Calendar} title="No Tours Scheduled" desc="You haven't requested any property visits yet. Experience properties in person for a better perspective." /> : (
@@ -214,29 +236,32 @@ export default function UserDashboard() {
                   </div>
                 )}
 
+                {/* INQUIRIES TAB */}
                 {activeTab === 'inquiries' && (
                   <div className="space-y-6 max-w-4xl">
                     {inquiries.length === 0 ? <EmptyState icon={MessageSquare} title="Inquiry Log Empty" desc="All your discussions with property owners and our support team will be securely logged here." /> : (
                       inquiries.map((inq) => (
                         <div key={inq.id} className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm hover:shadow-lg transition-shadow">
                           <div className="flex items-center justify-between mb-6">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-[#8B0000] rounded-xl flex items-center justify-center shadow-lg shadow-red-900/20">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 bg-[#8B0000] rounded-2xl flex items-center justify-center shadow-lg shadow-[#8B0000]/20">
                                 <Building className="w-5 h-5 text-white" />
                               </div>
                               <div>
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Reference ID</span>
-                                <span className="text-sm font-black text-slate-900">{inq.property_id || 'General Support'}</span>
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">Reference ID</span>
+                                <span className="text-sm font-black text-slate-900">{inq.property_id || 'General Support Inquiry'}</span>
                               </div>
                             </div>
-                            <span className="text-[11px] font-bold text-slate-400 bg-slate-50 px-3 py-1 rounded-lg">{new Date(inq.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long' })}</span>
+                            <span className="text-[11px] font-bold text-slate-400 bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-lg">
+                              {new Date(inq.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                            </span>
                           </div>
                           <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 text-slate-700 font-medium text-base leading-relaxed relative">
-                            <div className="absolute -top-3 left-6 bg-[#D4AF37] text-[10px] px-2 py-0.5 rounded font-black text-white uppercase tracking-tighter">Your Message</div>
+                            <div className="absolute -top-3 left-6 bg-[#D4AF37] text-[10px] px-3 py-0.5 rounded-md font-black text-white uppercase tracking-tighter shadow-sm">Your Message</div>
                             "{inq.message}"
                           </div>
-                          <div className="mt-6 flex items-center gap-3 text-emerald-600 font-black text-[11px] uppercase tracking-widest">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                          <div className="mt-6 flex items-center gap-3 text-emerald-600 font-black text-[11px] uppercase tracking-widest px-2">
+                            <CheckCircle className="w-4 h-4" />
                             Delivered to Advisory Team
                           </div>
                         </div>
