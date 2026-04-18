@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { 
   Calendar, Home, MessageSquare, Phone, Search, TrendingUp, Users, 
-  Plus, X, MapPin, Building, Mail, Clock, ArrowRight, ShieldCheck, CheckCircle, Loader2
+  Plus, X, MapPin, Building, Mail, Clock, ArrowRight, ShieldCheck, CheckCircle, Loader2, UserCheck, Shield
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +28,10 @@ export default function CrmDashboard() {
     properties: [], 
     inquiries: [] 
   });
+
+  // Users Data State (Admin Only)
+  const [users, setUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
   // Add Lead Modal State
   const [isAddLeadOpen, setIsAddLeadOpen] = useState(false);
@@ -63,9 +67,26 @@ export default function CrmDashboard() {
     }
   }, [api]);
 
+  // FETCH USERS (Admin Only)
+  const fetchUsersData = useCallback(async () => {
+    if (!api || user?.role !== 'admin') return;
+    
+    setLoadingUsers(true);
+    try {
+      const response = await api.get('/users');
+      setUsers(response.data || []);
+    } catch (error) {
+      console.error("Users Fetch Error:", error);
+      // Optional: toast.error('Failed to load registered users.');
+    } finally {
+      setLoadingUsers(false);
+    }
+  }, [api, user]);
+
   useEffect(() => {
     fetchDashboardData();
-  }, [fetchDashboardData]);
+    fetchUsersData();
+  }, [fetchDashboardData, fetchUsersData]);
 
   // Filtering Logic
   const filteredProperties = useMemo(() => 
@@ -80,6 +101,12 @@ export default function CrmDashboard() {
     ), 
   [data.inquiries, searchTerm]);
 
+  const filteredUsers = useMemo(() => 
+    users.filter((item) => 
+      [item.name, item.email, item.phone, item.role].filter(Boolean).some((field) => String(field).toLowerCase().includes(searchTerm.toLowerCase()))
+    ), 
+  [users, searchTerm]);
+
   // Handle Manual Lead Submission (Connected to Real API)
   const handleAddLeadSubmit = async (e) => {
     e.preventDefault();
@@ -90,7 +117,6 @@ export default function CrmDashboard() {
 
     setIsSubmitting(true);
     try {
-      // Post to the unified contacts route
       await api.post('/contacts', {
         name: newLead.clientName,
         phone: newLead.phone,
@@ -103,7 +129,6 @@ export default function CrmDashboard() {
       setIsAddLeadOpen(false);
       setNewLead({ clientName: '', phone: '', propertyId: '', message: '' });
       
-      // Refresh dashboard data to immediately show the new lead
       await fetchDashboardData();
     } catch (error) {
       console.error("Add Lead Error:", error);
@@ -113,17 +138,32 @@ export default function CrmDashboard() {
     }
   };
 
+  // Dynamic Sidebar Menu based on Role
+  const menuItems = [
+    { id: 'dashboard', label: 'Overview', icon: TrendingUp }, 
+    { id: 'properties', label: 'My Inventory', icon: Building }, 
+    { id: 'inquiries', label: 'Lead Manager', icon: MessageSquare }
+  ];
+  if (user?.role === 'admin') {
+    menuItems.push({ id: 'users', label: 'Registered Users', icon: UserCheck });
+  }
+
+  // Dynamic Stats based on Role
   const stats = [
     { title: 'Total Leads', value: data.total_inquiries, icon: Users, color: 'bg-blue-50 text-blue-600 border-blue-100' },
     { title: 'Active Listings', value: data.total_listings, icon: Home, color: 'bg-emerald-50 text-emerald-600 border-emerald-100' },
     { title: 'Total Views', value: data.total_views, icon: TrendingUp, color: 'bg-amber-50 text-amber-600 border-amber-100' },
-    { title: 'Follow Ups', value: filteredInquiries.length, icon: Calendar, color: 'bg-red-50 text-red-600 border-red-100' },
   ];
+  if (user?.role === 'admin') {
+    stats.push({ title: 'Registered Users', value: users.length, icon: UserCheck, color: 'bg-[#D4AF37]/10 text-[#c09b2e] border-[#D4AF37]/30' });
+  } else {
+    stats.push({ title: 'Follow Ups', value: filteredInquiries.length, icon: Calendar, color: 'bg-red-50 text-red-600 border-red-100' });
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans selection:bg-[#D4AF37]/30">
       
-      {/* SIDEBAR - Hidden on mobile, visible on medium screens and up */}
+      {/* SIDEBAR */}
       <aside className="w-64 bg-[#050505] text-slate-300 flex-col fixed h-full z-20 border-r border-slate-800 shadow-2xl hidden md:flex">
         <div className="h-20 flex items-center px-6 border-b border-slate-800 bg-[#000000]">
           <h1 className="text-2xl font-black text-[#D4AF37] tracking-tight">ANK<span className="text-white">REALTY</span></h1>
@@ -132,11 +172,7 @@ export default function CrmDashboard() {
         
         <nav className="flex-1 py-8 px-4 space-y-3">
           <p className="text-xs font-bold text-slate-500 uppercase tracking-widest px-4 mb-2">Main Menu</p>
-          {[
-            { id: 'dashboard', label: 'Overview', icon: TrendingUp }, 
-            { id: 'properties', label: 'My Inventory', icon: Building }, 
-            { id: 'inquiries', label: 'Lead Manager', icon: MessageSquare }
-          ].map((item) => (
+          {menuItems.map((item) => (
             <button 
               key={item.id} 
               onClick={() => setActiveTab(item.id)} 
@@ -177,7 +213,7 @@ export default function CrmDashboard() {
             <div className="relative group hidden sm:block">
               <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#8B0000] transition-colors" />
               <Input 
-                placeholder="Search leads or properties..." 
+                placeholder={`Search ${activeTab}...`} 
                 value={searchTerm} 
                 onChange={(e) => setSearchTerm(e.target.value)} 
                 className="pl-10 w-64 lg:w-80 bg-slate-50 border-slate-200 rounded-full h-11 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20 transition-all font-medium" 
@@ -196,7 +232,6 @@ export default function CrmDashboard() {
           {activeTab === 'dashboard' && (
             <div className="space-y-8 animate-in fade-in duration-500">
               
-              {/* Mobile Search - Visible only on small screens */}
               <div className="sm:hidden relative">
                 <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <Input 
@@ -205,7 +240,6 @@ export default function CrmDashboard() {
                 />
               </div>
 
-              {/* Stats Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                 {stats.map((stat) => (
                   <div key={stat.title} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-5 hover:shadow-md transition-shadow hover:border-slate-200">
@@ -385,6 +419,67 @@ export default function CrmDashboard() {
               </div>
             </div>
           )}
+
+          {/* TAB: REGISTERED USERS (ADMIN ONLY) */}
+          {activeTab === 'users' && user?.role === 'admin' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4">
+              {filteredUsers.map(u => (
+                <div key={u.id} className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md hover:border-[#D4AF37]/30 transition-all">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 text-slate-500 font-black">
+                        {u.name?.charAt(0).toUpperCase() || 'U'}
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-black text-slate-900 leading-tight">{u.name || 'No Name Provided'}</h3>
+                        <p className="text-sm text-slate-500 font-medium">{u.email}</p>
+                      </div>
+                    </div>
+                    {u.role === 'admin' && (
+                      <span className="bg-[#8B0000]/10 text-[#8B0000] px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider flex items-center">
+                        <Shield className="w-3 h-3 mr-1"/> Admin
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 space-y-2 mb-4">
+                    <div className="flex items-center text-sm text-slate-700">
+                      <Phone className="w-4 h-4 mr-2 text-slate-400" />
+                      {u.phone || 'No phone number'}
+                    </div>
+                    <div className="flex items-center text-sm text-slate-700">
+                      <Clock className="w-4 h-4 mr-2 text-slate-400" />
+                      Joined: {new Date(u.created_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    {u.phone && (
+                      <a href={`https://wa.me/${u.phone.replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#075E54] font-bold h-10 rounded-xl transition-colors text-xs">
+                        <MessageSquare className="w-3 h-3" /> Message
+                      </a>
+                    )}
+                    <a href={`mailto:${u.email}`} className="flex-1 flex items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold h-10 rounded-xl transition-colors text-xs">
+                      <Mail className="w-3 h-3" /> Email
+                    </a>
+                  </div>
+                </div>
+              ))}
+
+              {loadingUsers && (
+                <div className="col-span-1 md:col-span-2 p-12 text-center text-slate-500 font-medium">Loading registered users...</div>
+              )}
+
+              {!loadingUsers && filteredUsers.length === 0 && (
+                <div className="col-span-1 md:col-span-2 p-16 text-center bg-white rounded-3xl border border-dashed border-slate-300">
+                  <UserCheck className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-slate-700 mb-1">No Users Found</h3>
+                  <p className="text-slate-500 text-sm">No registered users match your search.</p>
+                </div>
+              )}
+            </div>
+          )}
+
         </div>
       </main>
 
