@@ -1,9 +1,8 @@
-// src/components/Navbar.jsx
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   User, LogOut, Menu, X, ChevronDown,
-  Youtube, FileText, TrendingUp, Home, Building2, Phone, Briefcase
+  Youtube, FileText, TrendingUp, Home, Building2, Phone, Briefcase, Key // <-- 'Key' added here!
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -35,9 +34,7 @@ export default function Navbar() {
 
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(`${path}/`);
 
-  // --- CRITICAL FIX FOR THE "MIXING" ISSUE ---
   // Define routes that have a DARK hero section at the top.
-  // On these routes, the navbar starts transparent. On all other routes, it starts solid white.
   const transparentRoutes = ['/', '/contact', '/dashboard'];
   const isTransparentRoute = transparentRoutes.includes(location.pathname);
   
