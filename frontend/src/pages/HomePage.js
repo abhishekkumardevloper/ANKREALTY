@@ -42,6 +42,7 @@ import {
   CheckCircle,
   Twitter,
   Facebook,
+  Heart
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import RegisterPopup from './RegisterPopup';
@@ -49,6 +50,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import * as siteData from '@/lib/siteData';
 import { WHATSAPP_URL } from '@/lib/api';
+import { useAuth } from '../contexts/AuthContext'; // Added useAuth
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://ankrealty.onrender.com/api";
 
@@ -71,14 +73,6 @@ const bottomRowLogos = [
   '/M3M-Jacob-and-Co-logo.png',
 ];
 
-// DATA for Static Content Sections
-const processSteps = [
-  { title: 'Search Property', desc: 'Discover premium listings, plots, and projects with ease.', icon: Search },
-  { title: 'Book Site Visit', desc: 'Our local experts coordinate viewings that fit your schedule.', icon: MapPin },
-  { title: 'Legal Verification', desc: 'Transparent review of property documents for total peace of mind.', icon: ShieldCheck },
-  { title: 'Close & Transact', desc: 'Benefit from human guidance through documentation and final handover.', icon: FileSignature },
-];
-
 const categoryOptions = [
   { label: 'Buy', value: 'buy' },
   { label: 'Resale', value: 'resale' },
@@ -99,7 +93,6 @@ const staggerContainer = {
 // Helper for YouTube IDs
 const getYouTubeID = (url) => {
   if (!url) return null;
-
   try {
     if (url.includes('youtube.com/watch')) return new URLSearchParams(new URL(url).search).get('v');
     if (url.includes('youtu.be/')) return url.split('youtu.be/')[1]?.split('?')[0];
@@ -107,15 +100,15 @@ const getYouTubeID = (url) => {
   } catch (error) {
     return null;
   }
-
   return null;
 };
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const { user, api } = useAuth(); // Pull user and API for favorites
+  
   const [search, setSearch] = useState({ category: 'buy', city: '', property_type: '', max_price: '' });
   const [searchFocused, setSearchFocused] = useState(false);
-  const [newsletterEmail, setNewsletterEmail] = useState('');
 
   // Dynamic Data States
   const [featuredProperties, setFeaturedProperties] = useState([]);
@@ -184,15 +177,23 @@ export default function HomePage() {
     navigate(`/properties?${params.toString()}`);
   };
 
-  const handleNewsletter = () => {
-    if (!newsletterEmail.includes('@')) return toast.error('Please enter a valid email address.');
-    window.open(
-      `${WHATSAPP_URL}?text=${encodeURIComponent(
-        `Hi ANK Realty, subscribe me for property deals. My email is ${newsletterEmail}.`
-      )}`,
-      '_blank',
-      'noopener,noreferrer'
-    );
+  // WORKING SAVE/FAVORITE HANDLER
+  const handleSaveProperty = async (e, propertyId) => {
+    e.stopPropagation(); // Prevents the card click from triggering navigation
+    
+    if (!user) {
+      toast.error('Please login to save properties.');
+      navigate('/auth');
+      return;
+    }
+    
+    try {
+      await api.post('/favorites', { property_id: propertyId });
+      toast.success('Property saved to your collection!');
+    } catch (error) {
+      console.error('Error saving favorite:', error);
+      toast.error('Failed to save property. It might already be in your favorites.');
+    }
   };
 
   // FULLY FUNCTIONAL LOAN SUBMISSION TO CRM
@@ -526,6 +527,15 @@ export default function HomePage() {
                   <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-black text-slate-900 shadow-lg z-10 flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" /> {property.projectStatus || 'Featured'}
                   </div>
+                  
+                  {/* ADDED: Save Property Button */}
+                  <button 
+                    onClick={(e) => handleSaveProperty(e, property.id)} 
+                    className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-slate-400 hover:text-[#8B0000] hover:bg-red-50 shadow-md transition-all z-20"
+                    title="Save to favorites"
+                  >
+                    <Heart className="w-5 h-5" />
+                  </button>
 
                   <div className="relative h-56 overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -596,6 +606,15 @@ export default function HomePage() {
                   <div className="absolute top-4 left-4 bg-[#8B0000]/90 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-black text-white shadow-lg z-10 flex items-center gap-1.5">
                     <Key className="w-3.5 h-3.5" /> {property.projectStatus || 'Ready to Move'}
                   </div>
+                  
+                  {/* ADDED: Save Property Button */}
+                  <button 
+                    onClick={(e) => handleSaveProperty(e, property.id)} 
+                    className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-slate-400 hover:text-[#8B0000] hover:bg-red-50 shadow-md transition-all z-20"
+                    title="Save to favorites"
+                  >
+                    <Heart className="w-5 h-5" />
+                  </button>
 
                   <div className="relative h-56 overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
