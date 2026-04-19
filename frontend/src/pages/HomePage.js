@@ -1,5 +1,5 @@
 // src/pages/HomePage.jsx
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
@@ -7,7 +7,6 @@ import { toast } from 'sonner';
 import {
   ArrowRight,
   Banknote,
-  Bell,
   Briefcase,
   Building2,
   Calculator,
@@ -17,22 +16,17 @@ import {
   Linkedin,
   Mail,
   MapPin,
-  MessageCircle,
   Search,
   Users,
-  Youtube,
   TrendingUp,
   Award,
   ShieldCheck,
   Home,
   Key,
   PieChart,
-  Map as MapIcon, // <--- Imported as MapIcon
+  Map as MapIcon,
   Sparkles,
   Building,
-  FileSignature,
-  Zap,
-  LandPlot,
   RefreshCw,
   DollarSign,
   Phone,
@@ -49,12 +43,10 @@ import RegisterPopup from './RegisterPopup';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import * as siteData from '@/lib/siteData';
-import { WHATSAPP_URL } from '@/lib/api';
 import { useAuth } from '../contexts/AuthContext';
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://ankrealty.onrender.com/api";
 
-const exploreLocalities = Array.isArray(siteData?.exploreLocalities) ? siteData.exploreLocalities : [];
 const bankOffers = Array.isArray(siteData?.bankOffers) ? siteData.bankOffers : [];
 const socialLinks = siteData?.socialLinks || {};
 
@@ -105,15 +97,15 @@ export default function HomePage() {
   const navigate = useNavigate();
   const { user, api } = useAuth();
   
-  const [search, setSearch] = useState({ category: 'buy', city: '', property_type: '', max_price: '' });
-  const [searchFocused, setSearchFocused] = useState(false);
+  // Search State
+  const [search, setSearch] = useState({ category: 'buy', location: '', property_type: '', max_price: '' });
 
   const [featuredProperties, setFeaturedProperties] = useState([]);
   const [resaleProperties, setResaleProperties] = useState([]);
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  const [uniqueLocations, setUniqueLocations] = useState([]);
+  const [availableLocations, setAvailableLocations] = useState([]);
   const [savedProperties, setSavedProperties] = useState(new Set());
 
   const [loanLead, setLoanLead] = useState({ name: '', phone: '' });
@@ -137,12 +129,9 @@ export default function HomePage() {
           const allProps = featuredRes.value.data;
           setFeaturedProperties(allProps.slice(0, 4));
           
-          const locsMap = new Map(); // <--- Safely using native JS Map
-          allProps.forEach(p => {
-            if (p.city) locsMap.set(p.city.toLowerCase(), { name: p.city, city: p.state || 'India', badge: 'City' });
-            if (p.location) locsMap.set(p.location.toLowerCase(), { name: p.location, city: p.city || '', badge: 'Locality' });
-          });
-          setUniqueLocations(Array.from(locsMap.values()));
+          // Dynamically extract all unique locations from properties
+          const uniqueLocs = [...new Set(allProps.map(p => p.location).filter(Boolean))].sort();
+          setAvailableLocations(uniqueLocs);
         }
         
         if (resaleRes.status === 'fulfilled' && resaleRes.value.data) {
@@ -172,25 +161,11 @@ export default function HomePage() {
     }
   }, [user, api]);
 
-  const suggestions = useMemo(() => {
-    const combined = [...uniqueLocations, ...exploreLocalities];
-    const deduplicated = Array.from(new Map(combined.map(item => [item.name?.toLowerCase(), item])).values());
-    
-    const query = search.city.trim().toLowerCase();
-    if (!query) return deduplicated.slice(0, 6);
-
-    return deduplicated.filter(
-      (item) =>
-        item?.name?.toLowerCase().includes(query) ||
-        item?.city?.toLowerCase().includes(query)
-    ).slice(0, 6);
-  }, [search.city, uniqueLocations]);
-
   const handleSearch = () => {
     const params = new URLSearchParams();
     if (search.category) params.append('category', search.category);
     if (search.property_type) params.append('property_type', search.property_type);
-    if (search.city) params.append('location', search.city);
+    if (search.location) params.append('location', search.location);
     if (search.max_price) params.append('max_price', search.max_price);
 
     navigate(`/properties?${params.toString()}`);
@@ -278,7 +253,7 @@ export default function HomePage() {
     return 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=800&auto=format&fit=crop';
   };
 
-  const mapLocation = search.city || 'Noida, Uttar Pradesh';
+  const mapLocation = search.location || 'Noida, Uttar Pradesh';
   const dynamicMapSrc = `https://maps.google.com/maps?q=$${encodeURIComponent(mapLocation)}&t=&z=12&ie=UTF8&iwloc=&output=embed`;
 
   return (
@@ -353,48 +328,22 @@ export default function HomePage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3 relative">
+              {/* Location Select */}
               <div className="relative md:border-r md:border-slate-200 group">
                 <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-[#8B0000] transition-colors" />
-                <Input
-                  value={search.city}
-                  onChange={(e) => setSearch((prev) => ({ ...prev, city: e.target.value }))}
-                  onFocus={() => setSearchFocused(true)}
-                  onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
-                  placeholder="Search by city or locality"
-                  className="h-14 pl-12 border-0 shadow-none focus-visible:ring-0 bg-transparent text-base placeholder:text-slate-400 font-medium"
-                />
-
-                {searchFocused && suggestions.length > 0 && (
-                  <div className="absolute left-0 right-0 top-full mt-4 bg-white border border-slate-100 rounded-2xl shadow-2xl p-2 z-50 overflow-hidden">
-                    {suggestions.map((item) => (
-                      <button
-                        key={item?.name || item?.city}
-                        type="button"
-                        onClick={() => {
-                          setSearch((prev) => ({
-                            ...prev,
-                            city: item?.name || item?.city || '',
-                            property_type: item?.propertyType || prev.property_type,
-                          }));
-                          setSearchFocused(false);
-                        }}
-                        className="w-full text-left px-4 py-3 rounded-xl hover:bg-slate-50 transition-colors flex justify-between items-center group/item"
-                      >
-                        <div>
-                          <p className="text-base font-bold text-slate-900 group-hover/item:text-[#8B0000] transition-colors">
-                            {item?.name}
-                          </p>
-                          <p className="text-xs text-slate-500">{item?.city}</p>
-                        </div>
-                        <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded font-semibold">
-                          {item?.badge}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
+                <select
+                  value={search.location}
+                  onChange={(e) => setSearch((prev) => ({ ...prev, location: e.target.value }))}
+                  className="h-14 pl-12 pr-4 bg-transparent border-0 w-full text-slate-700 appearance-none outline-none font-medium text-base cursor-pointer"
+                >
+                  <option value="">All Locations</option>
+                  {availableLocations.map((loc) => (
+                    <option key={loc} value={loc}>{loc}</option>
+                  ))}
+                </select>
               </div>
 
+              {/* Property Type Select */}
               <div className="relative md:border-r md:border-slate-200 group">
                 <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-[#8B0000] transition-colors" />
                 <select
@@ -410,6 +359,7 @@ export default function HomePage() {
                 </select>
               </div>
 
+              {/* Budget Select */}
               <div className="relative group">
                 <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-[#8B0000] transition-colors" />
                 <select
@@ -489,7 +439,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- CORPORATE LEASING BANNER (NEW) --- */}
+      {/* --- CORPORATE LEASING BANNER --- */}
       <section className="py-20 px-6 bg-[#050505] text-white relative overflow-hidden">
         <div className="absolute inset-0 opacity-30 bg-[url('https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-[#050505]/80 to-transparent z-0" />
@@ -560,10 +510,9 @@ export default function HomePage() {
                       <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" /> {property.projectStatus || 'Featured'}
                     </div>
                     
-                    {/* ADDED: Save Property Button */}
                     <button 
                       onClick={(e) => handleSaveProperty(e, property.id)} 
-                      className={`absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center transition-all z-20 shadow-md ${isSaved ? 'text-[#8B0000] bg-red-50' : 'text-slate-400 hover:text-[#8B0000] hover:bg-red-50'}`}
+                      className={`absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center transition-all z-20 shadow-md ${isSaved ? 'text-[#8B0000] bg-red-50 border border-red-100' : 'text-slate-400 hover:text-[#8B0000] hover:bg-red-50'}`}
                       title={isSaved ? "Remove from favorites" : "Save to favorites"}
                     >
                       <Heart className={`w-5 h-5 transition-colors ${isSaved ? 'fill-[#8B0000] text-[#8B0000]' : ''}`} />
@@ -645,7 +594,7 @@ export default function HomePage() {
                     {/* ADDED: Save Property Button */}
                     <button 
                       onClick={(e) => handleSaveProperty(e, property.id)} 
-                      className={`absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center transition-all z-20 shadow-md ${isSaved ? 'text-[#8B0000] bg-red-50' : 'text-slate-400 hover:text-[#8B0000] hover:bg-red-50'}`}
+                      className={`absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center transition-all z-20 shadow-md ${isSaved ? 'text-[#8B0000] bg-red-50 border border-red-100' : 'text-slate-400 hover:text-[#8B0000] hover:bg-red-50'}`}
                       title={isSaved ? "Remove from favorites" : "Save to favorites"}
                     >
                       <Heart className={`w-5 h-5 transition-colors ${isSaved ? 'fill-[#8B0000] text-[#8B0000]' : ''}`} />
