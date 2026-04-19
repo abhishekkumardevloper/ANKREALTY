@@ -1,3 +1,4 @@
+// src/pages/HomePage.jsx
 import React, { useMemo, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -26,7 +27,7 @@ import {
   Home,
   Key,
   PieChart,
-  Map,
+  Map as MapIcon, // <--- FIX: Aliased to MapIcon to prevent naming collision!
   Sparkles,
   Building,
   FileSignature,
@@ -112,7 +113,6 @@ export default function HomePage() {
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // States for unified dynamic search and favorites
   const [uniqueLocations, setUniqueLocations] = useState([]);
   const [savedProperties, setSavedProperties] = useState(new Set());
 
@@ -123,7 +123,6 @@ export default function HomePage() {
   const [interestRate, setInterestRate] = useState(8.5);
   const [loanTenure, setLoanTenure] = useState(20);
 
-  // Fetch properties, dynamic locations, videos, and user favorites
   useEffect(() => {
     const fetchHomePageData = async () => {
       setLoading(true);
@@ -138,8 +137,7 @@ export default function HomePage() {
           const allProps = featuredRes.value.data;
           setFeaturedProperties(allProps.slice(0, 4));
           
-          // Extract dynamic locations and cities from real property data
-          const locsMap = new Map();
+          const locsMap = new Map(); // <--- This native JS Map caused the crash before!
           allProps.forEach(p => {
             if (p.city) locsMap.set(p.city.toLowerCase(), { name: p.city, city: p.state || 'India', badge: 'City' });
             if (p.location) locsMap.set(p.location.toLowerCase(), { name: p.location, city: p.city || '', badge: 'Locality' });
@@ -163,7 +161,6 @@ export default function HomePage() {
     fetchHomePageData();
   }, []);
 
-  // Fetch User's Favorites so we can show red hearts
   useEffect(() => {
     if (user && api) {
       api.get('/favorites').then(res => {
@@ -175,7 +172,6 @@ export default function HomePage() {
     }
   }, [user, api]);
 
-  // Combine dynamic properties locations with static siteData
   const suggestions = useMemo(() => {
     const combined = [...uniqueLocations, ...exploreLocalities];
     const deduplicated = Array.from(new Map(combined.map(item => [item.name?.toLowerCase(), item])).values());
@@ -190,7 +186,6 @@ export default function HomePage() {
     ).slice(0, 6);
   }, [search.city, uniqueLocations]);
 
-  // WORKING SEARCH HANDLER: Passes all parameters to the property listing page
   const handleSearch = () => {
     const params = new URLSearchParams();
     if (search.category) params.append('category', search.category);
@@ -201,7 +196,6 @@ export default function HomePage() {
     navigate(`/properties?${params.toString()}`);
   };
 
-  // FULLY FUNCTIONAL FAVORITE TOGGLE WITH RED HEART UI
   const handleSaveProperty = async (e, propertyId) => {
     e.stopPropagation(); 
     
@@ -566,6 +560,7 @@ export default function HomePage() {
                       <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" /> {property.projectStatus || 'Featured'}
                     </div>
                     
+                    {/* ADDED: Save Property Button */}
                     <button 
                       onClick={(e) => handleSaveProperty(e, property.id)} 
                       className={`absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center transition-all z-20 shadow-md ${isSaved ? 'text-[#8B0000] bg-red-50' : 'text-slate-400 hover:text-[#8B0000] hover:bg-red-50'}`}
@@ -647,6 +642,7 @@ export default function HomePage() {
                       <Key className="w-3.5 h-3.5" /> {property.projectStatus || 'Ready to Move'}
                     </div>
                     
+                    {/* ADDED: Save Property Button */}
                     <button 
                       onClick={(e) => handleSaveProperty(e, property.id)} 
                       className={`absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center transition-all z-20 shadow-md ${isSaved ? 'text-[#8B0000] bg-red-50' : 'text-slate-400 hover:text-[#8B0000] hover:bg-red-50'}`}
