@@ -7,7 +7,7 @@ import {
   Heart, ShieldCheck, Share2, CheckCircle, Info, ChevronRight, 
   Image as ImageIcon, Download, FileText, Check, Building,
   TrendingUp, Coffee, Zap, ArrowUpDown, Shield, Dumbbell, Droplets, Wind,
-  Star, Lock, Zap as ZapIcon, MessageSquare, Map, DollarSign, Sparkles, PlayCircle
+  Star, Lock, Zap as ZapIcon, MessageSquare, Map, DollarSign, Sparkles, PlayCircle, Loader2
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { Button } from '@/components/ui/button';
@@ -36,6 +36,7 @@ export default function PropertyDetailPage() {
   const location = useLocation();
   const auth = useAuth();
   const user = auth?.user;
+  const api = auth?.api;
 
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -44,6 +45,12 @@ export default function PropertyDetailPage() {
   // Form States
   const [leadForm, setLeadForm] = useState({ name: '', email: '', phone: '' });
   const [quickForm, setQuickForm] = useState({ name: '', phone: '' });
+  
+  // Submission States
+  const [isSubmittingQuick, setIsSubmittingQuick] = useState(false);
+  const [isSubmittingMain, setIsSubmittingMain] = useState(false);
+  const [quickSuccess, setQuickSuccess] = useState(false);
+  const [mainSuccess, setMainSuccess] = useState(false);
 
   const fetchProperty = useCallback(async () => {
     try {
@@ -73,21 +80,68 @@ export default function PropertyDetailPage() {
     fetchProperty();
   }, [fetchProperty]);
 
-  const handleLeadSubmit = (e, formName) => {
+  // --- CRM INTEGRATION FOR INQUIRIES ---
+  const handleLeadSubmit = async (e, formType) => {
     e.preventDefault();
-    if(formName === 'Quick Form') setQuickForm({ name: '', phone: '' });
-    else setLeadForm({ name: '', email: '', phone: '' });
     
-    toast.success(`Thank you! Our expert will contact you shortly. (${formName})`);
+    // Determine which form data to use
+    const isQuick = formType === 'quick';
+    const currentForm = isQuick ? quickForm : leadForm;
+    const setSubmitting = isQuick ? setIsSubmittingQuick : setIsSubmittingMain;
+    const setSuccess = isQuick ? setQuickSuccess : setMainSuccess;
+    const resetForm = isQuick ? () => setQuickForm({ name: '', phone: '' }) : () => setLeadForm({ name: '', email: '', phone: '' });
+
+    if (!currentForm.name || !currentForm.phone) {
+      return toast.error("Please provide your name and phone number.");
+    }
+
+    setSubmitting(true);
+
+    try {
+      // If user is logged in, send as authenticated inquiry attached to property
+      if (user && api) {
+        await api.post('/inquiries', {
+          property_id: property.id,
+          message: `I am interested in ${property.title}. Please contact me.`
+        });
+      } else {
+        // If guest, send as public contact lead with property details
+        await axios.post(`${API_BASE}/contacts`, {
+          name: currentForm.name,
+          phone: currentForm.phone,
+          email: currentForm.email || 'N/A',
+          interest: `Property Inquiry: ${property.title} (${property.id})`,
+          message: `Guest inquiry for property: ${property.title}.`
+        });
+      }
+      
+      setSuccess(true);
+      resetForm();
+      
+      // Reset success message after 4 seconds
+      setTimeout(() => setSuccess(false), 4000);
+      
+    } catch (error) {
+      console.error("Inquiry Error:", error);
+      toast.error("Failed to send inquiry. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const addToFavorites = async () => {
-    if (!user) {
+    if (!user || !api) {
       toast.error('Please login to save favorites');
       navigate('/auth');
       return;
     }
-    toast.success('Added to favorites');
+    
+    try {
+      await api.post('/favorites', { property_id: property.id });
+      toast.success('Added to favorites');
+    } catch (error) {
+      toast.error('Failed to add to favorites. It may already be saved.');
+    }
   };
 
   if (loading) {
@@ -278,22 +332,34 @@ export default function PropertyDetailPage() {
 
               {/* Inline Help Form */}
               <div className="mt-auto border border-[#D4AF37]/30 rounded-2xl p-5 bg-[#D4AF37]/5 relative z-10">
-                <div className="flex items-center mb-5">
-                  <div className="w-10 h-10 bg-[#8B0000] rounded-full flex items-center justify-center mr-3 shrink-0 shadow-md">
-                    <Phone className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-black text-slate-900">Interested in this property?</p>
-                    <p className="text-xs text-slate-600 font-medium">Get a call back from our experts.</p>
-                  </div>
-                </div>
-                <form onSubmit={(e) => handleLeadSubmit(e, 'Quick Form')} className="flex flex-col gap-3">
-                  <div className="flex gap-2">
-                    <Input placeholder="Name" className="bg-white border-slate-200 h-11 text-sm focus:border-[#D4AF37]" value={quickForm.name} onChange={(e)=>setQuickForm({...quickForm, name: e.target.value})} required/>
-                    <Input placeholder="Phone" type="tel" className="bg-white border-slate-200 h-11 text-sm focus:border-[#D4AF37]" value={quickForm.phone} onChange={(e)=>setQuickForm({...quickForm, phone: e.target.value})} required/>
-                  </div>
-                  <Button type="submit" className="bg-[#8B0000] hover:bg-[#600000] text-white font-bold h-11 w-full shadow-md shadow-[#8B0000]/20">Request Details</Button>
-                </form>
+                {quickSuccess ? (
+                   <div className="flex flex-col items-center justify-center text-center animate-in zoom-in py-4">
+                     <CheckCircle className="w-8 h-8 text-[#D4AF37] mb-2" />
+                     <h4 className="font-black text-slate-900 text-sm">Request Sent!</h4>
+                     <p className="text-xs text-slate-600 font-medium">We'll be in touch shortly.</p>
+                   </div>
+                ) : (
+                  <>
+                    <div className="flex items-center mb-5">
+                      <div className="w-10 h-10 bg-[#8B0000] rounded-full flex items-center justify-center mr-3 shrink-0 shadow-md">
+                        <Phone className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-black text-slate-900">Interested in this property?</p>
+                        <p className="text-xs text-slate-600 font-medium">Get a call back from our experts.</p>
+                      </div>
+                    </div>
+                    <form onSubmit={(e) => handleLeadSubmit(e, 'quick')} className="flex flex-col gap-3">
+                      <div className="flex gap-2">
+                        <Input placeholder="Name" className="bg-white border-slate-200 h-11 text-sm focus:border-[#D4AF37]" value={quickForm.name} onChange={(e)=>setQuickForm({...quickForm, name: e.target.value})} required/>
+                        <Input placeholder="Phone" type="tel" className="bg-white border-slate-200 h-11 text-sm focus:border-[#D4AF37]" value={quickForm.phone} onChange={(e)=>setQuickForm({...quickForm, phone: e.target.value})} required/>
+                      </div>
+                      <Button type="submit" disabled={isSubmittingQuick} className="bg-[#8B0000] hover:bg-[#600000] text-white font-bold h-11 w-full shadow-md shadow-[#8B0000]/20 transition-all">
+                        {isSubmittingQuick ? <Loader2 className="w-4 h-4 animate-spin" /> : "Request Details"}
+                      </Button>
+                    </form>
+                  </>
+                )}
               </div>
 
             </div>
@@ -465,37 +531,51 @@ export default function PropertyDetailPage() {
               <div className="bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden text-white">
                 <div className="absolute top-0 right-0 w-48 h-48 bg-[#D4AF37]/20 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
                 
-                <div className="mb-8 relative z-10">
-                  <span className="inline-block bg-[#8B0000] text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-md mb-4 shadow-sm">
-                    Connect with Seller
-                  </span>
-                  <h3 className="text-2xl font-black leading-tight mb-2">Interested in {property.title}?</h3>
-                  <p className="text-sm text-slate-400 font-medium">Leave your details and we will arrange a direct meeting.</p>
-                </div>
+                {mainSuccess ? (
+                   <div className="h-[300px] flex flex-col items-center justify-center text-center animate-in zoom-in duration-500">
+                     <div className="w-16 h-16 bg-[#D4AF37]/20 rounded-full flex items-center justify-center mb-4">
+                       <CheckCircle className="w-8 h-8 text-[#D4AF37]" />
+                     </div>
+                     <h3 className="text-2xl font-black text-white mb-2">Request Received!</h3>
+                     <p className="text-slate-400 text-sm max-w-[250px]">
+                       Thank you. Our property expert will contact you shortly.
+                     </p>
+                   </div>
+                ) : (
+                  <>
+                    <div className="mb-8 relative z-10">
+                      <span className="inline-block bg-[#8B0000] text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-md mb-4 shadow-sm">
+                        Connect with Seller
+                      </span>
+                      <h3 className="text-2xl font-black leading-tight mb-2">Interested in {property.title}?</h3>
+                      <p className="text-sm text-slate-400 font-medium">Leave your details and we will arrange a direct meeting.</p>
+                    </div>
 
-                <form onSubmit={(e) => handleLeadSubmit(e, 'Main Lead Form')} className="space-y-4 relative z-10">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-slate-300 uppercase tracking-widest pl-1">Full Name</Label>
-                    <Input placeholder="John Doe" className="h-14 bg-white/10 border-white/20 text-white placeholder:text-slate-500 rounded-xl focus:border-[#D4AF37]" value={leadForm.name} onChange={(e)=>setLeadForm({...leadForm, name: e.target.value})} required/>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-slate-300 uppercase tracking-widest pl-1">Email Address</Label>
-                    <Input placeholder="john@example.com" type="email" className="h-14 bg-white/10 border-white/20 text-white placeholder:text-slate-500 rounded-xl focus:border-[#D4AF37]" value={leadForm.email} onChange={(e)=>setLeadForm({...leadForm, email: e.target.value})} required/>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-slate-300 uppercase tracking-widest pl-1">Phone Number</Label>
-                    <Input placeholder="+91 92664 58945" type="tel" className="h-14 bg-white/10 border-white/20 text-white placeholder:text-slate-500 rounded-xl focus:border-[#D4AF37]" value={leadForm.phone} onChange={(e)=>setLeadForm({...leadForm, phone: e.target.value})} required/>
-                  </div>
-                  <div className="pt-4">
-                    <Button type="submit" className="w-full h-14 bg-[#D4AF37] hover:bg-[#c09b2e] text-slate-900 font-black rounded-xl text-lg transition-all shadow-lg shadow-[#D4AF37]/20 hover:-translate-y-0.5">
-                      Get Callback Now
-                    </Button>
-                  </div>
-                </form>
+                    <form onSubmit={(e) => handleLeadSubmit(e, 'main')} className="space-y-4 relative z-10">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-bold text-slate-300 uppercase tracking-widest pl-1">Full Name</Label>
+                        <Input placeholder="John Doe" className="h-14 bg-white/10 border-white/20 text-white placeholder:text-slate-500 rounded-xl focus:border-[#D4AF37]" value={leadForm.name} onChange={(e)=>setLeadForm({...leadForm, name: e.target.value})} required/>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-bold text-slate-300 uppercase tracking-widest pl-1">Email Address</Label>
+                        <Input placeholder="john@example.com" type="email" className="h-14 bg-white/10 border-white/20 text-white placeholder:text-slate-500 rounded-xl focus:border-[#D4AF37]" value={leadForm.email} onChange={(e)=>setLeadForm({...leadForm, email: e.target.value})} required/>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-bold text-slate-300 uppercase tracking-widest pl-1">Phone Number</Label>
+                        <Input placeholder="+91 92664 58945" type="tel" className="h-14 bg-white/10 border-white/20 text-white placeholder:text-slate-500 rounded-xl focus:border-[#D4AF37]" value={leadForm.phone} onChange={(e)=>setLeadForm({...leadForm, phone: e.target.value})} required/>
+                      </div>
+                      <div className="pt-4">
+                        <Button type="submit" disabled={isSubmittingMain} className="w-full h-14 bg-[#D4AF37] hover:bg-[#c09b2e] text-slate-900 font-black rounded-xl text-lg transition-all shadow-lg shadow-[#D4AF37]/20 hover:-translate-y-0.5">
+                          {isSubmittingMain ? <Loader2 className="w-5 h-5 animate-spin" /> : "Get Callback Now"}
+                        </Button>
+                      </div>
+                    </form>
 
-                <div className="mt-6 flex items-center justify-center gap-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest border-t border-white/10 pt-6">
-                  <span className="flex items-center"><ShieldCheck className="w-4 h-4 mr-1.5 text-green-500"/> Privacy Protected</span>
-                </div>
+                    <div className="mt-6 flex items-center justify-center gap-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest border-t border-white/10 pt-6">
+                      <span className="flex items-center"><ShieldCheck className="w-4 h-4 mr-1.5 text-green-500"/> Privacy Protected</span>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Why Invest Box */}
