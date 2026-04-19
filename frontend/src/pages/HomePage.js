@@ -50,7 +50,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import * as siteData from '@/lib/siteData';
 import { WHATSAPP_URL } from '@/lib/api';
-import { useAuth } from '../contexts/AuthContext'; // Added useAuth
+import { useAuth } from '../contexts/AuthContext';
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://ankrealty.onrender.com/api";
 
@@ -79,7 +79,6 @@ const categoryOptions = [
   { label: 'Rent', value: 'rent' },
 ];
 
-// --- ANIMATION VARIANTS ---
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
@@ -90,7 +89,6 @@ const staggerContainer = {
   visible: { opacity: 1, transition: { staggerChildren: 0.15 } },
 };
 
-// Helper for YouTube IDs
 const getYouTubeID = (url) => {
   if (!url) return null;
   try {
@@ -105,27 +103,28 @@ const getYouTubeID = (url) => {
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { user, api } = useAuth(); // Pull user and API for favorites
+  const { user, api } = useAuth();
   
   const [search, setSearch] = useState({ category: 'buy', city: '', property_type: '', max_price: '' });
   const [searchFocused, setSearchFocused] = useState(false);
 
-  // Dynamic Data States
   const [featuredProperties, setFeaturedProperties] = useState([]);
   const [resaleProperties, setResaleProperties] = useState([]);
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // States for unified dynamic search and favorites
+  const [uniqueLocations, setUniqueLocations] = useState([]);
+  const [savedProperties, setSavedProperties] = useState(new Set());
 
-  // Loan CRM Form State
   const [loanLead, setLoanLead] = useState({ name: '', phone: '' });
   const [isLoanSubmitting, setIsLoanSubmitting] = useState(false);
 
-  // EMI Calculator State
   const [loanAmount, setLoanAmount] = useState(7500000);
   const [interestRate, setInterestRate] = useState(8.5);
   const [loanTenure, setLoanTenure] = useState(20);
 
-  // Fetch Data from Backend (Properties & Videos)
+  // Fetch properties, dynamic locations, videos, and user favorites
   useEffect(() => {
     const fetchHomePageData = async () => {
       setLoading(true);
@@ -137,8 +136,18 @@ export default function HomePage() {
         ]);
 
         if (featuredRes.status === 'fulfilled' && featuredRes.value.data) {
-          setFeaturedProperties(Array.isArray(featuredRes.value.data) ? featuredRes.value.data.slice(0, 4) : []);
+          const allProps = featuredRes.value.data;
+          setFeaturedProperties(allProps.slice(0, 4));
+          
+          // Extract dynamic locations and cities from real property data
+          const locsMap = new Map();
+          allProps.forEach(p => {
+            if (p.city) locsMap.set(p.city.toLowerCase(), { name: p.city, city: p.state || 'India', badge: 'City' });
+            if (p.location) locsMap.set(p.location.toLowerCase(), { name: p.location, city: p.city || '', badge: 'Locality' });
+          });
+          setUniqueLocations(Array.from(locsMap.values()));
         }
+        
         if (resaleRes.status === 'fulfilled' && resaleRes.value.data) {
           setResaleProperties(Array.isArray(resaleRes.value.data) ? resaleRes.value.data.slice(0, 4) : []);
         }
@@ -155,18 +164,34 @@ export default function HomePage() {
     fetchHomePageData();
   }, []);
 
-  const suggestions = useMemo(() => {
-    const query = search.city.trim().toLowerCase();
-    if (!query) return exploreLocalities;
+  // Fetch User's Favorites so we can show red hearts
+  useEffect(() => {
+    if (user && api) {
+      api.get('/favorites').then(res => {
+        const favIds = new Set(res.data.map(f => f.property_id));
+        setSavedProperties(favIds);
+      }).catch(console.error);
+    } else {
+      setSavedProperties(new Set());
+    }
+  }, [user, api]);
 
-    return exploreLocalities.filter(
+  // Combine dynamic properties locations with static siteData
+  const suggestions = useMemo(() => {
+    const combined = [...uniqueLocations, ...exploreLocalities];
+    const deduplicated = Array.from(new Map(combined.map(item => [item.name?.toLowerCase(), item])).values());
+    
+    const query = search.city.trim().toLowerCase();
+    if (!query) return deduplicated.slice(0, 6);
+
+    return deduplicated.filter(
       (item) =>
         item?.name?.toLowerCase().includes(query) ||
         item?.city?.toLowerCase().includes(query)
-    );
-  }, [search.city]);
+    ).slice(0, 6);
+  }, [search.city, uniqueLocations]);
 
-  // WORKING SEARCH HANDLER
+  // WORKING SEARCH HANDLER: Passes all parameters to the property listing page
   const handleSearch = () => {
     const params = new URLSearchParams();
     if (search.category) params.append('category', search.category);
@@ -177,9 +202,9 @@ export default function HomePage() {
     navigate(`/properties?${params.toString()}`);
   };
 
-  // WORKING SAVE/FAVORITE HANDLER
+  // FULLY FUNCTIONAL FAVORITE TOGGLE WITH RED HEART UI
   const handleSaveProperty = async (e, propertyId) => {
-    e.stopPropagation(); // Prevents the card click from triggering navigation
+    e.stopPropagation(); 
     
     if (!user) {
       toast.error('Please login to save properties.');
@@ -188,15 +213,29 @@ export default function HomePage() {
     }
     
     try {
-      await api.post('/favorites', { property_id: propertyId });
-      toast.success('Property saved to your collection!');
+      if (savedProperties.has(propertyId)) {
+        await api.delete(`/favorites/${propertyId}`);
+        setSavedProperties(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(propertyId);
+          return newSet;
+        });
+        toast.success('Removed from your collection.');
+      } else {
+        await api.post('/favorites', { property_id: propertyId });
+        setSavedProperties(prev => {
+          const newSet = new Set(prev);
+          newSet.add(propertyId);
+          return newSet;
+        });
+        toast.success('Property saved! Added to your dashboard.');
+      }
     } catch (error) {
       console.error('Error saving favorite:', error);
-      toast.error('Failed to save property. It might already be in your favorites.');
+      toast.error('Failed to update favorites. Please try again.');
     }
   };
 
-  // FULLY FUNCTIONAL LOAN SUBMISSION TO CRM
   const handleLoanLead = async () => {
     if (!loanLead.name || loanLead.phone.replace(/\D/g, '').length < 10) {
       return toast.error('Please enter a valid name and 10-digit phone number.');
@@ -221,7 +260,6 @@ export default function HomePage() {
     }
   };
 
-  // EMI Calculation Logic
   const calculateEMI = () => {
     const p = loanAmount;
     const r = interestRate / 12 / 100;
@@ -247,9 +285,8 @@ export default function HomePage() {
     return 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=800&auto=format&fit=crop';
   };
 
-  // Dynamic Map URL generation based on search.city or a default location
   const mapLocation = search.city || 'Noida, Uttar Pradesh';
-  const dynamicMapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(mapLocation)}&t=&z=12&ie=UTF8&iwloc=&output=embed`;
+  const dynamicMapSrc = `https://maps.google.com/maps?q=$${encodeURIComponent(mapLocation)}&t=&z=12&ie=UTF8&iwloc=&output=embed`;
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-[#D4AF37]/30 relative">
@@ -336,15 +373,15 @@ export default function HomePage() {
 
                 {searchFocused && suggestions.length > 0 && (
                   <div className="absolute left-0 right-0 top-full mt-4 bg-white border border-slate-100 rounded-2xl shadow-2xl p-2 z-50 overflow-hidden">
-                    {suggestions.slice(0, 5).map((item) => (
+                    {suggestions.map((item) => (
                       <button
                         key={item?.name || item?.city}
                         type="button"
                         onClick={() => {
                           setSearch((prev) => ({
                             ...prev,
-                            city: item?.city || '',
-                            property_type: item?.propertyType || '',
+                            city: item?.name || item?.city || '',
+                            property_type: item?.propertyType || prev.property_type,
                           }));
                           setSearchFocused(false);
                         }}
@@ -517,51 +554,53 @@ export default function HomePage() {
             <div className="text-center py-10 text-slate-500 font-medium">Loading featured properties...</div>
           ) : featuredProperties.length > 0 ? (
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {featuredProperties.map((property) => (
-                <motion.div
-                  variants={fadeUp}
-                  key={property.id}
-                  onClick={() => navigate(`/property/${property.id}`, { state: { property } })}
-                  className="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-2xl hover:border-[#D4AF37]/50 hover:-translate-y-2 transition-all duration-300 cursor-pointer relative group flex flex-col"
-                >
-                  <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-black text-slate-900 shadow-lg z-10 flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" /> {property.projectStatus || 'Featured'}
-                  </div>
-                  
-                  {/* ADDED: Save Property Button */}
-                  <button 
-                    onClick={(e) => handleSaveProperty(e, property.id)} 
-                    className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-slate-400 hover:text-[#8B0000] hover:bg-red-50 shadow-md transition-all z-20"
-                    title="Save to favorites"
+              {featuredProperties.map((property) => {
+                const isSaved = savedProperties.has(property.id);
+                return (
+                  <motion.div
+                    variants={fadeUp}
+                    key={property.id}
+                    onClick={() => navigate(`/property/${property.id}`, { state: { property } })}
+                    className="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-2xl hover:border-[#D4AF37]/50 hover:-translate-y-2 transition-all duration-300 cursor-pointer relative group flex flex-col"
                   >
-                    <Heart className="w-5 h-5" />
-                  </button>
-
-                  <div className="relative h-56 overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    <img src={getMainImage(property)} alt={property.title} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                  </div>
-
-                  <div className="p-6 flex-1 flex flex-col relative z-20 bg-white">
-                    <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#8B0000] mb-2">
-                      {property.category} • {property.property_type}
-                    </p>
-                    <h3 className="text-xl font-black text-slate-900 mb-2 group-hover:text-[#8B0000] transition-colors line-clamp-1 md:text-2xl">
-                      {property.title}
-                    </h3>
-                    <p className="text-slate-500 text-sm mb-6 flex items-center font-medium md:text-base">
-                      <MapPin className="w-4 h-4 mr-1.5 text-slate-400" /> {property.location}, {property.city}
-                    </p>
-
-                    <div className="mt-auto flex items-center justify-between pt-5 border-t border-slate-100">
-                      <span className="font-black text-slate-900 text-xl md:text-2xl">{formatCurrency(property.price)}</span>
-                      <span className="bg-slate-50 group-hover:bg-[#8B0000] text-slate-400 group-hover:text-[#D4AF37] w-10 h-10 rounded-full flex items-center justify-center transition-colors">
-                        <ArrowRight className="w-5 h-5" />
-                      </span>
+                    <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-black text-slate-900 shadow-lg z-10 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" /> {property.projectStatus || 'Featured'}
                     </div>
-                  </div>
-                </motion.div>
-              ))}
+                    
+                    <button 
+                      onClick={(e) => handleSaveProperty(e, property.id)} 
+                      className={`absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center transition-all z-20 shadow-md ${isSaved ? 'text-[#8B0000] bg-red-50' : 'text-slate-400 hover:text-[#8B0000] hover:bg-red-50'}`}
+                      title={isSaved ? "Remove from favorites" : "Save to favorites"}
+                    >
+                      <Heart className={`w-5 h-5 transition-colors ${isSaved ? 'fill-[#8B0000] text-[#8B0000]' : ''}`} />
+                    </button>
+
+                    <div className="relative h-56 overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <img src={getMainImage(property)} alt={property.title} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                    </div>
+
+                    <div className="p-6 flex-1 flex flex-col relative z-20 bg-white">
+                      <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#8B0000] mb-2">
+                        {property.category} • {property.property_type}
+                      </p>
+                      <h3 className="text-xl font-black text-slate-900 mb-2 group-hover:text-[#8B0000] transition-colors line-clamp-1 md:text-2xl">
+                        {property.title}
+                      </h3>
+                      <p className="text-slate-500 text-sm mb-6 flex items-center font-medium md:text-base">
+                        <MapPin className="w-4 h-4 mr-1.5 text-slate-400" /> {property.location}, {property.city}
+                      </p>
+
+                      <div className="mt-auto flex items-center justify-between pt-5 border-t border-slate-100">
+                        <span className="font-black text-slate-900 text-xl md:text-2xl">{formatCurrency(property.price)}</span>
+                        <span className="bg-slate-50 group-hover:bg-[#8B0000] text-slate-400 group-hover:text-[#D4AF37] w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+                          <ArrowRight className="w-5 h-5" />
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </motion.div>
           ) : (
             <div className="text-center py-10 text-slate-500 font-medium">No featured properties available at the moment.</div>
@@ -596,51 +635,53 @@ export default function HomePage() {
             <div className="text-center py-10 text-slate-500 font-medium">Loading resale properties...</div>
           ) : resaleProperties.length > 0 ? (
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {resaleProperties.map((property) => (
-                <motion.div
-                  variants={fadeUp}
-                  key={property.id}
-                  onClick={() => navigate(`/property/${property.id}`, { state: { property } })}
-                  className="bg-slate-50 rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-2xl hover:border-[#8B0000]/50 hover:-translate-y-2 transition-all duration-300 cursor-pointer relative group flex flex-col"
-                >
-                  <div className="absolute top-4 left-4 bg-[#8B0000]/90 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-black text-white shadow-lg z-10 flex items-center gap-1.5">
-                    <Key className="w-3.5 h-3.5" /> {property.projectStatus || 'Ready to Move'}
-                  </div>
-                  
-                  {/* ADDED: Save Property Button */}
-                  <button 
-                    onClick={(e) => handleSaveProperty(e, property.id)} 
-                    className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-slate-400 hover:text-[#8B0000] hover:bg-red-50 shadow-md transition-all z-20"
-                    title="Save to favorites"
+              {resaleProperties.map((property) => {
+                const isSaved = savedProperties.has(property.id);
+                return (
+                  <motion.div
+                    variants={fadeUp}
+                    key={property.id}
+                    onClick={() => navigate(`/property/${property.id}`, { state: { property } })}
+                    className="bg-slate-50 rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-2xl hover:border-[#8B0000]/50 hover:-translate-y-2 transition-all duration-300 cursor-pointer relative group flex flex-col"
                   >
-                    <Heart className="w-5 h-5" />
-                  </button>
-
-                  <div className="relative h-56 overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    <img src={getMainImage(property)} alt={property.title} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                  </div>
-
-                  <div className="p-6 flex-1 flex flex-col relative z-20 bg-white">
-                    <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#8B0000] mb-2">
-                      {property.category} • {property.property_type}
-                    </p>
-                    <h3 className="text-xl font-black text-slate-900 mb-2 group-hover:text-[#8B0000] transition-colors line-clamp-1 md:text-2xl">
-                      {property.title}
-                    </h3>
-                    <p className="text-slate-500 text-sm mb-6 flex items-center font-medium md:text-base">
-                      <MapPin className="w-4 h-4 mr-1.5 text-slate-400" /> {property.location}, {property.city}
-                    </p>
-
-                    <div className="mt-auto flex items-center justify-between pt-5 border-t border-slate-100">
-                      <span className="font-black text-slate-900 text-xl md:text-2xl">{formatCurrency(property.price)}</span>
-                      <span className="bg-slate-50 group-hover:bg-[#8B0000] text-slate-400 group-hover:text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors">
-                        <ArrowRight className="w-5 h-5" />
-                      </span>
+                    <div className="absolute top-4 left-4 bg-[#8B0000]/90 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-black text-white shadow-lg z-10 flex items-center gap-1.5">
+                      <Key className="w-3.5 h-3.5" /> {property.projectStatus || 'Ready to Move'}
                     </div>
-                  </div>
-                </motion.div>
-              ))}
+                    
+                    <button 
+                      onClick={(e) => handleSaveProperty(e, property.id)} 
+                      className={`absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center transition-all z-20 shadow-md ${isSaved ? 'text-[#8B0000] bg-red-50' : 'text-slate-400 hover:text-[#8B0000] hover:bg-red-50'}`}
+                      title={isSaved ? "Remove from favorites" : "Save to favorites"}
+                    >
+                      <Heart className={`w-5 h-5 transition-colors ${isSaved ? 'fill-[#8B0000] text-[#8B0000]' : ''}`} />
+                    </button>
+
+                    <div className="relative h-56 overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <img src={getMainImage(property)} alt={property.title} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                    </div>
+
+                    <div className="p-6 flex-1 flex flex-col relative z-20 bg-white">
+                      <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#8B0000] mb-2">
+                        {property.category} • {property.property_type}
+                      </p>
+                      <h3 className="text-xl font-black text-slate-900 mb-2 group-hover:text-[#8B0000] transition-colors line-clamp-1 md:text-2xl">
+                        {property.title}
+                      </h3>
+                      <p className="text-slate-500 text-sm mb-6 flex items-center font-medium md:text-base">
+                        <MapPin className="w-4 h-4 mr-1.5 text-slate-400" /> {property.location}, {property.city}
+                      </p>
+
+                      <div className="mt-auto flex items-center justify-between pt-5 border-t border-slate-100">
+                        <span className="font-black text-slate-900 text-xl md:text-2xl">{formatCurrency(property.price)}</span>
+                        <span className="bg-slate-50 group-hover:bg-[#8B0000] text-slate-400 group-hover:text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+                          <ArrowRight className="w-5 h-5" />
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </motion.div>
           ) : (
             <div className="text-center py-10 text-slate-500 font-medium">No resale properties currently available.</div>
