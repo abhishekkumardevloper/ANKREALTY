@@ -43,7 +43,7 @@ export default function CorporateLeasingPage() {
   const contactFormRef = useRef(null);
   
   const [leadForm, setLeadForm] = useState({ name: '', company: '', phone: '', email: '', requirements: '' });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [status, setStatus] = useState('idle'); // 'idle' | 'submitting' | 'success'
   
   const [properties, setProperties] = useState([]);
   const [loadingProps, setLoadingProps] = useState(true);
@@ -82,7 +82,9 @@ export default function CorporateLeasingPage() {
   // Connected to Real Backend CRM
   const handleLeadSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    if (!leadForm.name || !leadForm.phone) return toast.error("Name and Phone are required.");
+
+    setStatus('submitting');
     
     try {
       await axios.post(`${API_BASE}/contacts`, {
@@ -94,13 +96,15 @@ export default function CorporateLeasingPage() {
         interest: 'Corporate Leasing' // Tag for CRM
       });
       
-      toast.success("Corporate inquiry sent successfully! Our leasing expert will contact you shortly.");
+      setStatus('success');
       setLeadForm({ name: '', company: '', phone: '', email: '', requirements: '' });
+
+      // Return to form after 4 seconds
+      setTimeout(() => setStatus('idle'), 4000);
     } catch (error) {
       console.error("Submission error:", error);
       toast.error("Failed to send inquiry. Please try again or call us directly.");
-    } finally {
-      setIsSubmitting(false);
+      setStatus('idle');
     }
   };
 
@@ -215,7 +219,7 @@ export default function CorporateLeasingPage() {
                         <p className="text-[10px] uppercase font-bold text-slate-400 mb-0.5">Lease Price</p>
                         <span className="font-black text-[#003B30] text-lg">{formatCurrency(property.price)}</span>
                       </div>
-                      <Button onClick={() => handleInquireClick(property.title)} className="bg-[#8B0000] hover:bg-[#600000] text-white font-bold rounded-xl shadow-md">
+                      <Button onClick={() => handleInquireClick(property.title)} className="bg-[#8B0000] hover:bg-[#600000] text-white font-bold rounded-xl shadow-md transition-all hover:-translate-y-0.5">
                         Inquire Now
                       </Button>
                     </div>
@@ -318,68 +322,82 @@ export default function CorporateLeasingPage() {
           </div>
 
           {/* Right Column: Enquiry Form */}
-          <div className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-xl border border-slate-100 relative overflow-hidden">
+          <div className="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-xl border border-slate-100 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-[#D4AF37]/10 to-transparent rounded-bl-full pointer-events-none" />
             
-            <h3 className="text-2xl md:text-3xl font-black text-slate-900 mb-2">Corporate Enquiry</h3>
-            <p className="text-slate-500 text-sm mb-8 font-medium">Fill out the form below and our corporate leasing team will get back to you promptly.</p>
-
-            <form onSubmit={handleLeadSubmit} className="space-y-5 relative z-10">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Full Name *</label>
-                  <Input 
-                    required placeholder="e.g. John Doe"
-                    value={leadForm.name} onChange={(e) => setLeadForm({...leadForm, name: e.target.value})}
-                    className="h-12 bg-slate-50 border-slate-200 focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 rounded-xl font-medium transition-all"
-                  />
+            {status === 'success' ? (
+              <div className="h-[450px] flex flex-col items-center justify-center text-center animate-in zoom-in duration-500">
+                <div className="w-20 h-20 bg-[#D4AF37]/10 rounded-full flex items-center justify-center mb-6">
+                  <CheckCircle className="w-10 h-10 text-[#D4AF37]" />
                 </div>
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Company Name</label>
-                  <Input 
-                    placeholder="e.g. Tech Corp"
-                    value={leadForm.company} onChange={(e) => setLeadForm({...leadForm, company: e.target.value})}
-                    className="h-12 bg-slate-50 border-slate-200 focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 rounded-xl font-medium transition-all"
-                  />
-                </div>
+                <h3 className="text-3xl font-black text-slate-900 mb-2">Request Received!</h3>
+                <p className="text-slate-500 text-lg max-w-sm">
+                  Thank you. Our corporate leasing director will contact you shortly to discuss your workspace needs.
+                </p>
               </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Phone Number *</label>
-                  <Input 
-                    required type="tel" placeholder="+91 92664 58945"
-                    value={leadForm.phone} onChange={(e) => setLeadForm({...leadForm, phone: e.target.value})}
-                    className="h-12 bg-slate-50 border-slate-200 focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 rounded-xl font-medium transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Email Address *</label>
-                  <Input 
-                    required type="email" placeholder="john@company.com"
-                    value={leadForm.email} onChange={(e) => setLeadForm({...leadForm, email: e.target.value})}
-                    className="h-12 bg-slate-50 border-slate-200 focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 rounded-xl font-medium transition-all"
-                  />
-                </div>
-              </div>
+            ) : (
+              <div className="animate-in fade-in duration-500">
+                <h3 className="text-2xl md:text-3xl font-black text-slate-900 mb-2">Corporate Enquiry</h3>
+                <p className="text-slate-500 text-sm mb-8 font-medium">Fill out the form below and our corporate leasing team will get back to you promptly.</p>
 
-              <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Requirements / Space Details *</label>
-                <Textarea 
-                  required placeholder="Briefly describe your workspace requirements..." rows={4}
-                  value={leadForm.requirements} onChange={(e) => setLeadForm({...leadForm, requirements: e.target.value})}
-                  className="bg-slate-50 border-slate-200 focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 rounded-xl font-medium resize-none p-4 transition-all"
-                />
-              </div>
+                <form onSubmit={handleLeadSubmit} className="space-y-5 relative z-10">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Full Name *</label>
+                      <Input 
+                        required placeholder="e.g. John Doe"
+                        value={leadForm.name} onChange={(e) => setLeadForm({...leadForm, name: e.target.value})}
+                        className="h-14 bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#D4AF37] focus:ring-4 focus:ring-[#D4AF37]/10 rounded-xl font-medium text-base transition-all outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Company Name</label>
+                      <Input 
+                        placeholder="e.g. Tech Corp"
+                        value={leadForm.company} onChange={(e) => setLeadForm({...leadForm, company: e.target.value})}
+                        className="h-14 bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#D4AF37] focus:ring-4 focus:ring-[#D4AF37]/10 rounded-xl font-medium text-base transition-all outline-none"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Phone Number *</label>
+                      <Input 
+                        required type="tel" placeholder="+91 92664 58945"
+                        value={leadForm.phone} onChange={(e) => setLeadForm({...leadForm, phone: e.target.value})}
+                        className="h-14 bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#D4AF37] focus:ring-4 focus:ring-[#D4AF37]/10 rounded-xl font-medium text-base transition-all outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Email Address *</label>
+                      <Input 
+                        required type="email" placeholder="john@company.com"
+                        value={leadForm.email} onChange={(e) => setLeadForm({...leadForm, email: e.target.value})}
+                        className="h-14 bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#D4AF37] focus:ring-4 focus:ring-[#D4AF37]/10 rounded-xl font-medium text-base transition-all outline-none"
+                      />
+                    </div>
+                  </div>
 
-              <Button type="submit" disabled={isSubmitting} className="w-full h-14 bg-[#D4AF37] hover:bg-[#c09b2e] text-slate-900 font-black rounded-xl text-base shadow-lg shadow-[#D4AF37]/30 transition-all hover:-translate-y-0.5 mt-4">
-                {isSubmitting ? (
-                  <span className="flex items-center"><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Submitting Request...</span>
-                ) : (
-                  <span className="flex items-center">Request Leasing Consultation <ArrowRight className="w-5 h-5 ml-2" /></span>
-                )}
-              </Button>
-            </form>
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Requirements / Space Details *</label>
+                    <Textarea 
+                      required placeholder="Briefly describe your workspace requirements..." rows={4}
+                      value={leadForm.requirements} onChange={(e) => setLeadForm({...leadForm, requirements: e.target.value})}
+                      className="bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#D4AF37] focus:ring-4 focus:ring-[#D4AF37]/10 rounded-xl font-medium resize-none p-4 text-base transition-all outline-none"
+                    />
+                  </div>
+
+                  <Button type="submit" disabled={status === 'submitting'} className="w-full h-14 bg-[#8B0000] hover:bg-[#600000] text-white font-black rounded-xl text-base shadow-lg shadow-[#8B0000]/30 transition-all hover:-translate-y-0.5 mt-4 group">
+                    {status === 'submitting' ? (
+                      <span className="flex items-center"><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Submitting Request...</span>
+                    ) : (
+                      <span className="flex items-center">Request Leasing Consultation <ArrowRight className="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform" /></span>
+                    )}
+                  </Button>
+                </form>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -392,11 +410,11 @@ export default function CorporateLeasingPage() {
               <p className="text-white/80 text-sm font-medium">Our corporate advisory team is available 24/7.</p>
            </div>
            <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-              <a href="tel:+919732300007" className="flex-1 md:flex-none flex items-center justify-center bg-white/10 hover:bg-white/20 border border-white/20 px-6 py-3.5 rounded-xl font-bold transition-colors">
+              <a href="tel:+919266458945" className="flex-1 md:flex-none flex items-center justify-center bg-white/10 hover:bg-white/20 border border-white/20 px-6 py-3.5 rounded-xl font-bold transition-colors">
                  <Phone className="w-5 h-5 mr-3 text-[#D4AF37]" /> +91 92664 58945
               </a>
-              <a href="mailto:contact@ankrealty.com" className="flex-1 md:flex-none flex items-center justify-center bg-white/10 hover:bg-white/20 border border-white/20 px-6 py-3.5 rounded-xl font-bold transition-colors">
-                 <Mail className="w-5 h-5 mr-3 text-[#D4AF37]" /> contact@ankrealty.com
+              <a href="mailto:info@ankrealty.com" className="flex-1 md:flex-none flex items-center justify-center bg-white/10 hover:bg-white/20 border border-white/20 px-6 py-3.5 rounded-xl font-bold transition-colors">
+                 <Mail className="w-5 h-5 mr-3 text-[#D4AF37]" /> info@ankrealty.com
               </a>
            </div>
         </div>
@@ -448,7 +466,11 @@ export default function CorporateLeasingPage() {
                 </div>
                 <div className="flex items-center bg-slate-900/50 p-3 rounded-xl border border-slate-800 hover:border-[#D4AF37]/50 transition-colors">
                   <Phone className="w-5 h-5 mr-3 text-[#D4AF37] shrink-0" />
-                  <a href="tel: +91 92664 58945" className="text-xs hover:text-[#D4AF37] transition-colors">+91 92664 58945</a>
+                  <a href="tel:+919266458945" className="text-xs hover:text-[#D4AF37] transition-colors">+91 92664 58945</a>
+                </div>
+                <div className="flex items-center bg-slate-900/50 p-3 rounded-xl border border-slate-800 hover:border-[#D4AF37]/50 transition-colors">
+                  <Mail className="w-5 h-5 mr-3 text-[#D4AF37] shrink-0" />
+                  <a href="mailto:info@ankrealty.com" className="text-xs hover:text-[#D4AF37] transition-colors">info@ankrealty.com</a>
                 </div>
               </div>
             </div>
