@@ -1,6 +1,6 @@
 // src/components/AddProperty.jsx
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Save, X, Image as ImageIcon, Video, FileText, Plus, Trash2, LayoutTemplate } from 'lucide-react';
+import { ArrowLeft, Save, X, Image as ImageIcon, Video, FileText, Plus, Trash2, LayoutTemplate, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
