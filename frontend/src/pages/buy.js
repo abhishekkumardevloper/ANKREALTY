@@ -5,15 +5,39 @@ import Navbar from "../components/Navbar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
+import axios from 'axios';
 import { 
   Search, MapPin, X, Bed, Bath, 
   Maximize, CheckCircle, ArrowRight, Calculator,
   Home, DollarSign, Loader2, SlidersHorizontal, ChevronDown, 
   Phone, ShieldCheck, MessageSquare, Send, Mail, Heart,
-  Facebook, Twitter, Instagram, Linkedin
+  Facebook, Twitter, Instagram, Linkedin,
+  Map as MapIcon, PieChart, Video, PlayCircle, Briefcase, 
+  Banknote, Users, TrendingUp, Award, Sparkles, Building2
 } from "lucide-react";
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://ankrealty.onrender.com/api";
+
+const bankOffers = [
+  { bank: 'HDFC Bank', rate: '8.35%', note: 'Special rate for premium properties' },
+  { bank: 'SBI', rate: '8.40%', note: 'Zero processing fee' },
+  { bank: 'ICICI Bank', rate: '8.45%', note: 'Instant approval for pre-approved clients' }
+];
+
+const topRowLogos = [
+  '/images (3).png',
+  '/images__9_-removebg-preview.png',
+  '/images (1).png',
+  '/images (2).png',
+  '/183f468e401f4220bce9e4f7b1e3ffd820251112162925170.png',
+];
+
+const bottomRowLogos = [
+  '/images.png',
+  '/4f3bb698972531.Y3JvcCw5NTAsNzQzLDIyMywyMQ-removebg-preview.png',
+  '/Max_Estates_logo.svg.png',
+  '/M3M-Jacob-and-Co-logo.png',
+];
 
 export default function BuyPage() {
   const navigate = useNavigate();
@@ -21,6 +45,8 @@ export default function BuyPage() {
   
   // DYNAMIC DATA STATES
   const [properties, setProperties] = useState([]);
+  const [featuredProperties, setFeaturedProperties] = useState([]);
+  const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [availableLocations, setAvailableLocations] = useState([]);
   const [savedProperties, setSavedProperties] = useState(new Set());
@@ -44,30 +70,45 @@ export default function BuyPage() {
   // EMI Calculator States
   const [loanAmt, setLoanAmt] = useState(5000000);
   const [intRate, setIntRate] = useState(8.5);
-  const [tenure, setTenure] = useState(20);
+  const [tenure, setLoanTenure] = useState(20);
 
-  // FETCH PROPERTIES & EXTRACT LOCATIONS
+  const [loanLead, setLoanLead] = useState({ name: '', phone: '' });
+  const [isLoanSubmitting, setIsLoanSubmitting] = useState(false);
+
+  // FETCH PROPERTIES & VIDEOS
   useEffect(() => {
-    const fetchProperties = async () => {
+    const fetchPageData = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`${API_BASE}/properties?category=buy&limit=100`);
-        if (response.ok) {
-          const data = await response.json();
-          setProperties(data);
+        const [propsRes, videoRes] = await Promise.allSettled([
+          axios.get(`${API_BASE}/properties?category=buy&limit=100`),
+          axios.get(`${API_BASE}/youtube-videos`)
+        ]);
 
-          // Extract unique locations for the dropdown
+        if (propsRes.status === 'fulfilled' && propsRes.value.data) {
+          const data = propsRes.value.data;
+          setProperties(data);
+          
+          // Set featured properties
+          setFeaturedProperties(data.slice(0, 4));
+
+          // Extract unique locations dynamically
           const uniqueLocs = [...new Set(data.map(p => p.location).filter(Boolean))].sort();
           setAvailableLocations(uniqueLocs);
         }
+
+        if (videoRes.status === 'fulfilled' && videoRes.value.data) {
+          setVideos(Array.isArray(videoRes.value.data) ? videoRes.value.data.slice(0, 3) : []);
+        }
+
       } catch (error) {
-        console.error("Failed to fetch properties:", error);
+        console.error("Failed to fetch data:", error);
       } finally {
         setLoading(false);
       }
     };
     
-    fetchProperties();
+    fetchPageData();
   }, []);
 
   // FETCH USER FAVORITES
@@ -138,10 +179,35 @@ export default function BuyPage() {
     document.getElementById('property-grid')?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // FULLY FUNCTIONAL LOAN SUBMISSION TO CRM
+  const handleLoanLead = async () => {
+    if (!loanLead.name || loanLead.phone.replace(/\D/g, '').length < 10) {
+      return toast.error('Please enter a valid name and 10-digit phone number.');
+    }
+
+    setIsLoanSubmitting(true);
+    try {
+      await axios.post(`${API_BASE}/contacts`, {
+        name: loanLead.name,
+        phone: loanLead.phone,
+        email: 'N/A',
+        interest: 'Home Loan Inquiry',
+        message: 'Client requested a callback regarding home loan and EMI consultation from the Buy Page.',
+      });
+      toast.success('Request received successfully! Our loan expert will call you shortly.');
+      setLoanLead({ name: '', phone: '' });
+    } catch (error) {
+      console.error('Loan Request Error:', error);
+      toast.error('Failed to submit request. Please try again.');
+    } finally {
+      setIsLoanSubmitting(false);
+    }
+  };
+
   // EMI Calculation Logic
   const calculateEMI = () => {
-    const p = loanAmt;
-    const r = intRate / 12 / 100;
+    const p = loanAmount;
+    const r = interestRate / 12 / 100;
     const n = tenure * 12;
     if (p > 0 && r > 0 && n > 0) {
       return Math.round((p * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1));
@@ -162,6 +228,21 @@ export default function BuyPage() {
     if (property.images && property.images.length > 0) return property.images[0];
     return 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80'; 
   };
+
+  const getYouTubeID = (url) => {
+    if (!url) return null;
+    try {
+      if (url.includes('youtube.com/watch')) return new URLSearchParams(new URL(url).search).get('v');
+      if (url.includes('youtu.be/')) return url.split('youtu.be/')[1]?.split('?')[0];
+      if (url.includes('youtube.com/embed/')) return url.split('youtube.com/embed/')[1]?.split('?')[0];
+    } catch (error) {
+      return null;
+    }
+    return null;
+  };
+
+  const mapLocation = searchLocation || 'Noida, Uttar Pradesh';
+  const dynamicMapSrc = `https://maps.google.com/maps?q=$${encodeURIComponent(mapLocation)}&t=&z=12&ie=UTF8&iwloc=&output=embed`;
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans relative selection:bg-[#D4AF37]/30 pb-0">
@@ -244,8 +325,26 @@ export default function BuyPage() {
          </div>
       </section>
 
+      {/* --- QUICK STATS EXTENSION --- */}
+      <section className="relative z-30 -mt-10 max-w-6xl mx-auto px-4">
+        <div className="bg-white rounded-[2rem] shadow-xl border border-slate-100 p-6 md:p-10 grid grid-cols-2 md:grid-cols-4 gap-6 divide-x divide-slate-100">
+          {[
+            { label: 'Verified Properties', value: '10,000+', icon: ShieldCheck },
+            { label: 'Happy Customers', value: '5,000+', icon: Users },
+            { label: 'Cities Covered', value: '25+', icon: MapPin },
+            { label: 'Years Experience', value: '15+', icon: TrendingUp },
+          ].map((stat, i) => (
+            <div key={i} className="text-center px-4 group">
+              <stat.icon className="w-8 h-8 mx-auto text-[#D4AF37] mb-3 group-hover:scale-110 transition-transform duration-300" />
+              <h3 className="text-3xl font-black text-slate-900 md:text-4xl">{stat.value}</h3>
+              <p className="text-sm font-medium text-slate-500 mt-1 uppercase tracking-wide md:text-base">{stat.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* MAIN CONTENT GRID */}
-      <section id="property-grid" className="max-w-7xl mx-auto px-6 py-12">
+      <section id="property-grid" className="max-w-7xl mx-auto px-6 py-12 mt-8">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 pb-6 border-b border-slate-200">
            <div>
               <h2 className="text-2xl font-black text-slate-900">Properties for Sale</h2>
@@ -270,13 +369,13 @@ export default function BuyPage() {
         {loading ? (
           <div className="flex justify-center py-20"><Loader2 className="w-10 h-10 text-[#8B0000] animate-spin" /></div>
         ) : filteredAndSortedProperties.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300 shadow-sm">
+          <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300 shadow-sm animate-in fade-in zoom-in duration-500">
              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
                <Search className="w-8 h-8 text-slate-300"/>
              </div>
              <h3 className="text-xl font-bold text-slate-700">No properties found</h3>
-             <p className="text-slate-500 mt-2">Try removing some filters to see more results.</p>
-             <Button onClick={() => {setSearchLocation(""); setMaxPrice(""); setPropertyType("");}} className="mt-4 bg-[#D4AF37]/10 text-[#8B0000] hover:bg-[#D4AF37]/20 font-bold transition-colors">
+             <p className="text-slate-500 mt-2 max-w-md mx-auto">We couldn't find any properties matching your exact filters. Try broadening your search.</p>
+             <Button onClick={() => {setSearchLocation(""); setMaxPrice(""); setPropertyType("");}} className="mt-6 bg-[#D4AF37]/10 text-[#8B0000] hover:bg-[#D4AF37]/20 font-bold transition-colors">
                Clear All Filters
              </Button>
           </div>
@@ -284,7 +383,7 @@ export default function BuyPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredAndSortedProperties.map((property) => {
               const isSaved = savedProperties.has(property.id);
-              
+
               return (
                 <div 
                   key={property.id} 
@@ -311,7 +410,7 @@ export default function BuyPage() {
                        />
                        <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
                          <span className="bg-white/95 backdrop-blur-sm text-slate-900 px-3 py-1 rounded-lg text-xs font-black uppercase shadow-sm flex items-center gap-1">
-                           <ShieldCheck className="w-3.5 h-3.5 text-[#D4AF37]"/> Verified
+                           <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]"/> {property.projectStatus || 'Featured'}
                          </span>
                        </div>
                      </div>
@@ -348,10 +447,10 @@ export default function BuyPage() {
                         <div>
                           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Price</p>
                           <span className="text-2xl font-black text-slate-900">
-                              ₹{property.price >= 10000000 ? (property.price / 10000000).toFixed(2) + ' Cr' : (property.price / 100000).toFixed(2) + ' Lac'}
+                              {property.price > 0 ? `₹${property.price >= 10000000 ? (property.price / 10000000).toFixed(2) + ' Cr' : (property.price / 100000).toFixed(2) + ' Lac'}` : 'On Request'}
                           </span>
                         </div>
-                        <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-[#8B0000] group-hover:text-white transition-colors border border-slate-100 group-hover:border-[#8B0000]">
+                        <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-[#8B0000] group-hover:text-[#D4AF37] transition-colors border border-slate-100 group-hover:border-[#8B0000]">
                           <ArrowRight className="w-5 h-5"/>
                         </div>
                      </div>
@@ -405,10 +504,129 @@ export default function BuyPage() {
                    <span className="text-slate-500">Loan Tenure</span>
                    <span className="text-[#8B0000] text-lg font-black">{tenure} Years</span>
                  </div>
-                 <input type="range" min="5" max="30" step="1" value={tenure} onChange={(e)=>setTenure(Number(e.target.value))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#8B0000]" />
+                 <input type="range" min="5" max="30" step="1" value={tenure} onChange={(e)=>setLoanTenure(Number(e.target.value))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#8B0000]" />
                </div>
             </div>
          </div>
+      </section>
+
+      {/* --- CORPORATE LEASING BANNER --- */}
+      <section className="py-20 px-6 bg-[#050505] text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-30 bg-[url('https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-[#050505]/80 to-transparent z-0" />
+        <div className="max-w-7xl mx-auto relative z-10 flex flex-col lg:flex-row items-center justify-between gap-10">
+          <div className="max-w-2xl">
+            <p className="text-[#D4AF37] font-bold uppercase tracking-widest text-xs mb-3 flex items-center gap-2">
+              <Briefcase className="w-4 h-4" /> Commercial & Enterprise
+            </p>
+            <h2 className="text-3xl md:text-5xl font-black mb-6">Premium Corporate Leasing Solutions</h2>
+            <p className="text-slate-300 text-lg leading-relaxed mb-6">
+              We represent Fortune 500 companies and growing enterprises, providing bespoke commercial leasing, retail spaces, and grade-A office solutions tailored for modern businesses.
+            </p>
+            <ul className="space-y-3 mb-8 hidden md:block">
+              {['Grade-A Office Spaces', 'Turnkey Interior Solutions', 'Pan-India Portfolio Management'].map((item, i) => (
+                <li key={i} className="flex items-center text-slate-200 font-bold text-sm">
+                  <CheckCircle className="w-4 h-4 text-[#D4AF37] mr-2" /> {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="shrink-0 w-full lg:w-auto">
+            <Link to="/corporate-leasing">
+              <Button className="w-full lg:w-auto h-14 px-8 bg-[#D4AF37] hover:bg-[#c09b2e] text-slate-900 font-black rounded-xl text-base shadow-xl shadow-[#D4AF37]/20 transition-all hover:-translate-y-1">
+                Explore Corporate Spaces <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* --- PROMOTIONAL VIDEOS FROM ADMIN --- */}
+      {videos.length > 0 && (
+        <section className="py-24 px-6 bg-slate-50 border-t border-slate-200">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-16 max-w-2xl mx-auto">
+              <p className="text-[#8B0000] font-bold uppercase tracking-[0.25em] text-xs mb-3">Property Tours & Insights</p>
+              <h2 className="text-3xl md:text-5xl font-black text-slate-900 leading-tight">Featured Real Estate Videos</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {videos.map((vid) => {
+                const ytId = getYouTubeID(vid.videoUrl);
+                return (
+                  <div key={vid.id} className="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl hover:border-[#D4AF37]/50 transition-all duration-300 group flex flex-col">
+                    <div className="relative aspect-video bg-slate-900">
+                      {ytId ? (
+                        <iframe
+                          src={`https://www.youtube.com/embed/${ytId}?rel=0`}
+                          title={vid.title}
+                          className="w-full h-full absolute inset-0"
+                          allowFullScreen
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-slate-500">
+                          <Video className="w-10 h-10" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-6 flex-1 flex flex-col">
+                      <div className="text-[10px] font-black uppercase tracking-widest text-[#8B0000] mb-2 flex items-center gap-1.5">
+                        <PlayCircle className="w-3.5 h-3.5" /> Video Tour
+                      </div>
+                      <h3 className="font-black text-slate-900 text-lg mb-2 line-clamp-2 group-hover:text-[#8B0000] transition-colors">
+                        {vid.title}
+                      </h3>
+                      <p className="text-sm text-slate-500 line-clamp-2 mt-auto">
+                        {vid.description || 'Watch our latest property tour and market insights directly from our experts.'}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="text-center mt-12">
+              <Link to="/videos">
+                <Button variant="outline" className="border-slate-300 font-bold hover:bg-[#8B0000] hover:text-white transition-colors h-12 px-8 rounded-xl text-base">
+                  View All Videos <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* --- DYNAMIC MAP LOCATION FINDER --- */}
+      <section className="py-24 px-6 bg-slate-50 border-t border-slate-200">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col lg:flex-row justify-between lg:items-end mb-12 gap-8 lg:gap-16 relative">
+            <div className="max-w-2xl">
+              <p className="text-[#8B0000] font-bold uppercase tracking-[0.25em] text-xs mb-3 flex items-center gap-2">
+                <MapIcon className="w-4 h-4" /> Location insights
+              </p>
+              <h2 className="text-3xl md:text-5xl font-black text-slate-900 leading-tight">
+                Explore {searchLocation || 'Top Corridors'} Visually
+              </h2>
+              <p className="text-slate-600 text-lg md:text-xl mt-5 leading-relaxed">
+                Our interactive map view updates dynamically. Pan and zoom to discover the neighborhoods, connectivity hubs, and infrastructure shaping real estate.
+              </p>
+            </div>
+          </div>
+
+          <div className="w-full h-[550px] md:h-[600px] rounded-[2rem] overflow-hidden shadow-2xl border-4 border-white relative bg-slate-200 group">
+            <iframe
+              src={dynamicMapSrc}
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Real Estate Map View"
+              className="grayscale-[20%] hover:grayscale-0 transition-all duration-700 opacity-90 hover:opacity-100"
+            ></iframe>
+          </div>
+        </div>
       </section>
 
       {/* --- FLOATING CHATBOT --- */}
@@ -474,16 +692,16 @@ export default function BuyPage() {
                 Premium property discovery, verified advisory, corporate leasing help, and owner-first listing support across major hubs. Your Trusted Partner.
               </p>
               <div className="flex space-x-3 pt-2">
-                <a href="#" className="w-10 h-10 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all cursor-pointer">
+                <a href={socialLinks?.linkedin || '#'} className="w-10 h-10 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all cursor-pointer">
                   <Linkedin className="w-4 h-4" />
                 </a>
-                <a href="#" className="w-10 h-10 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all cursor-pointer">
+                <a href={socialLinks?.twitter || '#'} className="w-10 h-10 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all cursor-pointer">
                   <Twitter className="w-4 h-4" />
                 </a>
-                <a href="#" className="w-10 h-10 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all cursor-pointer">
+                <a href={socialLinks?.facebook || '#'} className="w-10 h-10 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all cursor-pointer">
                   <Facebook className="w-4 h-4" />
                 </a>
-                <a href="#" className="w-10 h-10 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all cursor-pointer">
+                <a href={socialLinks?.instagram || '#'} className="w-10 h-10 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all cursor-pointer">
                   <Instagram className="w-4 h-4" />
                 </a>
               </div>
@@ -565,7 +783,6 @@ export default function BuyPage() {
           </div>
         </div>
       </footer>
-
     </div>
   );
 }
