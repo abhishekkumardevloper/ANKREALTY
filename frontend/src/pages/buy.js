@@ -1,6 +1,7 @@
 // src/pages/BuyPage.jsx
 import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion'; // <--- FIX 1: Added motion import
 import Navbar from "../components/Navbar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from '../contexts/AuthContext';
@@ -18,7 +19,6 @@ import {
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://ankrealty.onrender.com/api";
 
-// FIX: Added the missing socialLinks variable!
 const socialLinks = {
   facebook: "#",
   twitter: "#",
@@ -32,20 +32,16 @@ const bankOffers = [
   { bank: 'ICICI Bank', rate: '8.45%', note: 'Instant approval for pre-approved clients' }
 ];
 
-const topRowLogos = [
-  '/images (3).png',
-  '/images__9_-removebg-preview.png',
-  '/images (1).png',
-  '/images (2).png',
-  '/183f468e401f4220bce9e4f7b1e3ffd820251112162925170.png',
-];
+// <--- FIX 2: Added missing animation variants
+const fadeUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
+};
 
-const bottomRowLogos = [
-  '/images.png',
-  '/4f3bb698972531.Y3JvcCw5NTAsNzQzLDIyMywyMQ-removebg-preview.png',
-  '/Max_Estates_logo.svg.png',
-  '/M3M-Jacob-and-Co-logo.png',
-];
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.15 } },
+};
 
 export default function BuyPage() {
   const navigate = useNavigate();
@@ -250,7 +246,7 @@ export default function BuyPage() {
   };
 
   const mapLocation = searchLocation || 'Noida, Uttar Pradesh';
-  const dynamicMapSrc = `https://maps.google.com/maps?q=$${encodeURIComponent(mapLocation)}&t=&z=12&ie=UTF8&iwloc=&output=embed`;
+  const dynamicMapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(mapLocation)}&t=&z=12&ie=UTF8&iwloc=&output=embed`;
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans relative selection:bg-[#D4AF37]/30 pb-0">
@@ -331,6 +327,24 @@ export default function BuyPage() {
                </Button>
             </div>
          </div>
+      </section>
+
+      {/* --- QUICK STATS EXTENSION --- */}
+      <section className="relative z-30 -mt-10 max-w-6xl mx-auto px-4">
+        <div className="bg-white rounded-[2rem] shadow-xl border border-slate-100 p-6 md:p-10 grid grid-cols-2 md:grid-cols-4 gap-6 divide-x divide-slate-100">
+          {[
+            { label: 'Verified Properties', value: '10,000+', icon: ShieldCheck },
+            { label: 'Happy Customers', value: '5,000+', icon: Users },
+            { label: 'Cities Covered', value: '25+', icon: MapPin },
+            { label: 'Years Experience', value: '15+', icon: TrendingUp },
+          ].map((stat, i) => (
+            <div key={i} className="text-center px-4 group">
+              <stat.icon className="w-8 h-8 mx-auto text-[#D4AF37] mb-3 group-hover:scale-110 transition-transform duration-300" />
+              <h3 className="text-3xl font-black text-slate-900 md:text-4xl">{stat.value}</h3>
+              <p className="text-sm font-medium text-slate-500 mt-1 uppercase tracking-wide md:text-base">{stat.label}</p>
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* MAIN CONTENT GRID */}
@@ -500,6 +514,37 @@ export default function BuyPage() {
          </div>
       </section>
 
+      {/* --- CORPORATE LEASING BANNER --- */}
+      <section className="py-20 px-6 bg-[#050505] text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-30 bg-[url('https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-[#050505]/80 to-transparent z-0" />
+        <div className="max-w-7xl mx-auto relative z-10 flex flex-col lg:flex-row items-center justify-between gap-10">
+          <div className="max-w-2xl">
+            <p className="text-[#D4AF37] font-bold uppercase tracking-widest text-xs mb-3 flex items-center gap-2">
+              <Briefcase className="w-4 h-4" /> Commercial & Enterprise
+            </p>
+            <h2 className="text-3xl md:text-5xl font-black mb-6">Premium Corporate Leasing Solutions</h2>
+            <p className="text-slate-300 text-lg leading-relaxed mb-6">
+              We represent Fortune 500 companies and growing enterprises, providing bespoke commercial leasing, retail spaces, and grade-A office solutions tailored for modern businesses.
+            </p>
+            <ul className="space-y-3 mb-8 hidden md:block">
+              {['Grade-A Office Spaces', 'Turnkey Interior Solutions', 'Pan-India Portfolio Management'].map((item, i) => (
+                <li key={i} className="flex items-center text-slate-200 font-bold text-sm">
+                  <CheckCircle className="w-4 h-4 text-[#D4AF37] mr-2" /> {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="shrink-0 w-full lg:w-auto">
+            <Link to="/corporate-leasing">
+              <Button className="w-full lg:w-auto h-14 px-8 bg-[#D4AF37] hover:bg-[#c09b2e] text-slate-900 font-black rounded-xl text-base shadow-xl shadow-[#D4AF37]/20 transition-all hover:-translate-y-1">
+                Explore Corporate Spaces <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* --- WHY INDIA & LOAN FORM (Connected to CRM) --- */}
       <section className="py-24 px-6 bg-slate-50 border-b border-slate-100 relative overflow-hidden">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center relative z-10">
@@ -589,9 +634,9 @@ export default function BuyPage() {
         </div>
       </section>
 
-      {/* --- PROMOTIONAL VIDEOS FROM ADMIN (NEW SECTION) --- */}
+      {/* --- PROMOTIONAL VIDEOS FROM ADMIN --- */}
       {videos.length > 0 && (
-        <section className="py-24 px-6 bg-slate-50 border-b border-slate-200">
+        <section className="py-24 px-6 bg-slate-50 border-t border-slate-200">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16 max-w-2xl mx-auto">
               <p className="text-[#8B0000] font-bold uppercase tracking-[0.25em] text-xs mb-3">Property Tours & Insights</p>
@@ -677,8 +722,59 @@ export default function BuyPage() {
         </div>
       </section>
 
+      {/* --- FLOATING CHATBOT --- */}
+      <div className="fixed bottom-6 right-6 z-50">
+        {isChatOpen ? (
+          <div className="bg-white rounded-2xl shadow-2xl w-80 sm:w-96 border border-[#D4AF37]/30 overflow-hidden flex flex-col animate-in slide-in-from-bottom-5">
+            <div className="bg-[#050505] text-[#D4AF37] border-b border-[#D4AF37]/30 p-4 font-bold flex justify-between items-center shadow-md relative z-10">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.8)]"></div>
+                ANK AI Assistant
+              </div>
+              <button onClick={() => setIsChatOpen(false)} className="hover:bg-slate-800 text-slate-300 hover:text-white p-1 rounded-md transition-colors"><X className="w-4 h-4"/></button>
+            </div>
+            
+            <div className="p-4 flex-1 bg-slate-50 flex flex-col gap-3 h-[380px] overflow-y-auto">
+              <div className="flex gap-2">
+                <div className="w-8 h-8 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/50 flex items-center justify-center shrink-0 shadow-sm">
+                   <Home className="w-4 h-4 text-[#8B0000]"/>
+                </div>
+                <div className="bg-white p-3 rounded-2xl rounded-tl-sm shadow-sm text-sm border border-slate-100 text-slate-700">
+                  Welcome to ANK Realty! I am your virtual assistant. Please choose a subject below so I can assist you better:
+                </div>
+              </div>
+              
+              <div className="flex flex-col gap-2 mt-2 pl-10">
+                {chatSubjects.map((subject, i) => (
+                  <button key={i} className="text-left bg-white hover:bg-[#8B0000]/5 text-slate-700 hover:text-[#8B0000] p-2.5 rounded-xl text-sm font-medium transition-all border border-slate-200 hover:border-[#D4AF37]/50 shadow-sm">
+                    {subject}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="p-3 bg-white border-t border-slate-100 flex items-center gap-2">
+              <input type="text" placeholder="Type your message..." className="flex-1 bg-slate-50 border border-slate-200 rounded-full px-4 py-2 text-sm outline-none focus:border-[#D4AF37]" />
+              <button className="bg-[#8B0000] text-white p-2 rounded-full hover:bg-[#600000] shadow-md shadow-[#8B0000]/30 transition-colors">
+                <Send className="w-4 h-4 ml-0.5" />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button 
+            onClick={() => setIsChatOpen(true)} 
+            className="bg-[#8B0000] hover:bg-[#600000] border-2 border-white/10 text-white p-4 rounded-full shadow-[0_10px_25px_rgba(139,0,0,0.4)] hover:scale-110 transition-transform flex items-center justify-center group"
+          >
+            <MessageSquare className="w-7 h-7" />
+            <span className="absolute right-full mr-4 bg-[#050505] border border-[#D4AF37]/30 text-[#D4AF37] text-xs font-bold py-1.5 px-3 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-lg">
+              Chat with us!
+            </span>
+          </button>
+        )}
+      </div>
+
       {/* --- FOOTER --- */}
-      <footer className="bg-[#050505] text-white pt-24 pb-12 px-6 border-t-[8px] border-[#8B0000]">
+      <footer className="bg-[#050505] text-white pt-24 pb-12 px-6 border-t-[8px] border-[#8B0000] mt-auto">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
             <div className="space-y-6 pr-4">
