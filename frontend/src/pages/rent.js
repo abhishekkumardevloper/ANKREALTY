@@ -9,7 +9,8 @@ import { toast } from 'sonner';
 import { 
   Search, MapPin, X, CheckCircle, Bed, Bath, 
   Maximize, Calendar, Loader2, Filter, Home, 
-  TrendingUp, Info, Mail, Phone, DollarSign, ChevronDown, ShieldCheck, ArrowRight, Heart
+  TrendingUp, Info, Mail, Phone, DollarSign, ChevronDown, ShieldCheck, ArrowRight, Heart,
+  Facebook, Twitter, Instagram, Linkedin // <--- FIX: Added missing social icons here!
 } from "lucide-react";
 import { 
   XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, CartesianGrid 
@@ -445,10 +446,10 @@ export default function RentPage() {
           <div className="border-t border-slate-800/80 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-slate-500 font-medium">
             <p>&copy; {new Date().getFullYear()} ANK Realty. All rights reserved.</p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-               <a href={socialLinks?.facebook || '#'} className="hover:text-[#D4AF37] transition-colors"><Facebook className="w-4 h-4"/></a>
-               <a href={socialLinks?.twitter || '#'} className="hover:text-[#D4AF37] transition-colors"><Twitter className="w-4 h-4"/></a>
-               <a href={socialLinks?.instagram || '#'} className="hover:text-[#D4AF37] transition-colors"><Instagram className="w-4 h-4"/></a>
-               <a href={socialLinks?.linkedin || '#'} className="hover:text-[#D4AF37] transition-colors"><Linkedin className="w-4 h-4"/></a>
+               <a href="#" className="hover:text-[#D4AF37] transition-colors"><Facebook className="w-4 h-4"/></a>
+               <a href="#" className="hover:text-[#D4AF37] transition-colors"><Twitter className="w-4 h-4"/></a>
+               <a href="#" className="hover:text-[#D4AF37] transition-colors"><Instagram className="w-4 h-4"/></a>
+               <a href="#" className="hover:text-[#D4AF37] transition-colors"><Linkedin className="w-4 h-4"/></a>
             </div>
           </div>
         </div>
