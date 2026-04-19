@@ -18,10 +18,33 @@ import {
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://ankrealty.onrender.com/api";
 
+// FIX: Added the missing socialLinks variable!
+const socialLinks = {
+  facebook: "#",
+  twitter: "#",
+  instagram: "#",
+  linkedin: "#"
+};
+
 const bankOffers = [
   { bank: 'HDFC Bank', rate: '8.35%', note: 'Special rate for premium properties' },
   { bank: 'SBI', rate: '8.40%', note: 'Zero processing fee' },
   { bank: 'ICICI Bank', rate: '8.45%', note: 'Instant approval for pre-approved clients' }
+];
+
+const topRowLogos = [
+  '/images (3).png',
+  '/images__9_-removebg-preview.png',
+  '/images (1).png',
+  '/images (2).png',
+  '/183f468e401f4220bce9e4f7b1e3ffd820251112162925170.png',
+];
+
+const bottomRowLogos = [
+  '/images.png',
+  '/4f3bb698972531.Y3JvcCw5NTAsNzQzLDIyMywyMQ-removebg-preview.png',
+  '/Max_Estates_logo.svg.png',
+  '/M3M-Jacob-and-Co-logo.png',
 ];
 
 export default function BuyPage() {
@@ -52,7 +75,7 @@ export default function BuyPage() {
   const [propertyType, setPropertyType] = useState("");
   const [sortBy, setSortBy] = useState("newest");
 
-  // EMI Calculator States (FIXED NAMES)
+  // EMI Calculator States
   const [loanAmount, setLoanAmount] = useState(5000000);
   const [interestRate, setInterestRate] = useState(8.5);
   const [loanTenure, setLoanTenure] = useState(20);
@@ -189,7 +212,7 @@ export default function BuyPage() {
     }
   };
 
-  // EMI Calculation Logic (FIXED NAMES)
+  // EMI Calculation Logic
   const calculateEMI = () => {
     const p = loanAmount;
     const r = interestRate / 12 / 100;
@@ -377,7 +400,7 @@ export default function BuyPage() {
                        />
                        <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
                          <span className="bg-white/95 backdrop-blur-sm text-slate-900 px-3 py-1 rounded-lg text-xs font-black uppercase shadow-sm flex items-center gap-1">
-                           <ShieldCheck className="w-3.5 h-3.5 text-[#D4AF37]"/> Verified
+                           <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]"/> {property.projectStatus || 'Featured'}
                          </span>
                        </div>
                      </div>
@@ -414,10 +437,10 @@ export default function BuyPage() {
                         <div>
                           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Price</p>
                           <span className="text-2xl font-black text-slate-900">
-                              ₹{property.price >= 10000000 ? (property.price / 10000000).toFixed(2) + ' Cr' : (property.price / 100000).toFixed(2) + ' Lac'}
+                              {property.price > 0 ? `₹${property.price >= 10000000 ? (property.price / 10000000).toFixed(2) + ' Cr' : (property.price / 100000).toFixed(2) + ' Lac'}` : 'On Request'}
                           </span>
                         </div>
-                        <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-[#8B0000] group-hover:text-white transition-colors border border-slate-100 group-hover:border-[#8B0000]">
+                        <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-[#8B0000] group-hover:text-[#D4AF37] transition-colors border border-slate-100 group-hover:border-[#8B0000]">
                           <ArrowRight className="w-5 h-5"/>
                         </div>
                      </div>
@@ -477,40 +500,98 @@ export default function BuyPage() {
          </div>
       </section>
 
-      {/* --- CORPORATE LEASING BANNER --- */}
-      <section className="py-20 px-6 bg-[#050505] text-white relative overflow-hidden">
-        <div className="absolute inset-0 opacity-30 bg-[url('https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-[#050505]/80 to-transparent z-0" />
-        <div className="max-w-7xl mx-auto relative z-10 flex flex-col lg:flex-row items-center justify-between gap-10">
-          <div className="max-w-2xl">
-            <p className="text-[#D4AF37] font-bold uppercase tracking-widest text-xs mb-3 flex items-center gap-2">
-              <Briefcase className="w-4 h-4" /> Commercial & Enterprise
+      {/* --- WHY INDIA & LOAN FORM (Connected to CRM) --- */}
+      <section className="py-24 px-6 bg-slate-50 border-b border-slate-100 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center relative z-10">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
+            <p className="text-[#8B0000] font-bold uppercase tracking-[0.25em] text-xs mb-3">Investment Hub Insights</p>
+            <h2 className="text-3xl md:text-5xl font-black mb-6 leading-tight text-slate-900">Why investors choose India’s growth corridors</h2>
+            <p className="text-slate-600 text-lg leading-relaxed mb-10 md:text-xl md:leading-relaxed">
+              Strong infrastructure pipelines, expanding business districts, and maturing social infrastructure continue to improve end-user demand and investment resilience. Trusted by thousands of buyers, <span className="font-bold text-[#8B0000]">ANK Realty</span> simplifies the journey with verified inventory, insightful maps, and dedicated human support.
             </p>
-            <h2 className="text-3xl md:text-5xl font-black mb-6">Premium Corporate Leasing Solutions</h2>
-            <p className="text-slate-300 text-lg leading-relaxed mb-6">
-              We represent Fortune 500 companies and growing enterprises, providing bespoke commercial leasing, retail spaces, and grade-A office solutions tailored for modern businesses.
-            </p>
-            <ul className="space-y-3 mb-8 hidden md:block">
-              {['Grade-A Office Spaces', 'Turnkey Interior Solutions', 'Pan-India Portfolio Management'].map((item, i) => (
-                <li key={i} className="flex items-center text-slate-200 font-bold text-sm">
-                  <CheckCircle className="w-4 h-4 text-[#D4AF37] mr-2" /> {item}
-                </li>
+
+            <div className="grid sm:grid-cols-2 gap-6">
+              {[
+                { title: 'Verified listings', body: 'Lead qualification reduce wasted site visits for homes and plots.', icon: ShieldCheck },
+                { title: 'Local expertise', body: 'Actionable help on pricing, potential ROI, and document readiness.', icon: MapPin },
+                { title: 'Wide discovery', body: 'Explore residential, premium plots, rentals, and commercial hubs.', icon: Building2 },
+                { title: 'Dedicated support', body: 'Dedicated experts for search, loan guidance, and leasing support.', icon: Users },
+              ].map((item, idx) => (
+                <div key={idx} className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-[#D4AF37]/50 transition-all flex flex-col">
+                  <item.icon className="w-6 h-6 text-[#D4AF37] mb-4" />
+                  <h3 className="text-lg font-black text-slate-900 mb-1.5 md:text-xl">{item.title}</h3>
+                  <p className="text-slate-500 text-sm leading-relaxed mt-auto md:text-base">{item.body}</p>
+                </div>
               ))}
-            </ul>
-          </div>
-          <div className="shrink-0 w-full lg:w-auto">
-            <Link to="/corporate-leasing">
-              <Button className="w-full lg:w-auto h-14 px-8 bg-[#D4AF37] hover:bg-[#c09b2e] text-slate-900 font-black rounded-xl text-base shadow-xl shadow-[#D4AF37]/20 transition-all hover:-translate-y-1">
-                Explore Corporate Spaces <ArrowRight className="w-5 h-5 ml-2" />
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="bg-[#8B0000] text-white rounded-[2.5rem] p-8 md:p-12 shadow-2xl relative overflow-hidden group"
+          >
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/20 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-1000" />
+
+            <div className="flex items-center gap-4 mb-8 relative z-10">
+              <div className="bg-[#D4AF37]/20 p-3 rounded-2xl shadow-inner border border-[#D4AF37]/20">
+                <Banknote className="w-8 h-8 text-[#D4AF37]" />
+              </div>
+              <h3 className="text-3xl font-black md:text-4xl">Request Loan Call</h3>
+            </div>
+
+            <div className="space-y-4 mb-8 relative z-10">
+              {bankOffers.slice(0, 3).map((offer) => (
+                <div
+                  key={offer.bank}
+                  className="p-5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between gap-4 hover:bg-white/10 transition-colors"
+                >
+                  <div>
+                    <p className="font-black text-lg md:text-xl">{offer.bank}</p>
+                    <p className="text-[#D4AF37]/80 text-sm mt-0.5">{offer.note}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[#D4AF37] font-black text-xl md:text-2xl">{offer.rate}</p>
+                    <p className="text-[11px] text-white/50 uppercase tracking-wider mt-1">Indicative</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4 mb-6 relative z-10">
+              <Input
+                value={loanLead.name}
+                onChange={(e) => setLoanLead((prev) => ({ ...prev, name: e.target.value }))}
+                placeholder="Your full name"
+                className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-14 text-base rounded-xl focus:border-[#D4AF37]"
+              />
+              <Input
+                value={loanLead.phone}
+                onChange={(e) => setLoanLead((prev) => ({ ...prev, phone: e.target.value }))}
+                placeholder="Phone number"
+                type="tel"
+                className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-14 text-base rounded-xl focus:border-[#D4AF37]"
+              />
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 relative z-10">
+              <Button
+                onClick={handleLoanLead}
+                disabled={isLoanSubmitting}
+                className="bg-[#D4AF37] hover:bg-[#c09b2e] text-slate-900 h-14 rounded-xl text-base px-8 font-black flex-1 shadow-lg shadow-[#D4AF37]/30 transition-all hover:-translate-y-0.5"
+              >
+                {isLoanSubmitting ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Request Callback'}
               </Button>
-            </Link>
-          </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* --- PROMOTIONAL VIDEOS --- */}
+      {/* --- PROMOTIONAL VIDEOS FROM ADMIN (NEW SECTION) --- */}
       {videos.length > 0 && (
-        <section className="py-24 px-6 bg-slate-50 border-t border-slate-200">
+        <section className="py-24 px-6 bg-slate-50 border-b border-slate-200">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16 max-w-2xl mx-auto">
               <p className="text-[#8B0000] font-bold uppercase tracking-[0.25em] text-xs mb-3">Property Tours & Insights</p>
