@@ -5,9 +5,10 @@ import axios from 'axios';
 import { 
   MapPin, Bed, Bath, Maximize, Phone, Mail, Calendar, Home,
   Heart, ShieldCheck, Share2, CheckCircle, Info, ChevronRight, 
-  Image as ImageIcon, Download, FileText, Check, Building,
+  Image as ImageIcon, Download, FileText, Building,
   TrendingUp, Coffee, Zap, ArrowUpDown, Shield, Dumbbell, Droplets, Wind,
-  Star, Lock, Zap as ZapIcon, MessageSquare, Map, DollarSign, Sparkles, PlayCircle, Loader2
+  Star, MessageSquare, Map as MapIcon, DollarSign, Sparkles, PlayCircle, Loader2,
+  Facebook, Twitter, Instagram, Linkedin, User, Lock
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,13 @@ import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://ankrealty.onrender.com/api";
+
+const socialLinks = {
+  facebook: "#",
+  twitter: "#",
+  instagram: "#",
+  linkedin: "#"
+};
 
 const mockAmenities = [
   { name: "Cafeteria/Food Court", icon: Coffee },
@@ -41,16 +49,12 @@ export default function PropertyDetailPage() {
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [savedProperties, setSavedProperties] = useState(new Set());
 
-  // Form States
+  // SINGLE Form State
   const [leadForm, setLeadForm] = useState({ name: '', email: '', phone: '' });
-  const [quickForm, setQuickForm] = useState({ name: '', phone: '' });
-  
-  // Submission States
-  const [isSubmittingQuick, setIsSubmittingQuick] = useState(false);
-  const [isSubmittingMain, setIsSubmittingMain] = useState(false);
-  const [quickSuccess, setQuickSuccess] = useState(false);
-  const [mainSuccess, setMainSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
 
   const fetchProperty = useCallback(async () => {
     try {
@@ -80,80 +84,90 @@ export default function PropertyDetailPage() {
     fetchProperty();
   }, [fetchProperty]);
 
-  // --- CRM INTEGRATION FOR INQUIRIES ---
-  const handleLeadSubmit = async (e, formType) => {
-    e.preventDefault();
-    
-    // Determine which form data to use
-    const isQuick = formType === 'quick';
-    const currentForm = isQuick ? quickForm : leadForm;
-    const setSubmitting = isQuick ? setIsSubmittingQuick : setIsSubmittingMain;
-    const setSuccess = isQuick ? setQuickSuccess : setMainSuccess;
-    const resetForm = isQuick ? () => setQuickForm({ name: '', phone: '' }) : () => setLeadForm({ name: '', email: '', phone: '' });
+  // Fetch User Favorites for Red Heart
+  useEffect(() => {
+    if (user && api) {
+      api.get('/favorites').then(res => {
+        const favIds = new Set(res.data.map(f => f.property_id));
+        setSavedProperties(favIds);
+      }).catch(console.error);
+    }
+  }, [user, api]);
 
-    if (!currentForm.name || !currentForm.phone) {
+  // --- CRM INTEGRATION FOR INQUIRY ---
+  const handleLeadSubmit = async (e) => {
+    e.preventDefault();
+    if (!leadForm.name || !leadForm.phone) {
       return toast.error("Please provide your name and phone number.");
     }
 
-    setSubmitting(true);
-
+    setIsSubmitting(true);
     try {
-      // If user is logged in, send as authenticated inquiry attached to property
       if (user && api) {
         await api.post('/inquiries', {
           property_id: property.id,
           message: `I am interested in ${property.title}. Please contact me.`
         });
       } else {
-        // If guest, send as public contact lead with property details
         await axios.post(`${API_BASE}/contacts`, {
-          name: currentForm.name,
-          phone: currentForm.phone,
-          email: currentForm.email || 'N/A',
+          name: leadForm.name,
+          phone: leadForm.phone,
+          email: leadForm.email || 'N/A',
           interest: `Property Inquiry: ${property.title} (${property.id})`,
           message: `Guest inquiry for property: ${property.title}.`
         });
       }
       
-      setSuccess(true);
-      resetForm();
-      
-      // Reset success message after 4 seconds
-      setTimeout(() => setSuccess(false), 4000);
+      setSubmitSuccess(true);
+      setLeadForm({ name: '', email: '', phone: '' });
+      setTimeout(() => setSubmitSuccess(false), 5000);
       
     } catch (error) {
       console.error("Inquiry Error:", error);
       toast.error("Failed to send inquiry. Please try again.");
     } finally {
-      setSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
-  const addToFavorites = async () => {
+  const handleSaveProperty = async () => {
     if (!user || !api) {
-      toast.error('Please login to save favorites');
+      toast.error('Please login to save properties.');
       navigate('/auth');
       return;
     }
-    
     try {
-      await api.post('/favorites', { property_id: property.id });
-      toast.success('Added to favorites');
+      if (savedProperties.has(property.id)) {
+        await api.delete(`/favorites/${property.id}`);
+        setSavedProperties(prev => { const n = new Set(prev); n.delete(property.id); return n; });
+        toast.success('Removed from collection.');
+      } else {
+        await api.post('/favorites', { property_id: property.id });
+        setSavedProperties(prev => { const n = new Set(prev); n.add(property.id); return n; });
+        toast.success('Property saved!');
+      }
     } catch (error) {
-      toast.error('Failed to add to favorites. It may already be saved.');
+      toast.error('Failed to update favorites.');
     }
+  };
+
+  const scrollToLeadForm = () => {
+    document.getElementById('inquiry-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    document.getElementById('lead-name-input')?.focus();
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-[#8B0000]"></div>
-        <p className="mt-4 text-slate-500 font-bold tracking-widest uppercase text-sm">Loading details...</p>
+        <Loader2 className="w-12 h-12 text-[#8B0000] animate-spin mb-4" />
+        <p className="text-slate-500 font-bold tracking-widest uppercase text-sm">Loading details...</p>
       </div>
     );
   }
 
   if (!property) return null;
+
+  const isSaved = savedProperties.has(property.id);
 
   // --- Helper to extract YouTube Embed URL ---
   const getYoutubeEmbedUrl = (url) => {
@@ -162,7 +176,6 @@ export default function PropertyDetailPage() {
     const match = url.match(regExp);
     return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}` : null;
   };
-  
   const embedUrl = getYoutubeEmbedUrl(property.youtube_link);
 
   const mapQuery = encodeURIComponent(`${property.title}, ${property.location || property.area || ''}, ${property.city || ''}`);
@@ -174,17 +187,7 @@ export default function PropertyDetailPage() {
     : [
         property.imageUrl || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80',
         'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=800&q=80'
       ];
-
-  const scrollToSection = (sectionId) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      const yOffset = -120;
-      const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
-      window.scrollTo({ top: y, behavior: 'smooth' });
-    }
-  };
 
   const formattedPrice = property.price 
     ? property.price >= 10000000 
@@ -192,323 +195,238 @@ export default function PropertyDetailPage() {
       : `₹ ${(property.price / 100000).toFixed(2)} Lac`
     : 'Price on Request';
 
-  const dynamicFloorPlans = property.floorPlans && property.floorPlans.length > 0 
+  // Dynamic Floor Plans Array
+  const displayFloorPlans = property.floorPlans && property.floorPlans.length > 0 
     ? property.floorPlans 
     : [
-        {
-          type: property.bhk ? `${property.bhk} BHK` : property.configurations || property.property_type || "Premium Unit",
-          size: property.area ? `${property.area} Sq.ft.` : "Size on Request",
-          price: formattedPrice,
-          perSqFt: (property.price && property.area && !isNaN(property.price) && !isNaN(property.area)) 
-            ? `₹ ${Math.round(property.price / property.area).toLocaleString('en-IN')}/sq.ft.` 
-            : null
-        }
+        { type: property.bhk ? `${property.bhk} BHK` : "Premium Unit", size: property.area ? `${property.area} Sq.ft.` : "Size on Request", price: formattedPrice, imageUrl: null }
       ];
 
-  // Dynamic Navigation Tabs
-  const navTabs = ['Overview'];
-  if (embedUrl) navTabs.push('Video Tour');
-  navTabs.push('Price List', 'Amenities', 'Location', 'About');
-
   return (
-    <div className="min-h-screen bg-slate-50 font-sans selection:bg-[#D4AF37]/30 text-slate-800 pb-0 relative">
+    <div className="min-h-screen bg-slate-50 font-sans selection:bg-[#D4AF37]/30 text-slate-800 pb-0">
       <Navbar />
 
-      {/* SUB NAVIGATION - STICKY */}
-      <div className="sticky top-16 md:top-20 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6">
-          <ul className="flex overflow-x-auto hide-scrollbar space-x-8 text-sm font-bold text-slate-500 uppercase tracking-widest">
-            {navTabs.map((item) => (
-              <li key={item} className="whitespace-nowrap pt-5 pb-4 cursor-pointer hover:text-[#8B0000] border-b-[3px] border-transparent hover:border-[#8B0000] transition-all"
-                  onClick={() => scrollToSection(item.toLowerCase().replace(' ', '-'))}>
-                {item}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-
-      <div className="pt-10 px-6 max-w-7xl mx-auto pb-24">
+      <div className="pt-24 px-4 md:px-6 max-w-[1400px] mx-auto pb-24">
         
-        {/* TITLE & LOCATION - PREMIUM REDESIGN */}
-        <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-slate-200/60">
+        {/* --- MAIN HEADER --- */}
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8 bg-white p-6 md:p-8 rounded-[2rem] border border-slate-200 shadow-sm">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#8B0000]/10 to-[#D4AF37]/10 text-[#8B0000] text-[10px] font-black uppercase tracking-widest mb-4 border border-[#D4AF37]/30 shadow-sm">
-               <Sparkles className="w-3 h-3 text-[#D4AF37]" /> {property.property_type || 'Property'} • {property.category || 'Sale'}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-100 text-[#8B0000] text-[10px] font-black uppercase tracking-widest mb-4">
+               <Building className="w-3.5 h-3.5" /> {property.property_type || 'Property'} • {property.category || 'Sale'}
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-slate-900 via-slate-800 to-slate-600 mb-4 tracking-tight leading-tight">
+            <h1 className="text-3xl md:text-5xl font-black text-slate-900 mb-3 tracking-tight">
               {property.title}
             </h1>
-            <p className="text-slate-600 font-medium flex items-center text-lg">
-              <MapPin className="w-5 h-5 mr-2 text-[#D4AF37]"/> 
-              {property.location}, {property.city} {property.state ? `, ${property.state}` : ''}
+            <p className="text-slate-500 font-medium flex items-center text-sm md:text-base">
+              <MapPin className="w-4 h-4 mr-1.5 text-[#D4AF37]"/> 
+              {property.location}, {property.city}
             </p>
           </div>
-          <div className="flex gap-3 pb-2">
-            <Button variant="outline" className="shrink-0 h-12 border-slate-200 text-slate-700 hover:bg-slate-100 font-bold rounded-xl shadow-sm">
-              <Share2 className="w-4 h-4 mr-2" /> Share
-            </Button>
-            <Button variant="outline" onClick={addToFavorites} className="shrink-0 h-12 border-[#8B0000]/20 text-[#8B0000] hover:bg-red-50 hover:border-red-300 font-bold rounded-xl shadow-sm">
-              <Heart className="w-4 h-4 mr-2" /> Save
-            </Button>
-          </div>
-        </div>
-
-        {/* --- TOP SECTION: IMAGE + QUICK STATS --- */}
-        <div className="flex flex-col lg:flex-row gap-8 mb-16" id="overview">
           
-          {/* Left: Image Gallery */}
-          <div className="lg:w-[65%]">
-            <div className="relative h-[400px] md:h-[550px] rounded-3xl overflow-hidden group border border-slate-200 shadow-lg bg-slate-900">
-              <img
-                src={images[selectedImage]}
-                alt={property.title}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-90"
-              />
-              <div className="absolute top-5 right-5 bg-black/60 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-xs font-bold tracking-widest shadow-lg">
-                <ImageIcon className="w-3.5 h-3.5 inline mr-1.5" /> {selectedImage + 1} / {images.length}
-              </div>
-            </div>
-            
-            {/* Thumbnails */}
-            {images.length > 1 && (
-              <div className="flex gap-4 mt-6 overflow-x-auto hide-scrollbar pb-2 px-1">
-                {images.map((img, idx) => (
-                  <div 
-                    key={idx}
-                    onClick={() => setSelectedImage(idx)}
-                    className={`relative w-28 h-20 md:w-36 md:h-24 rounded-2xl overflow-hidden shrink-0 cursor-pointer transition-all duration-300 ${
-                      selectedImage === idx ? 'ring-[3px] ring-[#D4AF37] opacity-100 shadow-md' : 'opacity-60 hover:opacity-100'
-                    }`}
-                  >
-                    <img src={img} alt={`Gallery view ${idx + 1}`} className="w-full h-full object-cover" />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Right: Quick Stats & Inline Form */}
-          <div className="lg:w-[35%] flex flex-col gap-6">
-            <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-xl h-full flex flex-col relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/10 rounded-full blur-2xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
-              
-              <div className="mb-8 relative z-10">
-                <p className="text-slate-500 text-xs font-bold tracking-widest uppercase mb-2">Starting Price</p>
-                <div className="flex items-center text-[#8B0000]">
-                  <TrendingUp className="w-8 h-8 mr-3 text-[#D4AF37]" />
-                  <span className="text-4xl md:text-5xl font-black tracking-tight">
-                    {formattedPrice}
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-y-8 gap-x-4 mb-10 relative z-10">
-                <div className="col-span-2 flex items-start bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                  <ShieldCheck className="w-6 h-6 text-[#D4AF37] mr-3 shrink-0" />
-                  <div>
-                    <p className="text-sm font-bold text-slate-900">RERA Approved Project</p>
-                    <p className="text-xs text-slate-500 font-medium mt-0.5">{property.rera || 'Check builder documents'}</p>
-                  </div>
-                </div>
-                
-                <div className="flex flex-col">
-                  <div className="flex items-center text-slate-400 text-[10px] font-bold mb-1.5 uppercase tracking-widest"><Building className="w-3.5 h-3.5 mr-1.5"/> Configuration</div>
-                  <p className="font-bold text-slate-900 text-sm md:text-base">{property.bhk ? `${property.bhk} BHK` : property.configurations || 'Various'}</p>
-                </div>
-                <div className="flex flex-col">
-                  <div className="flex items-center text-slate-400 text-[10px] font-bold mb-1.5 uppercase tracking-widest"><Star className="w-3.5 h-3.5 mr-1.5"/> Status</div>
-                  <p className="font-bold text-slate-900 text-sm md:text-base">{property.status === 'approved' ? 'Active Listing' : (property.projectStatus || 'Ready')}</p>
-                </div>
-                <div className="flex flex-col">
-                  <div className="flex items-center text-slate-400 text-[10px] font-bold mb-1.5 uppercase tracking-widest"><Calendar className="w-3.5 h-3.5 mr-1.5"/> Possession</div>
-                  <p className="font-bold text-slate-900 text-sm md:text-base">{property.possession || 'Immediate'}</p>
-                </div>
-                <div className="flex flex-col">
-                  <div className="flex items-center text-slate-400 text-[10px] font-bold mb-1.5 uppercase tracking-widest"><Maximize className="w-3.5 h-3.5 mr-1.5"/> Area</div>
-                  <p className="font-bold text-slate-900 text-sm md:text-base">{property.area || '-'} <span className="text-xs">sqft</span></p>
-                </div>
-              </div>
-
-              {/* Inline Help Form */}
-              <div className="mt-auto border border-[#D4AF37]/30 rounded-2xl p-5 bg-[#D4AF37]/5 relative z-10">
-                {quickSuccess ? (
-                   <div className="flex flex-col items-center justify-center text-center animate-in zoom-in py-4">
-                     <CheckCircle className="w-8 h-8 text-[#D4AF37] mb-2" />
-                     <h4 className="font-black text-slate-900 text-sm">Request Sent!</h4>
-                     <p className="text-xs text-slate-600 font-medium">We'll be in touch shortly.</p>
-                   </div>
-                ) : (
-                  <>
-                    <div className="flex items-center mb-5">
-                      <div className="w-10 h-10 bg-[#8B0000] rounded-full flex items-center justify-center mr-3 shrink-0 shadow-md">
-                        <Phone className="w-4 h-4 text-white" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-black text-slate-900">Interested in this property?</p>
-                        <p className="text-xs text-slate-600 font-medium">Get a call back from our experts.</p>
-                      </div>
-                    </div>
-                    <form onSubmit={(e) => handleLeadSubmit(e, 'quick')} className="flex flex-col gap-3">
-                      <div className="flex gap-2">
-                        <Input placeholder="Name" className="bg-white border-slate-200 h-11 text-sm focus:border-[#D4AF37]" value={quickForm.name} onChange={(e)=>setQuickForm({...quickForm, name: e.target.value})} required/>
-                        <Input placeholder="Phone" type="tel" className="bg-white border-slate-200 h-11 text-sm focus:border-[#D4AF37]" value={quickForm.phone} onChange={(e)=>setQuickForm({...quickForm, phone: e.target.value})} required/>
-                      </div>
-                      <Button type="submit" disabled={isSubmittingQuick} className="bg-[#8B0000] hover:bg-[#600000] text-white font-bold h-11 w-full shadow-md shadow-[#8B0000]/20 transition-all">
-                        {isSubmittingQuick ? <Loader2 className="w-4 h-4 animate-spin" /> : "Request Details"}
-                      </Button>
-                    </form>
-                  </>
-                )}
-              </div>
-
-            </div>
+          <div className="flex flex-col items-start lg:items-end gap-4 w-full lg:w-auto border-t lg:border-t-0 pt-4 lg:pt-0 border-slate-100">
+             <div className="text-left lg:text-right">
+               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Starting Price</p>
+               <p className="text-3xl md:text-4xl font-black text-[#8B0000] flex items-center">
+                 {formattedPrice} <span className="text-sm font-medium text-slate-500 ml-2">Onwards</span>
+               </p>
+             </div>
+             <div className="flex gap-3 w-full sm:w-auto">
+                <Button variant="outline" className="flex-1 sm:flex-none h-12 border-slate-200 text-slate-700 hover:bg-slate-50 font-bold rounded-xl shadow-sm">
+                  <Share2 className="w-4 h-4 mr-2" /> Share
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={handleSaveProperty} 
+                  className={`flex-1 sm:flex-none h-12 rounded-xl font-bold shadow-sm transition-all ${isSaved ? 'border-red-200 bg-red-50 text-[#8B0000]' : 'border-slate-200 text-slate-700 hover:bg-slate-50'}`}
+                >
+                  <Heart className={`w-4 h-4 mr-2 ${isSaved ? 'fill-[#8B0000] text-[#8B0000]' : ''}`} /> 
+                  {isSaved ? 'Saved' : 'Save'}
+                </Button>
+             </div>
           </div>
         </div>
 
         {/* --- MAIN CONTENT GRID --- */}
-        <div className="flex flex-col lg:flex-row gap-12">
+        <div className="flex flex-col lg:flex-row gap-8">
           
-          {/* LEFT COLUMN: Main Details */}
-          <div className="lg:w-[65%] space-y-16">
+          {/* LEFT COLUMN: Gallery & Details */}
+          <div className="lg:w-[68%] space-y-8">
             
-            {/* Overview / About Section */}
-            <section id="about">
-              <div className="flex items-center gap-3 mb-8">
-                 <FileText className="w-6 h-6 text-[#D4AF37]" />
-                 <h2 className="text-2xl md:text-3xl font-black text-slate-900">Property Overview</h2>
+            {/* Gallery Section */}
+            <div className="bg-white p-4 md:p-6 rounded-[2rem] border border-slate-200 shadow-sm">
+              <div className="relative h-[300px] md:h-[500px] rounded-2xl overflow-hidden group bg-slate-100">
+                <img
+                  src={images[selectedImage]}
+                  alt={property.title}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-lg text-xs font-black text-slate-900 shadow-sm flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#D4AF37]" /> Verified Property
+                </div>
               </div>
               
-              <div className="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-[#8B0000] to-[#D4AF37]"></div>
-                <p className="text-slate-700 leading-relaxed md:leading-loose text-justify whitespace-pre-line text-base md:text-lg font-medium">
-                  {property.description || `${property.title} is a premium ${property.property_type || 'property'} located in the prime area of ${property.location}, ${property.city}. \n\nDesigned with modern architecture and exceptional space planning, it offers an unparalleled lifestyle. Enjoy seamless connectivity to major commercial hubs, renowned schools, and top-tier hospitals. The property is equipped with top-of-the-line amenities ensuring absolute comfort, security, and convenience for you and your family.`}
-                </p>
-              </div>
+              {/* Thumbnails */}
+              {images.length > 1 && (
+                <div className="flex gap-3 mt-4 overflow-x-auto hide-scrollbar pb-2">
+                  {images.map((img, idx) => (
+                    <div 
+                      key={idx}
+                      onClick={() => setSelectedImage(idx)}
+                      className={`relative w-24 h-16 md:w-32 md:h-20 rounded-xl overflow-hidden shrink-0 cursor-pointer transition-all duration-300 ${
+                        selectedImage === idx ? 'ring-2 ring-[#D4AF37] opacity-100 shadow-sm' : 'opacity-50 hover:opacity-100'
+                      }`}
+                    >
+                      <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
-              <div className="mt-10 grid sm:grid-cols-2 gap-8 bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
-                <div>
-                  <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Developer</h4>
-                  <p className="font-bold text-slate-900">{property.builder || 'Verified Owner/Builder'}</p>
-                </div>
-                <div>
-                  <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Furnishing</h4>
-                  <p className="font-bold text-slate-900 capitalize">{property.furnishing || 'Unfurnished'}</p>
-                </div>
-                
-                <div className="sm:col-span-2">
-                  <h4 className="font-extrabold text-slate-900 mb-4 mt-2">Property Highlights:</h4>
-                  <ul className="grid sm:grid-cols-2 gap-4">
-                    {['Spacious Layout & Natural Light', 'Premium Fittings & Fixtures', 'Excellent Neighborhood Connectivity', '24/7 Water & Power Supply'].map((item, i) => (
-                      <li key={i} className="flex items-start text-slate-600 font-medium text-sm">
-                        <CheckCircle className="w-4 h-4 text-[#D4AF37] mr-2 shrink-0 mt-0.5" /> {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+            {/* Quick Info Bar */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+               <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">
+                 <Building className="w-6 h-6 text-[#D4AF37] mb-2"/>
+                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Configuration</p>
+                 <p className="font-black text-slate-900 text-sm">{property.bhk ? `${property.bhk} BHK` : property.configurations || 'Various'}</p>
+               </div>
+               <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">
+                 <Maximize className="w-6 h-6 text-[#D4AF37] mb-2"/>
+                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Super Area</p>
+                 <p className="font-black text-slate-900 text-sm">{property.area ? `${property.area} sq.ft` : 'On Request'}</p>
+               </div>
+               <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">
+                 <Calendar className="w-6 h-6 text-[#D4AF37] mb-2"/>
+                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Possession</p>
+                 <p className="font-black text-slate-900 text-sm">{property.possession || 'Ready to Move'}</p>
+               </div>
+               <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">
+                 <ShieldCheck className="w-6 h-6 text-[#D4AF37] mb-2"/>
+                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">RERA Status</p>
+                 <p className="font-black text-slate-900 text-sm">{property.rera ? 'Registered' : 'Check Docs'}</p>
+               </div>
+            </div>
+
+            {/* Overview Section */}
+            <section className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm">
+              <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                 <FileText className="w-6 h-6 text-[#D4AF37]" />
+                 <h2 className="text-2xl font-black text-slate-900">Project Overview</h2>
+              </div>
+              <p className="text-slate-600 leading-loose text-justify whitespace-pre-line text-base font-medium">
+                {property.description || `${property.title} is a premium ${property.property_type || 'property'} located in the prime area of ${property.location}, ${property.city}. \n\nDesigned with modern architecture and exceptional space planning, it offers an unparalleled lifestyle. Enjoy seamless connectivity to major commercial hubs, renowned schools, and top-tier hospitals.`}
+              </p>
+              
+              <div className="mt-8 grid sm:grid-cols-2 gap-4">
+                 <div className="flex items-center p-4 bg-slate-50 rounded-xl border border-slate-100">
+                   <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center mr-3 shadow-sm border border-slate-200"><Building className="w-4 h-4 text-slate-600"/></div>
+                   <div>
+                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Developer</p>
+                     <p className="font-bold text-slate-900 text-sm">{property.builder || 'Premium Builder'}</p>
+                   </div>
+                 </div>
+                 <div className="flex items-center p-4 bg-slate-50 rounded-xl border border-slate-100">
+                   <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center mr-3 shadow-sm border border-slate-200"><Home className="w-4 h-4 text-slate-600"/></div>
+                   <div>
+                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Furnishing</p>
+                     <p className="font-bold text-slate-900 text-sm capitalize">{property.furnishing || 'Unfurnished'}</p>
+                   </div>
+                 </div>
               </div>
             </section>
 
-            {/* --- YOUTUBE VIDEO TOUR SECTION --- */}
+            {/* Dynamic Floor Plans Section */}
+            <section className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm">
+              <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                 <DollarSign className="w-6 h-6 text-[#D4AF37]" />
+                 <h2 className="text-2xl font-black text-slate-900">Price List & Floor Plans</h2>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {displayFloorPlans.map((plan, idx) => (
+                  <div key={idx} className="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:border-[#D4AF37] hover:shadow-xl transition-all flex flex-col group cursor-pointer">
+                    {/* Blurred Floor Plan Image Area */}
+                    <div className="h-40 bg-slate-100 relative overflow-hidden border-b border-slate-100">
+                       <img 
+                         src={plan.imageUrl || 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600&q=80'} 
+                         alt={`${plan.type} Floor Plan`} 
+                         className="w-full h-full object-cover blur-[6px] opacity-70 group-hover:scale-105 transition-transform duration-700"
+                       />
+                       <div className="absolute inset-0 flex items-center justify-center">
+                          <Button onClick={scrollToLeadForm} variant="outline" className="bg-white/90 backdrop-blur-md border-white text-slate-900 font-bold shadow-lg hover:bg-white hover:text-[#8B0000]">
+                            View Full Plan <Download className="w-4 h-4 ml-2"/>
+                          </Button>
+                       </div>
+                    </div>
+                    
+                    <div className="p-5 flex flex-col flex-1">
+                      <div className="flex items-start justify-between mb-1">
+                        <span className="bg-slate-100 text-slate-500 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md">Unit</span>
+                      </div>
+                      <h3 className="text-lg font-black text-slate-900 mb-4">{plan.type}</h3>
+                      
+                      <div className="space-y-1 mb-6">
+                        <span className="bg-slate-50 text-slate-400 border border-slate-100 text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md block w-max mb-1">Size</span>
+                        <p className="font-bold text-slate-700 text-sm">{plan.size}</p>
+                      </div>
+                      
+                      <div className="mt-auto pt-4 border-t border-slate-100 flex items-end justify-between">
+                         <span className="text-slate-400 text-[11px] font-bold uppercase tracking-widest">Price</span>
+                         <p className="text-lg font-black text-[#003B30]">{plan.price}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Video Tour */}
             {embedUrl && (
-              <section id="video-tour" className="mt-16">
-                <div className="flex items-center gap-3 mb-8">
+              <section className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm">
+                <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                    <PlayCircle className="w-6 h-6 text-[#D4AF37]" />
-                   <h2 className="text-2xl md:text-3xl font-black text-slate-900">Virtual Property Tour</h2>
+                   <h2 className="text-2xl font-black text-slate-900">Virtual Tour</h2>
                 </div>
-                <div className="relative w-full aspect-video rounded-[2rem] overflow-hidden shadow-2xl border-[6px] border-white bg-slate-900 group">
+                <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-lg border-[4px] border-slate-50 bg-slate-900">
                   <iframe
-                    className="absolute top-0 left-0 w-full h-full opacity-95 group-hover:opacity-100 transition-opacity duration-500"
+                    className="absolute top-0 left-0 w-full h-full opacity-90 hover:opacity-100 transition-opacity"
                     src={embedUrl}
                     title="Property Video Tour"
                     frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                   ></iframe>
                 </div>
               </section>
             )}
 
-            {/* Pricing & Floor Plans Section */}
-            <section id="price-list">
-              <div className="flex items-center gap-3 mb-8">
-                 <DollarSign className="w-6 h-6 text-[#D4AF37]" />
-                 <h2 className="text-2xl md:text-3xl font-black text-slate-900">Pricing & Floor Plans</h2>
+            {/* Amenities Section */}
+            <section className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm">
+              <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                 <Sparkles className="w-6 h-6 text-[#D4AF37]" />
+                 <h2 className="text-2xl font-black text-slate-900">Project Amenities</h2>
               </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
-                {dynamicFloorPlans.map((item, idx) => (
-                  <div key={idx} className="bg-white border border-slate-200 rounded-3xl p-6 hover:border-[#D4AF37] hover:shadow-xl transition-all flex flex-col group cursor-pointer relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-16 h-16 bg-slate-50 rounded-bl-full -mr-8 -mt-8 group-hover:bg-[#D4AF37]/10 transition-colors"></div>
-                    <span className="text-[#8B0000] text-[10px] font-black uppercase tracking-widest mb-4">Configuration</span>
-                    <h3 className="text-2xl font-black text-slate-900 mb-4 truncate">{item.type}</h3>
-                    
-                    <div className="mb-6 space-y-2">
-                      <p className="text-slate-500 font-medium text-sm">Super Area: <span className="font-bold text-slate-900">{item.size}</span></p>
-                      {item.perSqFt && (
-                         <p className="text-slate-500 font-medium text-sm">Avg. Price: <span className="font-bold text-slate-900">{item.perSqFt}</span></p>
-                      )}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6">
+                {mockAmenities.map((amenity, idx) => (
+                  <div key={idx} className="bg-slate-50 border border-slate-100 rounded-2xl p-5 flex flex-col items-center justify-center text-center hover:bg-white hover:border-[#D4AF37]/40 hover:shadow-md transition-all group">
+                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mb-3 shadow-sm group-hover:bg-[#D4AF37]/10 transition-colors">
+                      <amenity.icon className="w-5 h-5 text-slate-400 group-hover:text-[#D4AF37] transition-colors" />
                     </div>
-                    
-                    <div className="mt-auto pt-6 border-t border-slate-100">
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Starting From</p>
-                      <p className="text-xl font-black text-[#003B30] group-hover:text-[#8B0000] transition-colors">{item.price}</p>
-                    </div>
+                    <span className="text-xs font-bold text-slate-700">{amenity.name}</span>
                   </div>
                 ))}
               </div>
-              
-              <div className="bg-slate-900 rounded-3xl p-8 flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden">
-                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 pointer-events-none"></div>
-                <div className="relative z-10 text-white">
-                  <h4 className="text-xl font-black mb-1">Download Detailed Brochure</h4>
-                  <p className="text-sm text-slate-400 font-medium">Get floor plans, site map, and exact unit pricing.</p>
-                </div>
-                <Button className="relative z-10 bg-[#D4AF37] hover:bg-[#c09b2e] text-slate-900 font-black rounded-xl h-12 px-8 shadow-lg shadow-[#D4AF37]/20">
-                  Download PDF <Download className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
             </section>
 
-            {/* Amenities Section */}
-            <section id="amenities">
-              <div className="flex items-center gap-3 mb-8">
-                 <Sparkles className="w-6 h-6 text-[#D4AF37]" />
-                 <h2 className="text-2xl md:text-3xl font-black text-slate-900">Project Amenities</h2>
+            {/* Location Map */}
+            <section className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm">
+              <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                 <MapIcon className="w-6 h-6 text-[#D4AF37]" />
+                 <h2 className="text-2xl font-black text-slate-900">Neighborhood Map</h2>
               </div>
-              
-              {property.amenities && property.amenities.length > 0 ? (
-                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                   {property.amenities.map((item, i) => (
-                      <div key={i} className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-center text-center shadow-sm hover:shadow-md transition-shadow">
-                        <span className="text-sm font-bold text-slate-700">{item}</span>
-                      </div>
-                   ))}
-                 </div>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
-                  {mockAmenities.map((amenity, idx) => (
-                    <div key={idx} className="bg-white border border-slate-200 rounded-3xl p-6 flex flex-col items-center justify-center text-center hover:shadow-lg hover:border-[#D4AF37]/50 transition-all group">
-                      <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-4 group-hover:bg-[#D4AF37]/10 transition-colors">
-                        <amenity.icon className="w-6 h-6 text-slate-500 group-hover:text-[#D4AF37] transition-colors" />
-                      </div>
-                      <span className="text-sm font-bold text-slate-700">{amenity.name}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-
-            {/* Location Map Section */}
-            <section id="location">
-              <div className="flex items-center gap-3 mb-8">
-                 <Map className="w-6 h-6 text-[#D4AF37]" />
-                 <h2 className="text-2xl md:text-3xl font-black text-slate-900">Neighborhood Map</h2>
-              </div>
-              <div className="w-full h-[450px] bg-slate-200 rounded-[2rem] overflow-hidden relative border-4 border-white shadow-xl">
+              <div className="w-full h-[400px] bg-slate-100 rounded-2xl overflow-hidden relative border-4 border-slate-50 shadow-inner">
                 <a href={mapOpenUrl} target="_blank" rel="noopener noreferrer">
-                  <Button className="absolute top-6 left-6 z-10 bg-white text-slate-900 font-bold border-slate-200 hover:bg-slate-50 shadow-lg shadow-black/10 rounded-xl">
-                    Open in Google Maps <Share2 className="w-4 h-4 ml-2" />
+                  <Button className="absolute top-4 left-4 z-10 bg-white text-slate-900 font-bold border-slate-200 hover:bg-slate-50 shadow-md rounded-xl text-xs h-10">
+                    Open in Maps <Share2 className="w-3.5 h-3.5 ml-2" />
                   </Button>
                 </a>
                 <iframe
@@ -523,85 +441,86 @@ export default function PropertyDetailPage() {
 
           </div>
 
-          {/* RIGHT COLUMN: Sticky Lead Form & Why Invest */}
-          <div className="lg:w-[35%]">
-            <div className="sticky top-28 space-y-8">
+          {/* RIGHT COLUMN: Sticky Minimal Lead Form */}
+          <div className="lg:w-[32%]">
+            <div className="sticky top-28 space-y-6" id="inquiry-form">
               
-              {/* Primary Sticky Form Card */}
-              <div className="bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden text-white">
-                <div className="absolute top-0 right-0 w-48 h-48 bg-[#D4AF37]/20 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
+              {/* PRIMARY INQUIRY FORM */}
+              <div className="bg-white rounded-[2rem] p-8 shadow-xl border border-slate-200 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/10 rounded-full blur-2xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
                 
-                {mainSuccess ? (
-                   <div className="h-[300px] flex flex-col items-center justify-center text-center animate-in zoom-in duration-500">
-                     <div className="w-16 h-16 bg-[#D4AF37]/20 rounded-full flex items-center justify-center mb-4">
-                       <CheckCircle className="w-8 h-8 text-[#D4AF37]" />
+                {submitSuccess ? (
+                   <div className="h-[300px] flex flex-col items-center justify-center text-center animate-in zoom-in duration-500 relative z-10">
+                     <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-4 border border-green-100">
+                       <CheckCircle className="w-8 h-8 text-green-500" />
                      </div>
-                     <h3 className="text-2xl font-black text-white mb-2">Request Received!</h3>
-                     <p className="text-slate-400 text-sm max-w-[250px]">
-                       Thank you. Our property expert will contact you shortly.
+                     <h3 className="text-2xl font-black text-slate-900 mb-2">Request Sent!</h3>
+                     <p className="text-slate-500 text-sm font-medium">
+                       Our property expert will contact you shortly regarding {property.title}.
                      </p>
                    </div>
                 ) : (
-                  <>
-                    <div className="mb-8 relative z-10">
-                      <span className="inline-block bg-[#8B0000] text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-md mb-4 shadow-sm">
-                        Connect with Seller
-                      </span>
-                      <h3 className="text-2xl font-black leading-tight mb-2">Interested in {property.title}?</h3>
-                      <p className="text-sm text-slate-400 font-medium">Leave your details and we will arrange a direct meeting.</p>
+                  <div className="relative z-10">
+                    <div className="mb-6">
+                      <h3 className="text-2xl font-black text-slate-900 mb-2">Interested?</h3>
+                      <p className="text-sm text-slate-500 font-medium">Fill the form below to get exact pricing, floor plans, and schedule a site visit.</p>
                     </div>
 
-                    <form onSubmit={(e) => handleLeadSubmit(e, 'main')} className="space-y-4 relative z-10">
+                    <form onSubmit={handleLeadSubmit} className="space-y-4">
                       <div className="space-y-1.5">
-                        <Label className="text-xs font-bold text-slate-300 uppercase tracking-widest pl-1">Full Name</Label>
-                        <Input placeholder="John Doe" className="h-14 bg-white/10 border-white/20 text-white placeholder:text-slate-500 rounded-xl focus:border-[#D4AF37]" value={leadForm.name} onChange={(e)=>setLeadForm({...leadForm, name: e.target.value})} required/>
+                        <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1">Full Name</Label>
+                        <div className="relative">
+                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><User className="h-4 w-4 text-slate-400"/></div>
+                           <Input id="lead-name-input" placeholder="e.g. John Doe" className="h-12 pl-10 bg-slate-50 border-slate-200 focus:bg-white focus:border-[#D4AF37] rounded-xl text-sm font-medium" value={leadForm.name} onChange={(e)=>setLeadForm({...leadForm, name: e.target.value})} required/>
+                        </div>
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-xs font-bold text-slate-300 uppercase tracking-widest pl-1">Email Address</Label>
-                        <Input placeholder="john@example.com" type="email" className="h-14 bg-white/10 border-white/20 text-white placeholder:text-slate-500 rounded-xl focus:border-[#D4AF37]" value={leadForm.email} onChange={(e)=>setLeadForm({...leadForm, email: e.target.value})} required/>
+                        <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1">Email Address</Label>
+                        <div className="relative">
+                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Mail className="h-4 w-4 text-slate-400"/></div>
+                           <Input placeholder="john@example.com" type="email" className="h-12 pl-10 bg-slate-50 border-slate-200 focus:bg-white focus:border-[#D4AF37] rounded-xl text-sm font-medium" value={leadForm.email} onChange={(e)=>setLeadForm({...leadForm, email: e.target.value})} required/>
+                        </div>
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-xs font-bold text-slate-300 uppercase tracking-widest pl-1">Phone Number</Label>
-                        <Input placeholder="+91 92664 58945" type="tel" className="h-14 bg-white/10 border-white/20 text-white placeholder:text-slate-500 rounded-xl focus:border-[#D4AF37]" value={leadForm.phone} onChange={(e)=>setLeadForm({...leadForm, phone: e.target.value})} required/>
+                        <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1">Phone Number</Label>
+                        <div className="relative">
+                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Phone className="h-4 w-4 text-slate-400"/></div>
+                           <Input placeholder="+91 98765 43210" type="tel" className="h-12 pl-10 bg-slate-50 border-slate-200 focus:bg-white focus:border-[#D4AF37] rounded-xl text-sm font-medium" value={leadForm.phone} onChange={(e)=>setLeadForm({...leadForm, phone: e.target.value})} required/>
+                        </div>
                       </div>
-                      <div className="pt-4">
-                        <Button type="submit" disabled={isSubmittingMain} className="w-full h-14 bg-[#D4AF37] hover:bg-[#c09b2e] text-slate-900 font-black rounded-xl text-lg transition-all shadow-lg shadow-[#D4AF37]/20 hover:-translate-y-0.5">
-                          {isSubmittingMain ? <Loader2 className="w-5 h-5 animate-spin" /> : "Get Callback Now"}
+                      
+                      <div className="pt-2">
+                        <Button type="submit" disabled={isSubmitting} className="w-full h-12 bg-[#8B0000] hover:bg-[#600000] text-white font-black rounded-xl text-sm shadow-lg shadow-[#8B0000]/20 transition-all hover:-translate-y-0.5 flex items-center justify-center">
+                          {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "Get Callback Now"}
                         </Button>
                       </div>
                     </form>
 
-                    <div className="mt-6 flex items-center justify-center gap-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest border-t border-white/10 pt-6">
-                      <span className="flex items-center"><ShieldCheck className="w-4 h-4 mr-1.5 text-green-500"/> Privacy Protected</span>
+                    <div className="mt-5 flex items-center justify-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest pt-5 border-t border-slate-100">
+                      <ShieldCheck className="w-3.5 h-3.5 text-green-500"/> Privacy Protected
                     </div>
-                  </>
+                  </div>
                 )}
               </div>
 
-              {/* Why Invest Box */}
-              <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm">
-                <h3 className="font-black text-slate-900 mb-6 text-xl">Investment Highlights</h3>
-                <div className="space-y-6">
-                  <div className="flex gap-4">
-                    <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center shrink-0 border border-emerald-100"><ShieldCheck className="w-5 h-5 text-emerald-600"/></div>
-                    <div>
-                      <h4 className="font-bold text-slate-900 text-sm mb-1">RERA Approved & Verified</h4>
-                      <p className="text-xs text-slate-500 font-medium leading-relaxed">Property documents and builder history have been cross-checked.</p>
-                    </div>
+              {/* Trust Box */}
+              <div className="bg-slate-900 rounded-[2rem] p-6 shadow-xl relative overflow-hidden text-white">
+                <div className="absolute bottom-0 right-0 w-24 h-24 bg-[#D4AF37]/20 blur-xl rounded-full pointer-events-none" />
+                <h3 className="font-black text-lg mb-4 flex items-center gap-2">
+                  <Star className="w-4 h-4 text-[#D4AF37] fill-[#D4AF37]"/> Why Choose Us
+                </h3>
+                <div className="space-y-4 text-sm font-medium text-slate-300">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5"/>
+                    <p>100% Verified & authentic property listings.</p>
                   </div>
-                  <div className="flex gap-4">
-                    <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center shrink-0 border border-blue-100"><MapPin className="w-5 h-5 text-blue-600"/></div>
-                    <div>
-                      <h4 className="font-bold text-slate-900 text-sm mb-1">Prime Accessibility</h4>
-                      <p className="text-xs text-slate-500 font-medium leading-relaxed">Located near upcoming transit hubs ensuring long-term value.</p>
-                    </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5"/>
+                    <p>Zero brokerage on select premium projects.</p>
                   </div>
-                  <div className="flex gap-4">
-                    <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center shrink-0 border border-amber-100"><TrendingUp className="w-5 h-5 text-amber-600"/></div>
-                    <div>
-                      <h4 className="font-bold text-slate-900 text-sm mb-1">High ROI Potential</h4>
-                      <p className="text-xs text-slate-500 font-medium leading-relaxed">Historical data shows strong appreciation in this specific sector.</p>
-                    </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5"/>
+                    <p>End-to-end legal and home loan assistance.</p>
                   </div>
                 </div>
               </div>
@@ -621,8 +540,10 @@ export default function PropertyDetailPage() {
                 The Red Carpet of Real Estate. We are committed to providing the highest level of service, transparency, and expertise in the Indian real estate market.
               </p>
               <div className="flex space-x-3 pt-2">
-                  <div className="w-10 h-10 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all cursor-pointer"><Mail className="w-4 h-4"/></div>
-                  <div className="w-10 h-10 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all cursor-pointer"><Phone className="w-4 h-4"/></div>
+                  <a href={socialLinks.facebook} className="w-10 h-10 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all cursor-pointer"><Facebook className="w-4 h-4"/></a>
+                  <a href={socialLinks.twitter} className="w-10 h-10 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all cursor-pointer"><Twitter className="w-4 h-4"/></a>
+                  <a href={socialLinks.instagram} className="w-10 h-10 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all cursor-pointer"><Instagram className="w-4 h-4"/></a>
+                  <a href={socialLinks.linkedin} className="w-10 h-10 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all cursor-pointer"><Linkedin className="w-4 h-4"/></a>
               </div>
             </div>
             
@@ -674,7 +595,6 @@ export default function PropertyDetailPage() {
           </div>
         </div>
       </footer>
-
     </div>
   );
 }
