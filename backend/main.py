@@ -51,11 +51,9 @@ security = HTTPBearer()
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """
     Verifies the Supabase Auth JWT natively and fetches the user's public profile.
-    This natively supports Supabase's new ECC (P-256) keys.
     """
     token = credentials.credentials
     
-    # 1. Let the Supabase client verify the token automatically
     try:
         auth_response = supabase.auth.get_user(token)
         if not auth_response or not getattr(auth_response, 'user', None):
@@ -68,11 +66,9 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
     if supabase is None:
         raise HTTPException(status_code=500, detail="Database not configured")
     
-    # 2. Fetch the custom profile data from our public.users table
     res = supabase.table("users").select("*").eq("id", user_id).limit(1).execute()
     user = res.data[0] if res.data and res.data else None
     
-    # 3. Fallback to the raw Auth data if RLS/Trigger fails
     if not user:
         user_meta = auth_response.user.user_metadata or {}
         return {
@@ -104,10 +100,13 @@ async def upload_file_to_supabase(file: UploadFile, folder: str) -> str:
 # 5. FastAPI App & CORS
 # --------------------------------
 app = FastAPI(title="ANK Realty API")
+
+# CRITICAL FIX: allow_credentials MUST be False if allow_origins is ["*"]. 
+# This was crashing the entire Python server on startup!
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], 
-    allow_credentials=True,
+    allow_credentials=False, 
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -246,7 +245,8 @@ def get_agent_dashboard(current_user: dict = Depends(get_current_user)):
     prop_res = supabase.table("properties").select("*").eq("owner_id", current_user["id"]).execute()
     properties = prop_res.data or []
     
-    total_views = sum(p.get("views", 0) for p in properties)
+    # FIXED: Handled None values safely to prevent crashing
+    total_views = sum((p.get("views") or 0) for p in properties)
 
     if current_user.get("role") == "admin":
         inq_res = supabase.table("inquiries").select("*").order("created_at", desc=True).execute()
@@ -338,21 +338,18 @@ async def create_property(
         except:
             parsed_amenities = []
 
-        # Process Global Images
         image_urls = []
         for img in form_data.getlist("new_images"):
             if hasattr(img, "filename") and img.filename:
                 url = await upload_file_to_supabase(img, "properties/images")
                 if url: image_urls.append(url)
                 
-        # Process Global Videos
         video_urls = []
         for vid in form_data.getlist("new_videos"):
             if hasattr(vid, "filename") and vid.filename:
                 url = await upload_file_to_supabase(vid, "properties/videos")
                 if url: video_urls.append(url)
                 
-        # Process PDF Brochure
         brochure = form_data.get("brochure")
         brochure_url = None
         if brochure and hasattr(brochure, "filename") and brochure.filename:
@@ -367,9 +364,8 @@ async def create_property(
 
         final_floor_plans = []
         for fp in floor_plans:
-            # Check if there is an image mapped to this floor plan index
             idx = fp.get("imageIndex")
-            fp_image_url = fp.get("existingImage", None) # Default to existing if available
+            fp_image_url = fp.get("existingImage", None) 
             
             if idx is not None:
                 img_file = form_data.get(f"floor_plan_image_{idx}")
@@ -378,7 +374,6 @@ async def create_property(
                     if url:
                         fp_image_url = url
             
-            # Save cleaned up version of the floor plan
             final_floor_plans.append({
                 "type": fp.get("type", ""),
                 "size": fp.get("size", ""),
@@ -412,12 +407,13 @@ async def create_property(
             "images": image_urls,
             "videos": video_urls,
             "brochure": brochure_url,
-            "floorPlans": final_floor_plans, # Attach processed floor plans
+            "floorPlans": final_floor_plans,
             "status": "approved" if current_user.get("role") == "admin" else "pending",
             "verified": current_user.get("role") == "admin",
             "created_at": datetime.now(timezone.utc).isoformat()
         }
         
+        # Safely insert the document
         res = supabase.table("properties").insert(property_doc).execute()
         check_res_or_raise(res, "inserting property")
         return property_doc
@@ -479,7 +475,6 @@ async def update_property(
         except:
             pass
 
-    # Process Global Images
     ex_img = form_data.get("existing_images")
     try:
         image_urls = json.loads(ex_img) if ex_img else existing_prop.get("images", [])
@@ -492,7 +487,6 @@ async def update_property(
             if url: image_urls.append(url)
     update_data["images"] = image_urls
     
-    # Process Global Videos
     video_urls = existing_prop.get("videos", [])
     for vid in form_data.getlist("new_videos"):
         if hasattr(vid, "filename") and vid.filename:
@@ -501,14 +495,12 @@ async def update_property(
     if video_urls:
         update_data["videos"] = video_urls
         
-    # Process Brochure
     brochure = form_data.get("brochure")
     if brochure and hasattr(brochure, "filename") and brochure.filename:
         brochure_url = await upload_file_to_supabase(brochure, "properties/brochures")
         if brochure_url:
             update_data["brochure"] = brochure_url
 
-    # --- PROCESS UPDATED DYNAMIC FLOOR PLANS ---
     if "floorPlans" in form_data:
         try:
             floor_plans = json.loads(form_data.get("floorPlans"))
@@ -542,18 +534,23 @@ async def update_property(
 
 @api_router.get("/properties")
 def get_properties(category: Optional[str] = None, property_type: Optional[str] = None, limit: int = 100):
-    query = supabase.table("properties").select("*").order("created_at", desc=True).limit(limit)
-    if category: query = query.eq("category", category)
-    if property_type: query = query.eq("property_type", property_type)
-    res = query.execute()
-    return res.data or []
+    try:
+        query = supabase.table("properties").select("*").order("created_at", desc=True).limit(limit)
+        if category: query = query.eq("category", category)
+        if property_type: query = query.eq("property_type", property_type)
+        res = query.execute()
+        return res.data or []
+    except Exception as e:
+        logger.error(f"Error fetching properties: {e}")
+        return []
 
 @api_router.get("/properties/{property_id}")
 def get_property(property_id: str):
     res = supabase.table("properties").select("*").eq("id", property_id).limit(1).execute()
     if not res.data: raise HTTPException(status_code=404, detail="Property not found")
     
-    views = res.data[0].get("views", 0) + 1
+    # FIXED: Handled None values safely to prevent crashing on individual property pages
+    views = (res.data[0].get("views") or 0) + 1
     supabase.table("properties").update({"views": views}).eq("id", property_id).execute()
     res.data[0]["views"] = views
     return res.data[0]
