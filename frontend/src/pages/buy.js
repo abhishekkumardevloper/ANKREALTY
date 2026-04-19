@@ -24,21 +24,6 @@ const bankOffers = [
   { bank: 'ICICI Bank', rate: '8.45%', note: 'Instant approval for pre-approved clients' }
 ];
 
-const topRowLogos = [
-  '/images (3).png',
-  '/images__9_-removebg-preview.png',
-  '/images (1).png',
-  '/images (2).png',
-  '/183f468e401f4220bce9e4f7b1e3ffd820251112162925170.png',
-];
-
-const bottomRowLogos = [
-  '/images.png',
-  '/4f3bb698972531.Y3JvcCw5NTAsNzQzLDIyMywyMQ-removebg-preview.png',
-  '/Max_Estates_logo.svg.png',
-  '/M3M-Jacob-and-Co-logo.png',
-];
-
 export default function BuyPage() {
   const navigate = useNavigate();
   const { user, api } = useAuth();
@@ -67,10 +52,10 @@ export default function BuyPage() {
   const [propertyType, setPropertyType] = useState("");
   const [sortBy, setSortBy] = useState("newest");
 
-  // EMI Calculator States
-  const [loanAmt, setLoanAmt] = useState(5000000);
-  const [intRate, setIntRate] = useState(8.5);
-  const [tenure, setLoanTenure] = useState(20);
+  // EMI Calculator States (FIXED NAMES)
+  const [loanAmount, setLoanAmount] = useState(5000000);
+  const [interestRate, setInterestRate] = useState(8.5);
+  const [loanTenure, setLoanTenure] = useState(20);
 
   const [loanLead, setLoanLead] = useState({ name: '', phone: '' });
   const [isLoanSubmitting, setIsLoanSubmitting] = useState(false);
@@ -204,11 +189,11 @@ export default function BuyPage() {
     }
   };
 
-  // EMI Calculation Logic
+  // EMI Calculation Logic (FIXED NAMES)
   const calculateEMI = () => {
     const p = loanAmount;
     const r = interestRate / 12 / 100;
-    const n = tenure * 12;
+    const n = loanTenure * 12;
     if (p > 0 && r > 0 && n > 0) {
       return Math.round((p * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1));
     }
@@ -325,24 +310,6 @@ export default function BuyPage() {
          </div>
       </section>
 
-      {/* --- QUICK STATS EXTENSION --- */}
-      <section className="relative z-30 -mt-10 max-w-6xl mx-auto px-4">
-        <div className="bg-white rounded-[2rem] shadow-xl border border-slate-100 p-6 md:p-10 grid grid-cols-2 md:grid-cols-4 gap-6 divide-x divide-slate-100">
-          {[
-            { label: 'Verified Properties', value: '10,000+', icon: ShieldCheck },
-            { label: 'Happy Customers', value: '5,000+', icon: Users },
-            { label: 'Cities Covered', value: '25+', icon: MapPin },
-            { label: 'Years Experience', value: '15+', icon: TrendingUp },
-          ].map((stat, i) => (
-            <div key={i} className="text-center px-4 group">
-              <stat.icon className="w-8 h-8 mx-auto text-[#D4AF37] mb-3 group-hover:scale-110 transition-transform duration-300" />
-              <h3 className="text-3xl font-black text-slate-900 md:text-4xl">{stat.value}</h3>
-              <p className="text-sm font-medium text-slate-500 mt-1 uppercase tracking-wide md:text-base">{stat.label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* MAIN CONTENT GRID */}
       <section id="property-grid" className="max-w-7xl mx-auto px-6 py-12 mt-8">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 pb-6 border-b border-slate-200">
@@ -410,7 +377,7 @@ export default function BuyPage() {
                        />
                        <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
                          <span className="bg-white/95 backdrop-blur-sm text-slate-900 px-3 py-1 rounded-lg text-xs font-black uppercase shadow-sm flex items-center gap-1">
-                           <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]"/> {property.projectStatus || 'Featured'}
+                           <ShieldCheck className="w-3.5 h-3.5 text-[#D4AF37]"/> Verified
                          </span>
                        </div>
                      </div>
@@ -447,10 +414,10 @@ export default function BuyPage() {
                         <div>
                           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Price</p>
                           <span className="text-2xl font-black text-slate-900">
-                              {property.price > 0 ? `₹${property.price >= 10000000 ? (property.price / 10000000).toFixed(2) + ' Cr' : (property.price / 100000).toFixed(2) + ' Lac'}` : 'On Request'}
+                              ₹{property.price >= 10000000 ? (property.price / 10000000).toFixed(2) + ' Cr' : (property.price / 100000).toFixed(2) + ' Lac'}
                           </span>
                         </div>
-                        <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-[#8B0000] group-hover:text-[#D4AF37] transition-colors border border-slate-100 group-hover:border-[#8B0000]">
+                        <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-[#8B0000] group-hover:text-white transition-colors border border-slate-100 group-hover:border-[#8B0000]">
                           <ArrowRight className="w-5 h-5"/>
                         </div>
                      </div>
@@ -486,25 +453,25 @@ export default function BuyPage() {
                <div>
                  <div className="flex justify-between text-sm mb-2 font-bold">
                    <span className="text-slate-500">Loan Amount</span>
-                   <span className="text-[#8B0000] text-lg font-black">₹{loanAmt.toLocaleString('en-IN')}</span>
+                   <span className="text-[#8B0000] text-lg font-black">₹{loanAmount.toLocaleString('en-IN')}</span>
                  </div>
-                 <input type="range" min="1000000" max="100000000" step="500000" value={loanAmt} onChange={(e)=>setLoanAmt(Number(e.target.value))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#8B0000]" />
+                 <input type="range" min="1000000" max="100000000" step="500000" value={loanAmount} onChange={(e)=>setLoanAmount(Number(e.target.value))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#8B0000]" />
                </div>
                
                <div>
                  <div className="flex justify-between text-sm mb-2 font-bold">
                    <span className="text-slate-500">Interest Rate</span>
-                   <span className="text-[#8B0000] text-lg font-black">{intRate}% p.a.</span>
+                   <span className="text-[#8B0000] text-lg font-black">{interestRate}% p.a.</span>
                  </div>
-                 <input type="range" min="6" max="12" step="0.1" value={intRate} onChange={(e)=>setIntRate(Number(e.target.value))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#8B0000]" />
+                 <input type="range" min="6" max="12" step="0.1" value={interestRate} onChange={(e)=>setInterestRate(Number(e.target.value))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#8B0000]" />
                </div>
 
                <div>
                  <div className="flex justify-between text-sm mb-2 font-bold">
                    <span className="text-slate-500">Loan Tenure</span>
-                   <span className="text-[#8B0000] text-lg font-black">{tenure} Years</span>
+                   <span className="text-[#8B0000] text-lg font-black">{loanTenure} Years</span>
                  </div>
-                 <input type="range" min="5" max="30" step="1" value={tenure} onChange={(e)=>setLoanTenure(Number(e.target.value))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#8B0000]" />
+                 <input type="range" min="5" max="30" step="1" value={loanTenure} onChange={(e)=>setLoanTenure(Number(e.target.value))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#8B0000]" />
                </div>
             </div>
          </div>
@@ -541,7 +508,7 @@ export default function BuyPage() {
         </div>
       </section>
 
-      {/* --- PROMOTIONAL VIDEOS FROM ADMIN --- */}
+      {/* --- PROMOTIONAL VIDEOS --- */}
       {videos.length > 0 && (
         <section className="py-24 px-6 bg-slate-50 border-t border-slate-200">
           <div className="max-w-7xl mx-auto">
@@ -629,59 +596,8 @@ export default function BuyPage() {
         </div>
       </section>
 
-      {/* --- FLOATING CHATBOT --- */}
-      <div className="fixed bottom-6 right-6 z-50">
-        {isChatOpen ? (
-          <div className="bg-white rounded-2xl shadow-2xl w-80 sm:w-96 border border-[#D4AF37]/30 overflow-hidden flex flex-col animate-in slide-in-from-bottom-5">
-            <div className="bg-[#050505] text-[#D4AF37] border-b border-[#D4AF37]/30 p-4 font-bold flex justify-between items-center shadow-md relative z-10">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.8)]"></div>
-                ANK AI Assistant
-              </div>
-              <button onClick={() => setIsChatOpen(false)} className="hover:bg-slate-800 text-slate-300 hover:text-white p-1 rounded-md transition-colors"><X className="w-4 h-4"/></button>
-            </div>
-            
-            <div className="p-4 flex-1 bg-slate-50 flex flex-col gap-3 h-[380px] overflow-y-auto">
-              <div className="flex gap-2">
-                <div className="w-8 h-8 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/50 flex items-center justify-center shrink-0 shadow-sm">
-                   <Home className="w-4 h-4 text-[#8B0000]"/>
-                </div>
-                <div className="bg-white p-3 rounded-2xl rounded-tl-sm shadow-sm text-sm border border-slate-100 text-slate-700">
-                  Welcome to ANK Realty! I am your virtual assistant. Please choose a subject below so I can assist you better:
-                </div>
-              </div>
-              
-              <div className="flex flex-col gap-2 mt-2 pl-10">
-                {chatSubjects.map((subject, i) => (
-                  <button key={i} className="text-left bg-white hover:bg-[#8B0000]/5 text-slate-700 hover:text-[#8B0000] p-2.5 rounded-xl text-sm font-medium transition-all border border-slate-200 hover:border-[#D4AF37]/50 shadow-sm">
-                    {subject}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="p-3 bg-white border-t border-slate-100 flex items-center gap-2">
-              <input type="text" placeholder="Type your message..." className="flex-1 bg-slate-50 border border-slate-200 rounded-full px-4 py-2 text-sm outline-none focus:border-[#D4AF37]" />
-              <button className="bg-[#8B0000] text-white p-2 rounded-full hover:bg-[#600000] shadow-md shadow-[#8B0000]/30 transition-colors">
-                <Send className="w-4 h-4 ml-0.5" />
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button 
-            onClick={() => setIsChatOpen(true)} 
-            className="bg-[#8B0000] hover:bg-[#600000] border-2 border-white/10 text-white p-4 rounded-full shadow-[0_10px_25px_rgba(139,0,0,0.4)] hover:scale-110 transition-transform flex items-center justify-center group"
-          >
-            <MessageSquare className="w-7 h-7" />
-            <span className="absolute right-full mr-4 bg-[#050505] border border-[#D4AF37]/30 text-[#D4AF37] text-xs font-bold py-1.5 px-3 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-lg">
-              Chat with us!
-            </span>
-          </button>
-        )}
-      </div>
-
       {/* --- FOOTER --- */}
-      <footer className="bg-[#050505] text-white pt-24 pb-12 px-6 border-t-[8px] border-[#8B0000] mt-auto">
+      <footer className="bg-[#050505] text-white pt-24 pb-12 px-6 border-t-[8px] border-[#8B0000]">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
             <div className="space-y-6 pr-4">
