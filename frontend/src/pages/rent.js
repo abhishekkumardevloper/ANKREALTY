@@ -4,16 +4,18 @@ import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from "../components/Navbar";
 import { Button } from "@/components/ui/button";
+import { useAuth } from '../contexts/AuthContext';
+import { toast } from 'sonner';
 import { 
   Search, MapPin, X, CheckCircle, Bed, Bath, 
   Maximize, Calendar, Loader2, Filter, Home, 
-  TrendingUp, Info, Mail, Phone, DollarSign, ChevronDown, ShieldCheck, ArrowRight
+  TrendingUp, Info, Mail, Phone, DollarSign, ChevronDown, ShieldCheck, ArrowRight, Heart
 } from "lucide-react";
 import { 
   XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, CartesianGrid 
 } from 'recharts';
 
-// API Configuration matching your environment
+// API Configuration
 const API_BASE = import.meta.env.VITE_API_URL || "https://ankrealty.onrender.com/api";
 
 const rentTrends = [
@@ -29,25 +31,33 @@ const rentTrends = [
 
 export default function RentPage() {
   const navigate = useNavigate(); 
+  const { user, api } = useAuth();
   
   // DYNAMIC DATA STATES
   const [resaleProperties, setResaleProperties] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [availableLocations, setAvailableLocations] = useState([]);
+  const [savedProperties, setSavedProperties] = useState(new Set());
   
   // FILTER STATES
-  const [searchCity, setSearchCity] = useState("");
+  const [searchLocation, setSearchLocation] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [propertyType, setPropertyType] = useState("");
   const [sortBy, setSortBy] = useState("newest");
 
-  // FETCH DATA FROM BACKEND
+  // FETCH PROPERTIES & EXTRACT LOCATIONS
   useEffect(() => {
     const fetchResaleProperties = async () => {
       setLoading(true);
       try {
-        // Fetch properties strictly in the 'resale' category
         const response = await axios.get(`${API_BASE}/properties?category=resale&limit=100`);
-        setResaleProperties(response.data || []);
+        const data = response.data || [];
+        setResaleProperties(data);
+
+        // Extract unique locations dynamically from backend data
+        const uniqueLocs = [...new Set(data.map(p => p.location).filter(Boolean))].sort();
+        setAvailableLocations(uniqueLocs);
+
       } catch (error) {
         console.error("Error fetching resale properties:", error);
       } finally {
@@ -57,25 +67,74 @@ export default function RentPage() {
     fetchResaleProperties();
   }, []);
 
+  // FETCH USER FAVORITES
+  useEffect(() => {
+    if (user && api) {
+      api.get('/favorites').then(res => {
+        const favIds = new Set(res.data.map(f => f.property_id));
+        setSavedProperties(favIds);
+      }).catch(console.error);
+    } else {
+      setSavedProperties(new Set());
+    }
+  }, [user, api]);
+
+  // FAVORITE TOGGLE LOGIC
+  const handleSaveProperty = async (e, propertyId) => {
+    e.stopPropagation(); 
+    
+    if (!user) {
+      toast.error('Please login to save properties.');
+      navigate('/auth');
+      return;
+    }
+    
+    try {
+      if (savedProperties.has(propertyId)) {
+        await api.delete(`/favorites/${propertyId}`);
+        setSavedProperties(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(propertyId);
+          return newSet;
+        });
+        toast.success('Removed from your collection.');
+      } else {
+        await api.post('/favorites', { property_id: propertyId });
+        setSavedProperties(prev => {
+          const newSet = new Set(prev);
+          newSet.add(propertyId);
+          return newSet;
+        });
+        toast.success('Property saved! Added to your dashboard.');
+      }
+    } catch (error) {
+      console.error('Error saving favorite:', error);
+      toast.error('Failed to update favorites. Please try again.');
+    }
+  };
+
   // FILTER & SORT LOGIC
   const filteredAndSortedRentals = useMemo(() => {
     let result = resaleProperties.filter(r => {
-      const matchesCity = searchCity 
-        ? (r.city?.toLowerCase().includes(searchCity.toLowerCase()) || r.title?.toLowerCase().includes(searchCity.toLowerCase()) || r.location?.toLowerCase().includes(searchCity.toLowerCase())) 
+      const matchesLocation = searchLocation 
+        ? (r.location?.toLowerCase() === searchLocation.toLowerCase() || r.city?.toLowerCase() === searchLocation.toLowerCase()) 
         : true;
       const matchesPrice = maxPrice ? Number(r.price) <= Number(maxPrice) : true;
       const matchesType = propertyType ? (r.property_type || "").toLowerCase() === propertyType.toLowerCase() : true;
       
-      return matchesCity && matchesPrice && matchesType;
+      return matchesLocation && matchesPrice && matchesType;
     });
 
     // Sorting
     if (sortBy === "price_low") result.sort((a, b) => Number(a.price) - Number(b.price));
     else if (sortBy === "price_high") result.sort((a, b) => Number(b.price) - Number(a.price));
-    // Default 'newest' is handled by the backend's descending created_at sort
     
     return result;
-  }, [resaleProperties, searchCity, maxPrice, propertyType, sortBy]);
+  }, [resaleProperties, searchLocation, maxPrice, propertyType, sortBy]);
+
+  const handleSearchClick = () => {
+    document.getElementById('property-grid')?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   // Helper to safely get the main image
   const getMainImage = (property) => {
@@ -98,7 +157,7 @@ export default function RentPage() {
          </div>
          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent"></div>
          
-         <div className="relative z-10 max-w-5xl mx-auto text-center">
+         <div className="relative z-10 max-w-5xl mx-auto text-center animate-in slide-in-from-bottom-8 duration-700">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#D4AF37]/10 backdrop-blur-md border border-[#D4AF37]/40 text-[#D4AF37] text-xs font-bold tracking-widest uppercase mb-6 shadow-[0_0_15px_rgba(212,175,55,0.2)]">
                <span className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse"></span> Zero Brokerage Options Available
             </div>
@@ -110,18 +169,24 @@ export default function RentPage() {
             </p>
 
             {/* SEARCH WIDGET */}
-            <div className="bg-white p-3 rounded-2xl md:rounded-full mx-auto flex flex-col md:flex-row shadow-2xl items-center border border-[#D4AF37]/20">
-               <div className="w-full md:flex-1 flex items-center px-4 py-3 border-b md:border-b-0 md:border-r border-slate-100">
-                  <MapPin className="text-slate-400 w-5 h-5 mr-3 shrink-0" />
-                  <input 
-                    type="text" placeholder="City or Locality..." 
-                    value={searchCity} onChange={(e) => setSearchCity(e.target.value)}
-                    className="w-full bg-transparent text-slate-900 outline-none placeholder:text-slate-400 font-medium"
-                  />
+            <div className="bg-white p-3 rounded-2xl md:rounded-full mx-auto flex flex-col md:flex-row shadow-2xl items-center border border-[#D4AF37]/20 text-slate-900">
+               
+               <div className="w-full md:flex-1 flex items-center px-4 py-3 border-b md:border-b-0 md:border-r border-slate-100 relative group">
+                  <MapPin className="text-slate-400 w-5 h-5 mr-3 shrink-0 group-focus-within:text-[#8B0000] transition-colors" />
+                  <select 
+                    value={searchLocation} onChange={(e) => setSearchLocation(e.target.value)}
+                    className="w-full bg-transparent text-slate-900 outline-none appearance-none cursor-pointer font-medium"
+                  >
+                    <option value="">All Locations</option>
+                    {availableLocations.map(loc => (
+                      <option key={loc} value={loc}>{loc}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-4 w-4 h-4 text-slate-400 pointer-events-none"/>
                </div>
                
                <div className="w-full md:w-48 flex items-center px-4 py-3 border-b md:border-b-0 md:border-r border-slate-100 relative group">
-                  <Home className="text-slate-400 w-5 h-5 mr-3 shrink-0" />
+                  <Home className="text-slate-400 w-5 h-5 mr-3 shrink-0 group-focus-within:text-[#8B0000] transition-colors" />
                   <select 
                     value={propertyType} onChange={(e) => setPropertyType(e.target.value)}
                     className="w-full bg-transparent text-slate-900 outline-none appearance-none cursor-pointer font-medium"
@@ -129,28 +194,29 @@ export default function RentPage() {
                     <option value="">All Types</option>
                     <option value="apartment">Apartment</option>
                     <option value="villa">Villa</option>
-                    <option value="pg">PG / Co-living</option>
+                    <option value="plot">Plot</option>
+                    <option value="commercial">Commercial</option>
                   </select>
                   <ChevronDown className="absolute right-4 w-4 h-4 text-slate-400 pointer-events-none"/>
                </div>
 
-               <div className="w-full md:w-48 flex items-center px-4 py-3 border-b md:border-b-0 md:border-r border-slate-100 relative">
-                  <DollarSign className="text-slate-400 w-5 h-5 mr-3 shrink-0" />
+               <div className="w-full md:w-48 flex items-center px-4 py-3 border-b md:border-b-0 md:border-r border-slate-100 relative group">
+                  <DollarSign className="text-slate-400 w-5 h-5 mr-3 shrink-0 group-focus-within:text-[#8B0000] transition-colors" />
                   <select 
                     value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)}
                     className="w-full bg-transparent text-slate-900 outline-none appearance-none cursor-pointer font-medium"
                   >
                     <option value="">Max Budget</option>
-                    <option value="10000000">Up to ₹ 1 Cr</option>
-                    <option value="20000000">Up to ₹ 2 Cr</option>
-                    <option value="30000000">Up to ₹ 3 Cr</option>
-                    <option value="50000000">Up to ₹ 5 Cr</option>
-                    <option value="100000000">Up to ₹ 10 Cr</option>
+                    <option value="5000000">Up to ₹ 50 Lacs</option>
+                    <option value="10000000">Up to ₹ 1 Crore</option>
+                    <option value="30000000">Up to ₹ 3 Crore</option>
+                    <option value="50000000">Up to ₹ 5 Crore</option>
+                    <option value="100000000">Up to ₹ 10 Crore</option>
                   </select>
                   <ChevronDown className="absolute right-4 w-4 h-4 text-slate-400 pointer-events-none"/>
                </div>
 
-               <Button className="bg-[#8B0000] hover:bg-[#600000] text-white font-bold h-12 px-8 rounded-xl md:rounded-full w-full md:w-auto mt-2 md:mt-0 shadow-lg shadow-[#8B0000]/30 md:ml-2 transition-all">
+               <Button onClick={handleSearchClick} className="bg-[#8B0000] hover:bg-[#600000] text-white font-bold h-12 px-8 rounded-xl md:rounded-full w-full md:w-auto mt-2 md:mt-0 shadow-lg shadow-[#8B0000]/30 md:ml-2 transition-all hover:-translate-y-0.5">
                   <Search className="w-5 h-5 md:mr-2" /> <span className="md:inline hidden">Search</span>
                </Button>
             </div>
@@ -158,23 +224,24 @@ export default function RentPage() {
       </section>
 
       {/* LISTINGS GRID */}
-      <section className="max-w-7xl mx-auto px-6 py-12">
+      <section id="property-grid" className="max-w-7xl mx-auto px-6 py-12">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 pb-6 border-b border-slate-200">
            <div>
               <h2 className="text-2xl font-black text-slate-900">Premium Resale Properties</h2>
               <p className="text-slate-500 font-medium mt-1">Found {filteredAndSortedRentals.length} verified resale units available</p>
            </div>
            <div className="flex items-center gap-4 mt-4 md:mt-0">
-              <div className="flex items-center bg-white border border-slate-200 hover:border-[#D4AF37]/50 transition-colors rounded-lg px-3 py-2 shadow-sm">
-                <Filter className="w-4 h-4 text-slate-400 mr-2"/>
+              <div className="flex items-center bg-white border border-slate-200 hover:border-[#D4AF37]/50 transition-colors rounded-lg px-3 py-2 shadow-sm relative group">
+                <Filter className="w-4 h-4 text-slate-400 mr-2 group-focus-within:text-[#8B0000]"/>
                 <select 
                   value={sortBy} onChange={(e) => setSortBy(e.target.value)}
-                  className="bg-transparent outline-none text-sm font-bold text-slate-700 cursor-pointer appearance-none pr-4"
+                  className="bg-transparent outline-none text-sm font-bold text-slate-700 cursor-pointer appearance-none pr-4 w-full"
                 >
                   <option value="newest">Sort By: Newest</option>
                   <option value="price_low">Price: Low to High</option>
                   <option value="price_high">Price: High to Low</option>
                 </select>
+                <ChevronDown className="absolute right-3 w-3 h-3 text-slate-400 pointer-events-none"/>
               </div>
            </div>
         </div>
@@ -182,41 +249,53 @@ export default function RentPage() {
         {loading ? (
           <div className="flex justify-center py-20"><Loader2 className="animate-spin text-[#8B0000] w-12 h-12"/></div>
         ) : filteredAndSortedRentals.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300 shadow-sm">
+          <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300 shadow-sm animate-in fade-in zoom-in duration-500">
              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
                <Search className="w-8 h-8 text-slate-300"/>
              </div>
              <h3 className="text-xl font-bold text-slate-700">No resale listings match your criteria</h3>
              <p className="text-slate-500 mt-2 max-w-md mx-auto">We couldn't find any properties matching your exact filters. Try broadening your search.</p>
-             <Button onClick={() => {setSearchCity(""); setMaxPrice(""); setPropertyType("");}} className="mt-6 bg-[#D4AF37]/10 text-[#8B0000] hover:bg-[#D4AF37]/20 font-bold px-8">
+             <Button onClick={() => {setSearchLocation(""); setMaxPrice(""); setPropertyType("");}} className="mt-6 bg-[#D4AF37]/10 text-[#8B0000] hover:bg-[#D4AF37]/20 font-bold px-8 transition-colors">
                Clear All Filters
              </Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredAndSortedRentals.map((property) => (
+            {filteredAndSortedRentals.map((property) => {
+              const isSaved = savedProperties.has(property.id);
+
+              return (
                 <div 
                   key={property.id} 
                   className="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-2xl hover:border-[#D4AF37]/50 transition-all duration-300 group cursor-pointer flex flex-col transform hover:-translate-y-1"
                   onClick={() => navigate(`/property/${property.id}`, { state: { property } })}
                 >
                   <div className="h-60 relative overflow-hidden p-2">
-                     <div className="w-full h-full rounded-3xl overflow-hidden relative">
+                     <div className="w-full h-full rounded-3xl overflow-hidden relative bg-slate-100">
                        <img 
                          src={getMainImage(property)} 
                          alt={property.title}
                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                        />
-                       <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm text-slate-900 px-3 py-1 rounded-lg text-xs font-black uppercase shadow-sm flex items-center gap-1.5">
+                       <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                       
+                       <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm text-slate-900 px-3 py-1 rounded-lg text-xs font-black uppercase shadow-sm flex items-center gap-1.5 z-20">
                          <span className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse"></span> {property.projectStatus || 'Resale'}
                        </div>
-                       <button className="absolute top-3 right-3 p-2 bg-black/20 hover:bg-[#8B0000] backdrop-blur-md rounded-full text-white transition-all border border-white/20">
-                         <ShieldCheck className="w-4 h-4" />
+                       
+                       {/* ADDED: Save Property Button */}
+                       <button 
+                          onClick={(e) => handleSaveProperty(e, property.id)} 
+                          className={`absolute top-3 right-3 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center transition-all z-20 shadow-md ${isSaved ? 'text-[#8B0000] bg-red-50 border border-red-100' : 'text-slate-400 hover:text-[#8B0000] hover:bg-red-50'}`}
+                          title={isSaved ? "Remove from favorites" : "Save to favorites"}
+                       >
+                          <Heart className={`w-5 h-5 transition-colors ${isSaved ? 'fill-[#8B0000] text-[#8B0000]' : ''}`} />
                        </button>
+
                      </div>
                   </div>
                   
-                  <div className="p-6 pt-3 flex-1 flex flex-col">
+                  <div className="p-6 pt-3 flex-1 flex flex-col relative z-20 bg-white">
                      <div className="flex justify-between items-start mb-2">
                          <p className="text-[#8B0000] text-xs font-bold uppercase tracking-wider bg-slate-50 border border-slate-100 px-2 py-1 rounded-md">
                            {property.property_type || property.type || 'Property'}
@@ -225,7 +304,7 @@ export default function RentPage() {
                      <h3 className="font-black text-xl text-slate-900 line-clamp-1 mb-2 group-hover:text-[#8B0000] transition-colors">
                        {property.title}
                      </h3>
-                     <p className="text-slate-500 text-sm flex items-center mb-5">
+                     <p className="text-slate-500 text-sm flex items-center mb-5 font-medium">
                        <MapPin className="w-4 h-4 mr-1 text-slate-400"/> {property.location}, {property.city}
                      </p>
                      
@@ -248,13 +327,14 @@ export default function RentPage() {
                              {property.price > 0 ? `₹${property.price >= 10000000 ? (property.price / 10000000).toFixed(2) + ' Cr' : (property.price / 100000).toFixed(2) + ' Lac'}` : 'On Request'}
                            </span>
                         </div>
-                        <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-[#8B0000] group-hover:text-[#D4AF37] transition-colors">
+                        <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-[#8B0000] group-hover:text-[#D4AF37] transition-colors border border-slate-100 group-hover:border-[#8B0000]">
                           <ArrowRight className="w-5 h-5"/>
                         </div>
                      </div>
                   </div>
                 </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
@@ -271,18 +351,18 @@ export default function RentPage() {
               Make informed decisions. Resale values are moving based on inventory and location demand. Compare market pricing before finalizing your deal.
             </p>
             <div className="space-y-4">
-               <div className="flex items-start gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+               <div className="flex items-start gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-[#D4AF37]/30 transition-colors">
                   <CheckCircle className="w-5 h-5 text-[#D4AF37] shrink-0 mt-0.5"/>
                   <p className="text-sm text-slate-700 font-medium">Average 2BHK resale demand remains strongest in central Noida sectors.</p>
                </div>
-               <div className="flex items-start gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+               <div className="flex items-start gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-[#D4AF37]/30 transition-colors">
                   <Info className="w-5 h-5 text-[#D4AF37] shrink-0 mt-0.5"/>
                   <p className="text-sm text-slate-700 font-medium">Large-size units and premium towers are seeing faster price movement.</p>
                </div>
             </div>
           </div>
           
-          <div className="lg:w-2/3 w-full bg-slate-900 p-6 md:p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+          <div className="lg:w-2/3 w-full bg-slate-900 p-6 md:p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37] rounded-full blur-[100px] opacity-10 pointer-events-none"></div>
             <h3 className="font-bold text-white text-xl mb-6 relative z-10 flex items-center gap-2">
               Average Resale Benchmark (Indicative)
@@ -315,29 +395,29 @@ export default function RentPage() {
       {/* FOOTER */}
       <footer className="bg-[#050505] text-white pt-20 pb-10 px-6 border-t-[6px] border-[#8B0000]">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-10 mb-16">
-            <div className="md:col-span-2 space-y-6 pr-4">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-12 lg:gap-8 mb-16">
+            <div className="md:col-span-4 space-y-6 pr-4">
               <h3 className="text-3xl font-black tracking-tight text-[#D4AF37]">ANK <span className="text-white">REALTY</span></h3>
-              <p className="text-slate-400 text-sm leading-relaxed">
+              <p className="text-slate-400 text-sm leading-relaxed font-medium">
                 The Red Carpet of Real Estate. We are India's most trusted property portal, committed to providing transparency, verified listings, and end-to-end property solutions.
               </p>
               <div className="space-y-3 pt-2">
-                <p className="flex items-center text-slate-300"><Phone className="w-5 h-5 mr-3 text-[#D4AF37]"/> Toll Free: 92664 58945</p>
-                <p className="flex items-center text-slate-300"><Mail className="w-5 h-5 mr-3 text-[#D4AF37]"/> support@ankrealty.com</p>
+                <p className="flex items-center text-slate-300 font-bold"><Phone className="w-5 h-5 mr-3 text-[#D4AF37]"/> Toll Free: 92664 58945</p>
+                <p className="flex items-center text-slate-300 font-bold"><Mail className="w-5 h-5 mr-3 text-[#D4AF37]"/> info@ankrealty.com</p>
               </div>
             </div>
             
-            <div>
+            <div className="md:col-span-2">
               <h4 className="font-bold text-base mb-6 text-white uppercase tracking-widest text-[11px]">Properties</h4>
               <ul className="space-y-4 text-slate-400 text-sm font-medium">
                 <li><Link to="/buy" className="hover:text-[#D4AF37] transition-colors">Property for Sale</Link></li>
-                <li><Link to="/rent" className="hover:text-[#D4AF37] transition-colors">Property Resale</Link></li>
+                <li><Link to="/resale" className="hover:text-[#D4AF37] transition-colors">Property Resale</Link></li>
                 <li><Link to="/buy" className="hover:text-[#D4AF37] transition-colors">Commercial Projects</Link></li>
                 <li><Link to="/buy" className="hover:text-[#D4AF37] transition-colors">New Projects</Link></li>
               </ul>
             </div>
 
-            <div>
+            <div className="md:col-span-2">
               <h4 className="font-bold text-base mb-6 text-white uppercase tracking-widest text-[11px]">Company</h4>
               <ul className="space-y-4 text-slate-400 text-sm font-medium">
                 <li><Link to="/about" className="hover:text-[#D4AF37] transition-colors">About Us</Link></li>
@@ -347,23 +427,28 @@ export default function RentPage() {
               </ul>
             </div>
 
-            <div>
-              <h4 className="font-bold text-base mb-6 text-white uppercase tracking-widest text-[11px]">For Builders & Agents</h4>
-              <ul className="space-y-4 text-slate-400 text-sm font-medium">
-                <li><Link to="/sell" className="hover:text-[#D4AF37] transition-colors">List your Property</Link></li>
-                <li><Link to="/advertise" className="hover:text-[#D4AF37] transition-colors">Advertise with Us</Link></li>
-                <li><Link to="/agent-login" className="hover:text-[#D4AF37] transition-colors">Agent Portal</Link></li>
-              </ul>
+            <div className="md:col-span-4">
+              <h4 className="font-bold text-base mb-6 text-white uppercase tracking-widest text-[11px]">Contact Us</h4>
+              <div className="space-y-4 text-slate-400 font-medium text-sm">
+                <div className="flex items-start bg-slate-900/50 p-4 rounded-xl border border-slate-800 hover:border-[#D4AF37]/50 transition-colors">
+                  <MapPin className="w-5 h-5 mr-3 text-[#D4AF37] shrink-0" />
+                  <p className="text-xs">Sector 62, Noida, Uttar Pradesh 201309</p>
+                </div>
+                <div className="flex items-center bg-slate-900/50 p-4 rounded-xl border border-slate-800 hover:border-[#D4AF37]/50 transition-colors">
+                  <Mail className="w-5 h-5 mr-3 text-[#D4AF37] shrink-0" />
+                  <p className="text-xs">info@ankrealty.com</p>
+                </div>
+              </div>
             </div>
           </div>
           
-          <div className="border-t border-slate-800/80 pt-6 flex flex-col md:flex-row justify-between items-center text-xs text-slate-500 font-medium">
+          <div className="border-t border-slate-800/80 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-slate-500 font-medium">
             <p>&copy; {new Date().getFullYear()} ANK Realty. All rights reserved.</p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-               <span className="hover:text-[#D4AF37] cursor-pointer transition-colors">Facebook</span>
-               <span className="hover:text-[#D4AF37] cursor-pointer transition-colors">Twitter</span>
-               <span className="hover:text-[#D4AF37] cursor-pointer transition-colors">Instagram</span>
-               <span className="hover:text-[#D4AF37] cursor-pointer transition-colors">LinkedIn</span>
+               <a href={socialLinks?.facebook || '#'} className="hover:text-[#D4AF37] transition-colors"><Facebook className="w-4 h-4"/></a>
+               <a href={socialLinks?.twitter || '#'} className="hover:text-[#D4AF37] transition-colors"><Twitter className="w-4 h-4"/></a>
+               <a href={socialLinks?.instagram || '#'} className="hover:text-[#D4AF37] transition-colors"><Instagram className="w-4 h-4"/></a>
+               <a href={socialLinks?.linkedin || '#'} className="hover:text-[#D4AF37] transition-colors"><Linkedin className="w-4 h-4"/></a>
             </div>
           </div>
         </div>
