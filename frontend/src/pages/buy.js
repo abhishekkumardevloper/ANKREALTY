@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Navbar from "../components/Navbar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input"; // <--- FIXED: Input is now properly imported!
+import { Input } from "@/components/ui/input";
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -15,7 +15,8 @@ import {
   Phone, ShieldCheck, MessageSquare, Send, Mail, Heart,
   Facebook, Twitter, Instagram, Linkedin,
   Map as MapIcon, PieChart, Video, PlayCircle, Briefcase, 
-  Banknote, Users, TrendingUp, Award, Sparkles, Building2
+  Banknote, Users, TrendingUp, Award, Sparkles, Building2,
+  ChevronRight // <--- FIXED: ChevronRight is now imported!
 } from "lucide-react";
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://ankrealty.onrender.com/api";
