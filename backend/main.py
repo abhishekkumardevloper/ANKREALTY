@@ -72,8 +72,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
     res = supabase.table("users").select("*").eq("id", user_id).limit(1).execute()
     user = res.data[0] if res.data and res.data else None
     
-    # 3. THE FIX: If the database trigger is running slow or RLS blocked it, 
-    # DO NOT crash. Gracefully fallback to the raw Auth data so the user stays logged in!
+    # 3. Fallback to the raw Auth data if RLS/Trigger fails
     if not user:
         user_meta = auth_response.user.user_metadata or {}
         return {
@@ -204,9 +203,7 @@ def login(credentials: UserLogin):
 @api_router.post("/auth/forgot-password")
 def forgot_password(req: ForgotPasswordRequest):
     try:
-        # Supabase natively handles sending the secure reset email
         supabase.auth.reset_password_email(req.email)
-        # Return generic success to prevent email enumeration
         return {"message": "If that email is registered, a password reset link has been sent."}
     except Exception as e:
         logger.error(f"Error sending reset email: {str(e)}")
@@ -221,11 +218,9 @@ def get_me(current_user: dict = Depends(get_current_user)):
 # --------------------------------
 @api_router.get("/users")
 def get_all_users(current_user: dict = Depends(get_current_user)):
-    """Fetches all registered users for the Admin CRM Page."""
     if current_user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin only")
     
-    # Assuming you have a trigger that copies auth.users to public.users
     res = supabase.table("users").select("*").order("created_at", desc=True).execute()
     return res.data or []
 
@@ -270,11 +265,10 @@ def get_agent_dashboard(current_user: dict = Depends(get_current_user)):
     }
 
 # --------------------------------
-# ROUTES: Public Contact Forms (General Website Leads)
+# ROUTES: Public Contact Forms
 # --------------------------------
 @api_router.post("/contacts")
 def submit_contact_form(contact: ContactCreate):
-    """Handles public contact forms and saves them as Leads in the CRM."""
     full_name = contact.name
     if not full_name:
         full_name = f"{contact.firstName or ''} {contact.lastName or ''}".strip()
@@ -344,22 +338,53 @@ async def create_property(
         except:
             parsed_amenities = []
 
+        # Process Global Images
         image_urls = []
         for img in form_data.getlist("new_images"):
             if hasattr(img, "filename") and img.filename:
                 url = await upload_file_to_supabase(img, "properties/images")
                 if url: image_urls.append(url)
                 
+        # Process Global Videos
         video_urls = []
         for vid in form_data.getlist("new_videos"):
             if hasattr(vid, "filename") and vid.filename:
                 url = await upload_file_to_supabase(vid, "properties/videos")
                 if url: video_urls.append(url)
                 
+        # Process PDF Brochure
         brochure = form_data.get("brochure")
         brochure_url = None
         if brochure and hasattr(brochure, "filename") and brochure.filename:
             brochure_url = await upload_file_to_supabase(brochure, "properties/brochures")
+
+        # --- PROCESS NEW DYNAMIC FLOOR PLANS ---
+        floor_plans_raw = form_data.get("floorPlans", "[]")
+        try:
+            floor_plans = json.loads(floor_plans_raw)
+        except:
+            floor_plans = []
+
+        final_floor_plans = []
+        for fp in floor_plans:
+            # Check if there is an image mapped to this floor plan index
+            idx = fp.get("imageIndex")
+            fp_image_url = fp.get("existingImage", None) # Default to existing if available
+            
+            if idx is not None:
+                img_file = form_data.get(f"floor_plan_image_{idx}")
+                if img_file and hasattr(img_file, "filename") and img_file.filename:
+                    url = await upload_file_to_supabase(img_file, "properties/floor_plans")
+                    if url:
+                        fp_image_url = url
+            
+            # Save cleaned up version of the floor plan
+            final_floor_plans.append({
+                "type": fp.get("type", ""),
+                "size": fp.get("size", ""),
+                "price": fp.get("price", ""),
+                "imageUrl": fp_image_url
+            })
 
         property_doc = {
             "id": str(uuid.uuid4()),
@@ -387,6 +412,7 @@ async def create_property(
             "images": image_urls,
             "videos": video_urls,
             "brochure": brochure_url,
+            "floorPlans": final_floor_plans, # Attach processed floor plans
             "status": "approved" if current_user.get("role") == "admin" else "pending",
             "verified": current_user.get("role") == "admin",
             "created_at": datetime.now(timezone.utc).isoformat()
@@ -453,6 +479,7 @@ async def update_property(
         except:
             pass
 
+    # Process Global Images
     ex_img = form_data.get("existing_images")
     try:
         image_urls = json.loads(ex_img) if ex_img else existing_prop.get("images", [])
@@ -465,6 +492,7 @@ async def update_property(
             if url: image_urls.append(url)
     update_data["images"] = image_urls
     
+    # Process Global Videos
     video_urls = existing_prop.get("videos", [])
     for vid in form_data.getlist("new_videos"):
         if hasattr(vid, "filename") and vid.filename:
@@ -473,11 +501,41 @@ async def update_property(
     if video_urls:
         update_data["videos"] = video_urls
         
+    # Process Brochure
     brochure = form_data.get("brochure")
     if brochure and hasattr(brochure, "filename") and brochure.filename:
         brochure_url = await upload_file_to_supabase(brochure, "properties/brochures")
         if brochure_url:
             update_data["brochure"] = brochure_url
+
+    # --- PROCESS UPDATED DYNAMIC FLOOR PLANS ---
+    if "floorPlans" in form_data:
+        try:
+            floor_plans = json.loads(form_data.get("floorPlans"))
+            final_floor_plans = []
+            
+            for fp in floor_plans:
+                idx = fp.get("imageIndex")
+                fp_image_url = fp.get("existingImage", None) 
+                
+                if idx is not None:
+                    img_file = form_data.get(f"floor_plan_image_{idx}")
+                    if img_file and hasattr(img_file, "filename") and img_file.filename:
+                        url = await upload_file_to_supabase(img_file, "properties/floor_plans")
+                        if url:
+                            fp_image_url = url
+                
+                final_floor_plans.append({
+                    "type": fp.get("type", ""),
+                    "size": fp.get("size", ""),
+                    "price": fp.get("price", ""),
+                    "imageUrl": fp_image_url
+                })
+                
+            update_data["floorPlans"] = final_floor_plans
+        except Exception as e:
+            logger.error(f"Error updating floor plans: {e}")
+            pass
     
     updated_res = supabase.table("properties").update(update_data).eq("id", property_id).execute()
     return updated_res.data[0]
@@ -587,7 +645,6 @@ def delete_youtube_video(video_id: str, current_user: dict = Depends(get_current
 # --------------------------------
 @api_router.post("/inquiries")
 def create_inquiry(inq: InquiryCreate, current_user: dict = Depends(get_current_user)):
-    """Handles property-specific leads from logged-in users."""
     prop_res = supabase.table("properties").select("owner_id").eq("id", inq.property_id).limit(1).execute()
     if not prop_res.data: raise HTTPException(status_code=404, detail="Property not found")
     
@@ -606,7 +663,6 @@ def create_inquiry(inq: InquiryCreate, current_user: dict = Depends(get_current_
 
 @api_router.get("/inquiries")
 def get_inquiries(current_user: dict = Depends(get_current_user)):
-    """This route serves as your Lead CRM. Admin sees all leads, agents see their own."""
     if current_user.get("role") == "admin":
         res = supabase.table("inquiries").select("*").order("created_at", desc=True).execute()
     else:
@@ -619,7 +675,6 @@ def get_inquiries(current_user: dict = Depends(get_current_user)):
 # --------------------------------
 @api_router.post("/favorites")
 def add_favorite(fav: FavoriteCreate, current_user: dict = Depends(get_current_user)):
-    # Check if already favorited
     exist = supabase.table("favorites").select("id").eq("user_id", current_user["id"]).eq("property_id", fav.property_id).execute()
     if exist.data: return {"message": "Already favorited"}
     
@@ -634,26 +689,16 @@ def add_favorite(fav: FavoriteCreate, current_user: dict = Depends(get_current_u
 
 @api_router.get("/favorites")
 def get_favorites(current_user: dict = Depends(get_current_user)):
-    """
-    CRITICAL FIX for User Dashboard:
-    By adding 'properties(*)', Supabase automatically performs a SQL JOIN.
-    This ensures the frontend receives the full property details (images, price, title)
-    instead of just the favorite ID.
-    """
     res = supabase.table("favorites").select("*, properties(*)").eq("user_id", current_user["id"]).order("created_at", desc=True).execute()
     return res.data or []
 
 @api_router.delete("/favorites/{favorite_id}")
 def delete_favorite(favorite_id: str, current_user: dict = Depends(get_current_user)):
-    """Allows users to remove a property from their dashboard."""
-    # Ensure they own the favorite record before deleting
     res = supabase.table("favorites").delete().eq("id", favorite_id).eq("user_id", current_user["id"]).execute()
     
-    # If no data was returned/affected, it might mean they tried to delete by property_id instead of favorite_id.
-    # Fallback to check by property_id just in case the frontend sends that.
     if not getattr(res, 'data', None) and not getattr(res, 'count', 0):
-       supabase.table("favorites").delete().eq("property_id", favorite_id).eq("user_id", current_user["id"]).execute()
-       
+        supabase.table("favorites").delete().eq("property_id", favorite_id).eq("user_id", current_user["id"]).execute()
+        
     return {"message": "Removed from favorites"}
 
 app.include_router(api_router)
