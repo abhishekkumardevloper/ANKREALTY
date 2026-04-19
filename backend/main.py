@@ -26,13 +26,17 @@ SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 DEBUG = os.environ.get("DEBUG", "false").lower() in ("1", "true", "yes")
 
 # --------------------------------
-# 2. Supabase Initialization
+# 2. Dynamic Supabase Client
 # --------------------------------
-try:
-    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY else None
-except Exception as e:
-    supabase = None
-    logger.exception("Failed to create Supabase client: %s", e)
+def get_db() -> Client:
+    """
+    CRITICAL FIX: Creates a fresh Supabase client for EVERY request.
+    This completely fixes the "stops working after 1 hour" bug caused by 
+    stale network connections dropping on hosting platforms.
+    """
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        raise HTTPException(status_code=500, detail="Supabase credentials missing.")
+    return create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def check_res_or_raise(res: Any, action: str = "database operation"):
     if res is None:
@@ -49,11 +53,11 @@ def check_res_or_raise(res: Any, action: str = "database operation"):
 security = HTTPBearer()
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Verifies the Supabase Auth JWT natively and fetches the user's public profile."""
+    db = get_db()
     token = credentials.credentials
     
     try:
-        auth_response = supabase.auth.get_user(token)
+        auth_response = db.auth.get_user(token)
         if not auth_response or not getattr(auth_response, 'user', None):
             raise HTTPException(status_code=401, detail="Invalid token structure")
         user_id = auth_response.user.id
@@ -61,10 +65,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
         logger.error(f"Token verification failed: {str(e)}")
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     
-    if supabase is None:
-        raise HTTPException(status_code=500, detail="Database not configured")
-    
-    res = supabase.table("users").select("*").eq("id", user_id).limit(1).execute()
+    res = db.table("users").select("*").eq("id", user_id).limit(1).execute()
     user = res.data[0] if res.data and res.data else None
     
     if not user:
@@ -76,21 +77,21 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
             "phone": user_meta.get("phone", ""),
             "role": user_meta.get("role", "client"),
         }
-    
     return user
 
 # --------------------------------
 # 4. Storage Helper
 # --------------------------------
 async def upload_file_to_supabase(file: UploadFile, folder: str) -> str:
-    if not supabase or not file or not file.filename: return ""
+    db = get_db()
+    if not file or not file.filename: return ""
     try:
         file_ext = file.filename.split(".")[-1]
         file_name = f"{folder}/{uuid.uuid4()}.{file_ext}"
         contents = await file.read()
-        res = supabase.storage.from_("media").upload(file_name, contents)
+        res = db.storage.from_("media").upload(file_name, contents)
         if getattr(res, "error", None): return ""
-        return supabase.storage.from_("media").get_public_url(file_name)
+        return db.storage.from_("media").get_public_url(file_name)
     except Exception:
         return ""
 
@@ -99,8 +100,6 @@ async def upload_file_to_supabase(file: UploadFile, folder: str) -> str:
 # --------------------------------
 app = FastAPI(title="ANK Realty API")
 
-# CRITICAL FIX: allow_origin_regex=".*" ensures the browser NEVER blocks your API 
-# regardless of frontend cache, localhost, or production URLs.
 app.add_middleware(
     CORSMiddleware,
     allow_origin_regex=".*", 
@@ -155,16 +154,13 @@ class ContactCreate(BaseModel):
 # --------------------------------
 @api_router.post("/auth/register")
 def register(user_data: UserRegister):
+    db = get_db()
     try:
-        res = supabase.auth.sign_up({
+        res = db.auth.sign_up({
             "email": user_data.email,
             "password": user_data.password,
             "options": {
-                "data": {
-                    "name": user_data.name,
-                    "phone": user_data.phone,
-                    "role": user_data.role
-                }
+                "data": {"name": user_data.name, "phone": user_data.phone, "role": user_data.role}
             }
         })
         if not res.session:
@@ -175,12 +171,10 @@ def register(user_data: UserRegister):
 
 @api_router.post("/auth/login")
 def login(credentials: UserLogin):
+    db = get_db()
     try:
-        res = supabase.auth.sign_in_with_password({
-            "email": credentials.email,
-            "password": credentials.password
-        })
-        profile_res = supabase.table("users").select("*").eq("id", res.user.id).limit(1).execute()
+        res = db.auth.sign_in_with_password({"email": credentials.email, "password": credentials.password})
+        profile_res = db.table("users").select("*").eq("id", res.user.id).limit(1).execute()
         user_profile = profile_res.data[0] if profile_res.data else res.user.user_metadata
         return {"token": res.session.access_token, "user": user_profile}
     except Exception as e:
@@ -189,7 +183,7 @@ def login(credentials: UserLogin):
 @api_router.post("/auth/forgot-password")
 def forgot_password(req: ForgotPasswordRequest):
     try:
-        supabase.auth.reset_password_email(req.email)
+        get_db().auth.reset_password_email(req.email)
         return {"message": "If that email is registered, a password reset link has been sent."}
     except Exception as e:
         return {"message": "If that email is registered, a password reset link has been sent."}
@@ -203,9 +197,8 @@ def get_me(current_user: dict = Depends(get_current_user)):
 # --------------------------------
 @api_router.get("/users")
 def get_all_users(current_user: dict = Depends(get_current_user)):
-    if current_user.get("role") != "admin":
-        raise HTTPException(status_code=403, detail="Admin only")
-    res = supabase.table("users").select("*").order("created_at", desc=True).execute()
+    if current_user.get("role") != "admin": raise HTTPException(status_code=403, detail="Admin only")
+    res = get_db().table("users").select("*").order("created_at", desc=True).execute()
     return res.data or []
 
 # --------------------------------
@@ -214,10 +207,10 @@ def get_all_users(current_user: dict = Depends(get_current_user)):
 @api_router.get("/dashboard/admin")
 def get_admin_dashboard(current_user: dict = Depends(get_current_user)):
     if current_user.get("role") != "admin": raise HTTPException(status_code=403, detail="Admin only")
-    
-    total_props = supabase.table("properties").select("id", count="exact").execute()
-    pending_props = supabase.table("properties").select("id", count="exact").eq("status", "pending").execute()
-    pending_list = supabase.table("properties").select("*").eq("status", "pending").order("created_at", desc=True).limit(50).execute()
+    db = get_db()
+    total_props = db.table("properties").select("id", count="exact").execute()
+    pending_props = db.table("properties").select("id", count="exact").eq("status", "pending").execute()
+    pending_list = db.table("properties").select("*").eq("status", "pending").order("created_at", desc=True).limit(50).execute()
     
     return {
         "total_properties": total_props.count or 0,
@@ -227,16 +220,16 @@ def get_admin_dashboard(current_user: dict = Depends(get_current_user)):
 
 @api_router.get("/dashboard/agent")
 def get_agent_dashboard(current_user: dict = Depends(get_current_user)):
-    prop_res = supabase.table("properties").select("*").eq("owner_id", current_user["id"]).execute()
+    db = get_db()
+    prop_res = db.table("properties").select("*").eq("owner_id", current_user["id"]).execute()
     properties = prop_res.data or []
-    
     total_views = sum((p.get("views") or 0) for p in properties)
 
     if current_user.get("role") == "admin":
-        inq_res = supabase.table("inquiries").select("*").order("created_at", desc=True).execute()
+        inq_res = db.table("inquiries").select("*").order("created_at", desc=True).execute()
     else:
         expr = f"from_user_id.eq.{current_user['id']},to_user_id.eq.{current_user['id']}"
-        inq_res = supabase.table("inquiries").select("*").or_(expr).order("created_at", desc=True).execute()
+        inq_res = db.table("inquiries").select("*").or_(expr).order("created_at", desc=True).execute()
     
     return {
         "total_listings": len(properties),
@@ -251,6 +244,7 @@ def get_agent_dashboard(current_user: dict = Depends(get_current_user)):
 # --------------------------------
 @api_router.post("/contacts")
 def submit_contact_form(contact: ContactCreate):
+    db = get_db()
     full_name = contact.name or f"{contact.firstName or ''} {contact.lastName or ''}".strip()
     msg_body = contact.message or contact.requirements or "No additional message."
     
@@ -269,7 +263,7 @@ def submit_contact_form(contact: ContactCreate):
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     
-    res = supabase.table("inquiries").insert(doc).execute()
+    res = db.table("inquiries").insert(doc).execute()
     check_res_or_raise(res, "submitting contact form")
     return {"message": "Inquiry submitted successfully"}
 
@@ -278,6 +272,7 @@ def submit_contact_form(contact: ContactCreate):
 # --------------------------------
 @api_router.post("/properties")
 async def create_property(request: Request, current_user: dict = Depends(get_current_user)):
+    db = get_db()
     try:
         form_data = await request.form()
         
@@ -286,10 +281,8 @@ async def create_property(request: Request, current_user: dict = Depends(get_cur
         parsed_bhk = int(form_data.get("bhk", "0")) if str(form_data.get("bhk", "")).strip() else 0
         parsed_bathrooms = int(form_data.get("bathrooms", "0")) if str(form_data.get("bathrooms", "")).strip() else 0
         
-        try:
-            parsed_amenities = json.loads(form_data.get("amenities", "[]"))
-        except:
-            parsed_amenities = []
+        try: parsed_amenities = json.loads(form_data.get("amenities", "[]"))
+        except: parsed_amenities = []
 
         image_urls = []
         for img in form_data.getlist("new_images"):
@@ -308,10 +301,8 @@ async def create_property(request: Request, current_user: dict = Depends(get_cur
         if brochure and hasattr(brochure, "filename") and brochure.filename:
             brochure_url = await upload_file_to_supabase(brochure, "properties/brochures")
 
-        try:
-            floor_plans = json.loads(form_data.get("floorPlans", "[]"))
-        except:
-            floor_plans = []
+        try: floor_plans = json.loads(form_data.get("floorPlans", "[]"))
+        except: floor_plans = []
 
         final_floor_plans = []
         for fp in floor_plans:
@@ -322,47 +313,27 @@ async def create_property(request: Request, current_user: dict = Depends(get_cur
                 if img_file and hasattr(img_file, "filename") and img_file.filename:
                     url = await upload_file_to_supabase(img_file, "properties/floor_plans")
                     if url: fp_image_url = url
-            
             final_floor_plans.append({
-                "type": fp.get("type", ""),
-                "size": fp.get("size", ""),
-                "price": fp.get("price", ""),
-                "imageUrl": fp_image_url
+                "type": fp.get("type", ""), "size": fp.get("size", ""), "price": fp.get("price", ""), "imageUrl": fp_image_url
             })
 
         property_doc = {
-            "id": str(uuid.uuid4()),
-            "owner_id": current_user["id"],
-            "owner_name": current_user.get("name"),
-            "owner_phone": current_user.get("phone"),
-            "title": str(form_data.get("title", "")),
-            "description": str(form_data.get("description", "")),
-            "price": parsed_price,
-            "location": str(form_data.get("location", "")),
-            "city": str(form_data.get("city", "")),
-            "state": str(form_data.get("state", "")),
-            "property_type": str(form_data.get("property_type", "apartment")),
-            "category": str(form_data.get("category", "buy")),
-            "area": parsed_area,
-            "bhk": parsed_bhk,
-            "bathrooms": parsed_bathrooms,
-            "furnishing": str(form_data.get("furnishing", "unfurnished")),
-            "amenities": parsed_amenities,
-            "builder": str(form_data.get("builder", "")),
-            "rera": str(form_data.get("rera", "")),
-            "project_status": str(form_data.get("projectStatus", "New Launch")),
+            "id": str(uuid.uuid4()), "owner_id": current_user["id"], "owner_name": current_user.get("name"),
+            "owner_phone": current_user.get("phone"), "title": str(form_data.get("title", "")),
+            "description": str(form_data.get("description", "")), "price": parsed_price,
+            "location": str(form_data.get("location", "")), "city": str(form_data.get("city", "")),
+            "state": str(form_data.get("state", "")), "property_type": str(form_data.get("property_type", "apartment")),
+            "category": str(form_data.get("category", "buy")), "area": parsed_area, "bhk": parsed_bhk,
+            "bathrooms": parsed_bathrooms, "furnishing": str(form_data.get("furnishing", "unfurnished")),
+            "amenities": parsed_amenities, "builder": str(form_data.get("builder", "")),
+            "rera": str(form_data.get("rera", "")), "project_status": str(form_data.get("projectStatus", "New Launch")),
             "possession": str(form_data.get("possession", "")),
             "youtube_link": str(form_data.get("youtube_link", "")) if form_data.get("youtube_link") else None,
-            "images": image_urls,
-            "videos": video_urls,
-            "brochure": brochure_url,
-            "floorPlans": final_floor_plans,
+            "images": image_urls, "videos": video_urls, "brochure": brochure_url, "floorPlans": final_floor_plans,
             "status": "approved" if current_user.get("role") == "admin" else "pending",
-            "verified": current_user.get("role") == "admin",
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "verified": current_user.get("role") == "admin", "created_at": datetime.now(timezone.utc).isoformat()
         }
-        
-        res = supabase.table("properties").insert(property_doc).execute()
+        res = db.table("properties").insert(property_doc).execute()
         check_res_or_raise(res, "inserting property")
         return property_doc
     except Exception as e:
@@ -371,7 +342,8 @@ async def create_property(request: Request, current_user: dict = Depends(get_cur
 
 @api_router.put("/properties/{property_id}")
 async def update_property(property_id: str, request: Request, current_user: dict = Depends(get_current_user)):
-    res = supabase.table("properties").select("*").eq("id", property_id).limit(1).execute()
+    db = get_db()
+    res = db.table("properties").select("*").eq("id", property_id).limit(1).execute()
     if not res.data: raise HTTPException(status_code=404, detail="Property not found")
     
     existing_prop = res.data[0]
@@ -433,14 +405,14 @@ async def update_property(property_id: str, request: Request, current_user: dict
             update_data["floorPlans"] = final_floor_plans
         except: pass
     
-    updated_res = supabase.table("properties").update(update_data).eq("id", property_id).execute()
+    updated_res = db.table("properties").update(update_data).eq("id", property_id).execute()
     return updated_res.data[0]
 
 @api_router.get("/properties")
 def get_properties(category: Optional[str] = None, property_type: Optional[str] = None, limit: int = 100):
     try:
-        # CRITICAL FIX: Restructured query builder to prevent silent failures
-        query = supabase.table("properties").select("*")
+        db = get_db()
+        query = db.table("properties").select("*")
         if category:
             query = query.eq("category", category)
         if property_type:
@@ -450,33 +422,34 @@ def get_properties(category: Optional[str] = None, property_type: Optional[str] 
         return res.data or []
     except Exception as e:
         logger.error(f"Error fetching properties: {e}")
-        # Expose the error instead of returning [] silently so we know exactly what is wrong
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/properties/{property_id}")
 def get_property(property_id: str):
-    res = supabase.table("properties").select("*").eq("id", property_id).limit(1).execute()
+    db = get_db()
+    res = db.table("properties").select("*").eq("id", property_id).limit(1).execute()
     if not res.data: raise HTTPException(status_code=404, detail="Property not found")
     
     views = (res.data[0].get("views") or 0) + 1
-    supabase.table("properties").update({"views": views}).eq("id", property_id).execute()
+    db.table("properties").update({"views": views}).eq("id", property_id).execute()
     res.data[0]["views"] = views
     return res.data[0]
 
 @api_router.delete("/properties/{property_id}")
 def delete_property(property_id: str, current_user: dict = Depends(get_current_user)):
-    res = supabase.table("properties").select("owner_id").eq("id", property_id).execute()
+    db = get_db()
+    res = db.table("properties").select("owner_id").eq("id", property_id).execute()
     if not res.data: raise HTTPException(status_code=404)
     if res.data[0]["owner_id"] != current_user["id"] and current_user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    supabase.table("properties").delete().eq("id", property_id).execute()
+    db.table("properties").delete().eq("id", property_id).execute()
     return {"message": "Deleted"}
 
 @api_router.put("/admin/properties/{property_id}/status")
 def update_property_status(property_id: str, status: str, current_user: dict = Depends(get_current_user)):
     if current_user.get("role") != "admin": raise HTTPException(status_code=403)
-    supabase.table("properties").update({"status": status, "verified": status == "approved"}).eq("id", property_id).execute()
+    get_db().table("properties").update({"status": status, "verified": status == "approved"}).eq("id", property_id).execute()
     return {"message": f"Property {status}"}
 
 # --------------------------------
@@ -489,18 +462,18 @@ async def create_blog(title: str = Form(...), excerpt: str = Form(default=""), c
     if image and image.filename: image_url = await upload_file_to_supabase(image, "blogs")
 
     blog_doc = { "id": str(uuid.uuid4()), "title": title, "excerpt": excerpt, "content": content, "imageUrl": image_url, "created_at": datetime.now(timezone.utc).isoformat() }
-    supabase.table("blogs").insert(blog_doc).execute()
+    get_db().table("blogs").insert(blog_doc).execute()
     return blog_doc
 
 @api_router.get("/blogs")
 def get_blogs():
-    res = supabase.table("blogs").select("*").order("created_at", desc=True).execute()
+    res = get_db().table("blogs").select("*").order("created_at", desc=True).execute()
     return res.data or []
 
 @api_router.delete("/blogs/{blog_id}")
 def delete_blog(blog_id: str, current_user: dict = Depends(get_current_user)):
     if current_user.get("role") != "admin": raise HTTPException(status_code=403)
-    supabase.table("blogs").delete().eq("id", blog_id).execute()
+    get_db().table("blogs").delete().eq("id", blog_id).execute()
     return {"message": "Deleted"}
 
 # --------------------------------
@@ -510,18 +483,18 @@ def delete_blog(blog_id: str, current_user: dict = Depends(get_current_user)):
 def create_youtube_video(video: YoutubeVideoCreate, current_user: dict = Depends(get_current_user)):
     if current_user.get("role") != "admin": raise HTTPException(status_code=403)
     video_doc = { "id": str(uuid.uuid4()), "title": video.title, "videoUrl": video.videoUrl, "description": video.description, "created_at": datetime.now(timezone.utc).isoformat() }
-    supabase.table("youtube_videos").insert(video_doc).execute()
+    get_db().table("youtube_videos").insert(video_doc).execute()
     return video_doc
 
 @api_router.get("/youtube-videos")
 def get_youtube_videos():
-    res = supabase.table("youtube_videos").select("*").order("created_at", desc=True).execute()
+    res = get_db().table("youtube_videos").select("*").order("created_at", desc=True).execute()
     return res.data or []
 
 @api_router.delete("/youtube-videos/{video_id}")
 def delete_youtube_video(video_id: str, current_user: dict = Depends(get_current_user)):
     if current_user.get("role") != "admin": raise HTTPException(status_code=403)
-    supabase.table("youtube_videos").delete().eq("id", video_id).execute()
+    get_db().table("youtube_videos").delete().eq("id", video_id).execute()
     return {"message": "Deleted"}
 
 # --------------------------------
@@ -529,40 +502,44 @@ def delete_youtube_video(video_id: str, current_user: dict = Depends(get_current
 # --------------------------------
 @api_router.post("/inquiries")
 def create_inquiry(inq: InquiryCreate, current_user: dict = Depends(get_current_user)):
-    prop_res = supabase.table("properties").select("owner_id").eq("id", inq.property_id).limit(1).execute()
+    db = get_db()
+    prop_res = db.table("properties").select("owner_id").eq("id", inq.property_id).limit(1).execute()
     if not prop_res.data: raise HTTPException(status_code=404, detail="Property not found")
     
     doc = { "id": str(uuid.uuid4()), "from_user_id": current_user["id"], "from_user_name": current_user.get("name"), "phone": current_user.get("phone"), "to_user_id": prop_res.data[0]["owner_id"], "property_id": inq.property_id, "message": inq.message, "created_at": datetime.now(timezone.utc).isoformat() }
-    supabase.table("inquiries").insert(doc).execute()
+    db.table("inquiries").insert(doc).execute()
     return {"message": "Inquiry sent"}
 
 @api_router.get("/inquiries")
 def get_inquiries(current_user: dict = Depends(get_current_user)):
-    if current_user.get("role") == "admin": res = supabase.table("inquiries").select("*").order("created_at", desc=True).execute()
+    db = get_db()
+    if current_user.get("role") == "admin": res = db.table("inquiries").select("*").order("created_at", desc=True).execute()
     else:
         expr = f"from_user_id.eq.{current_user['id']},to_user_id.eq.{current_user['id']}"
-        res = supabase.table("inquiries").select("*").or_(expr).order("created_at", desc=True).execute()
+        res = db.table("inquiries").select("*").or_(expr).order("created_at", desc=True).execute()
     return res.data or []
 
 @api_router.post("/favorites")
 def add_favorite(fav: FavoriteCreate, current_user: dict = Depends(get_current_user)):
-    exist = supabase.table("favorites").select("id").eq("user_id", current_user["id"]).eq("property_id", fav.property_id).execute()
+    db = get_db()
+    exist = db.table("favorites").select("id").eq("user_id", current_user["id"]).eq("property_id", fav.property_id).execute()
     if exist.data: return {"message": "Already favorited"}
     
     doc = { "id": str(uuid.uuid4()), "user_id": current_user["id"], "property_id": fav.property_id, "created_at": datetime.now(timezone.utc).isoformat() }
-    supabase.table("favorites").insert(doc).execute()
+    db.table("favorites").insert(doc).execute()
     return {"message": "Added to favorites"}
 
 @api_router.get("/favorites")
 def get_favorites(current_user: dict = Depends(get_current_user)):
-    res = supabase.table("favorites").select("*, properties(*)").eq("user_id", current_user["id"]).order("created_at", desc=True).execute()
+    res = get_db().table("favorites").select("*, properties(*)").eq("user_id", current_user["id"]).order("created_at", desc=True).execute()
     return res.data or []
 
 @api_router.delete("/favorites/{favorite_id}")
 def delete_favorite(favorite_id: str, current_user: dict = Depends(get_current_user)):
-    res = supabase.table("favorites").delete().eq("id", favorite_id).eq("user_id", current_user["id"]).execute()
+    db = get_db()
+    res = db.table("favorites").delete().eq("id", favorite_id).eq("user_id", current_user["id"]).execute()
     if not getattr(res, 'data', None) and not getattr(res, 'count', 0):
-        supabase.table("favorites").delete().eq("property_id", favorite_id).eq("user_id", current_user["id"]).execute()
+        db.table("favorites").delete().eq("property_id", favorite_id).eq("user_id", current_user["id"]).execute()
     return {"message": "Removed from favorites"}
 
 app.include_router(api_router)
