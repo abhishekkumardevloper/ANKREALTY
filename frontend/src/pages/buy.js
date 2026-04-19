@@ -1,9 +1,10 @@
 // src/pages/BuyPage.jsx
 import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion'; // <--- FIX 1: Added motion import
+import { motion } from 'framer-motion';
 import Navbar from "../components/Navbar";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input"; // <--- FIXED: Input is now properly imported!
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -32,7 +33,6 @@ const bankOffers = [
   { bank: 'ICICI Bank', rate: '8.45%', note: 'Instant approval for pre-approved clients' }
 ];
 
-// <--- FIX 2: Added missing animation variants
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
@@ -454,7 +454,7 @@ export default function BuyPage() {
                               {property.price > 0 ? `₹${property.price >= 10000000 ? (property.price / 10000000).toFixed(2) + ' Cr' : (property.price / 100000).toFixed(2) + ' Lac'}` : 'On Request'}
                           </span>
                         </div>
-                        <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-[#8B0000] group-hover:text-[#D4AF37] transition-colors border border-slate-100 group-hover:border-[#8B0000]">
+                        <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-[#8B0000] group-hover:text-white transition-colors border border-slate-100 group-hover:border-[#8B0000]">
                           <ArrowRight className="w-5 h-5"/>
                         </div>
                      </div>
