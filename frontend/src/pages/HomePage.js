@@ -27,7 +27,7 @@ import {
   Home,
   Key,
   PieChart,
-  Map as MapIcon, // <--- FIX: Aliased to MapIcon to prevent naming collision!
+  Map as MapIcon, // <--- Imported as MapIcon
   Sparkles,
   Building,
   FileSignature,
@@ -137,7 +137,7 @@ export default function HomePage() {
           const allProps = featuredRes.value.data;
           setFeaturedProperties(allProps.slice(0, 4));
           
-          const locsMap = new Map(); // <--- This native JS Map caused the crash before!
+          const locsMap = new Map(); // <--- Safely using native JS Map
           allProps.forEach(p => {
             if (p.city) locsMap.set(p.city.toLowerCase(), { name: p.city, city: p.state || 'India', badge: 'City' });
             if (p.location) locsMap.set(p.location.toLowerCase(), { name: p.location, city: p.city || '', badge: 'Locality' });
@@ -924,7 +924,7 @@ export default function HomePage() {
           <div className="flex flex-col lg:flex-row justify-between lg:items-end mb-12 gap-8 lg:gap-16 relative">
             <div className="max-w-2xl">
               <p className="text-[#8B0000] font-bold uppercase tracking-[0.25em] text-xs mb-3 flex items-center gap-2">
-                <Map className="w-4 h-4" /> Location insights
+                <MapIcon className="w-4 h-4" /> Location insights
               </p>
               <h2 className="text-3xl md:text-5xl font-black text-slate-900 leading-tight">
                 Explore {search.city || 'Top Corridors'} Visually
