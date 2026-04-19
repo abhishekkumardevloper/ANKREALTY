@@ -39,7 +39,7 @@ export default function ConstructionPage() {
   const [loadingProps, setLoadingProps] = useState(true);
   
   const [form, setForm] = useState({ name: '', phone: '', email: '', projectType: '', message: '' });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [status, setStatus] = useState('idle'); // 'idle' | 'submitting' | 'success'
 
   // Fetch 'Under Construction' Properties from your backend
   useEffect(() => {
@@ -65,7 +65,7 @@ export default function ConstructionPage() {
     e.preventDefault();
     if (!form.name || !form.phone) return toast.error("Name and Phone are required.");
     
-    setIsSubmitting(true);
+    setStatus('submitting');
     try {
       await axios.post(`${API_BASE}/contacts`, {
         name: form.name,
@@ -74,12 +74,16 @@ export default function ConstructionPage() {
         interest: `Construction Services: ${form.projectType || 'General'}`,
         message: form.message
       });
-      toast.success("Inquiry submitted! Our construction team will contact you shortly.");
+      
+      setStatus('success');
       setForm({ name: '', phone: '', email: '', projectType: '', message: '' });
+      
+      // Return to form after 4 seconds
+      setTimeout(() => setStatus('idle'), 4000);
     } catch (error) {
+      console.error("Form Submission Error:", error);
       toast.error("Failed to submit your request. Please try again.");
-    } finally {
-      setIsSubmitting(false);
+      setStatus('idle');
     }
   };
 
@@ -272,73 +276,87 @@ export default function ConstructionPage() {
           </div>
 
           <div className="lg:col-span-3">
-            <div className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+            <div className="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-2xl relative overflow-hidden border border-slate-100">
               <div className="absolute top-0 right-0 w-32 h-32 bg-[#8B0000]/5 rounded-bl-full pointer-events-none" />
               
-              <h3 className="text-2xl md:text-3xl font-black text-slate-900 mb-2">Inquire About Construction</h3>
-              <p className="text-slate-500 text-sm mb-8 font-medium">Send us your details and requirements to get a custom quote.</p>
-
-              <form onSubmit={handleLeadSubmit} className="space-y-5 relative z-10">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Full Name *</label>
-                    <Input 
-                      required placeholder="e.g. Rahul Sharma"
-                      value={form.name} onChange={(e) => setForm({...form, name: e.target.value})}
-                      className="h-14 bg-slate-50 border-slate-200 focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 rounded-xl font-medium text-base"
-                    />
+              {status === 'success' ? (
+                <div className="h-[400px] flex flex-col items-center justify-center text-center animate-in zoom-in duration-500">
+                  <div className="w-20 h-20 bg-[#D4AF37]/10 rounded-full flex items-center justify-center mb-6">
+                    <CheckCircle className="w-10 h-10 text-[#D4AF37]" />
                   </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Phone Number *</label>
-                    <Input 
-                      required type="tel" placeholder="+91 92664 58945"
-                      value={form.phone} onChange={(e) => setForm({...form, phone: e.target.value})}
-                      className="h-14 bg-slate-50 border-slate-200 focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 rounded-xl font-medium text-base"
-                    />
-                  </div>
+                  <h3 className="text-3xl font-black text-slate-900 mb-2">Request Received!</h3>
+                  <p className="text-slate-500 text-lg max-w-sm">
+                    Thank you. Our lead engineer will contact you shortly to discuss your project requirements.
+                  </p>
                 </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Email Address</label>
-                    <Input 
-                      type="email" placeholder="rahul@example.com"
-                      value={form.email} onChange={(e) => setForm({...form, email: e.target.value})}
-                      className="h-14 bg-slate-50 border-slate-200 focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 rounded-xl font-medium text-base"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Service Type</label>
-                    <select 
-                      value={form.projectType} onChange={(e) => setForm({...form, projectType: e.target.value})}
-                      className="w-full h-14 px-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/50 appearance-none font-medium text-slate-700 text-base"
-                    >
-                      <option value="">Select Service...</option>
-                      <option value="Pre-Launch Investment">Pre-Launch Investment</option>
-                      <option value="Turnkey Construction">Turnkey Construction</option>
-                      <option value="Architectural Design">Architectural Design</option>
-                      <option value="Commercial Build">Commercial Build</option>
-                    </select>
-                  </div>
-                </div>
+              ) : (
+                <div className="animate-in fade-in duration-500">
+                  <h3 className="text-2xl md:text-3xl font-black text-slate-900 mb-2">Inquire About Construction</h3>
+                  <p className="text-slate-500 text-sm mb-8 font-medium">Send us your details and requirements to get a custom quote.</p>
 
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Project Details / Message *</label>
-                  <Textarea 
-                    required placeholder="Briefly describe your requirements, land area, or the project you are interested in..." rows={4}
-                    value={form.message} onChange={(e) => setForm({...form, message: e.target.value})}
-                    className="bg-slate-50 border-slate-200 focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 rounded-xl font-medium resize-none p-4 text-base"
-                  />
-                </div>
+                  <form onSubmit={handleLeadSubmit} className="space-y-5 relative z-10">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Full Name *</label>
+                        <Input 
+                          required placeholder="e.g. Rahul Sharma"
+                          value={form.name} onChange={(e) => setForm({...form, name: e.target.value})}
+                          className="h-14 bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#D4AF37] focus:ring-4 focus:ring-[#D4AF37]/10 rounded-xl font-medium text-base transition-all outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Phone Number *</label>
+                        <Input 
+                          required type="tel" placeholder="+91 92664 58945"
+                          value={form.phone} onChange={(e) => setForm({...form, phone: e.target.value})}
+                          className="h-14 bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#D4AF37] focus:ring-4 focus:ring-[#D4AF37]/10 rounded-xl font-medium text-base transition-all outline-none"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Email Address</label>
+                        <Input 
+                          type="email" placeholder="rahul@example.com"
+                          value={form.email} onChange={(e) => setForm({...form, email: e.target.value})}
+                          className="h-14 bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#D4AF37] focus:ring-4 focus:ring-[#D4AF37]/10 rounded-xl font-medium text-base transition-all outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Service Type</label>
+                        <select 
+                          value={form.projectType} onChange={(e) => setForm({...form, projectType: e.target.value})}
+                          className="w-full h-14 px-4 bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#D4AF37] focus:ring-4 focus:ring-[#D4AF37]/10 rounded-xl outline-none appearance-none font-medium text-slate-700 text-base transition-all"
+                        >
+                          <option value="">Select Service...</option>
+                          <option value="Pre-Launch Investment">Pre-Launch Investment</option>
+                          <option value="Turnkey Construction">Turnkey Construction</option>
+                          <option value="Architectural Design">Architectural Design</option>
+                          <option value="Commercial Build">Commercial Build</option>
+                        </select>
+                      </div>
+                    </div>
 
-                <Button type="submit" disabled={isSubmitting} className="w-full h-14 bg-[#8B0000] hover:bg-[#600000] text-white font-black rounded-xl text-base shadow-lg shadow-[#8B0000]/30 transition-all hover:-translate-y-0.5 mt-4">
-                  {isSubmitting ? (
-                    <span className="flex items-center"><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Submitting...</span>
-                  ) : (
-                    <span className="flex items-center">Submit Inquiry <ArrowRight className="w-5 h-5 ml-2" /></span>
-                  )}
-                </Button>
-              </form>
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Project Details / Message *</label>
+                      <Textarea 
+                        required placeholder="Briefly describe your requirements, land area, or the project you are interested in..." rows={4}
+                        value={form.message} onChange={(e) => setForm({...form, message: e.target.value})}
+                        className="bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#D4AF37] focus:ring-4 focus:ring-[#D4AF37]/10 rounded-xl font-medium resize-none p-4 text-base transition-all outline-none"
+                      />
+                    </div>
+
+                    <Button type="submit" disabled={status === 'submitting'} className="w-full h-14 bg-[#8B0000] hover:bg-[#600000] text-white font-black rounded-xl text-lg shadow-xl shadow-[#8B0000]/20 transition-all hover:-translate-y-0.5 mt-4 group">
+                      {status === 'submitting' ? (
+                        <span className="flex items-center"><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Submitting...</span>
+                      ) : (
+                        <span className="flex items-center">Submit Inquiry <ArrowRight className="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform" /></span>
+                      )}
+                    </Button>
+                  </form>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -390,7 +408,7 @@ export default function ConstructionPage() {
                 </div>
                 <div className="flex items-center bg-slate-900/50 p-3 rounded-xl border border-slate-800 hover:border-[#D4AF37]/50 transition-colors">
                   <Phone className="w-5 h-5 mr-3 text-[#D4AF37] shrink-0" />
-                  <a href="tel:+919732300007" className="text-xs hover:text-[#D4AF37] transition-colors">+91 92664 58945</a>
+                  <a href="tel:+919266458945" className="text-xs hover:text-[#D4AF37] transition-colors">+91 92664 58945</a>
                 </div>
               </div>
             </div>
