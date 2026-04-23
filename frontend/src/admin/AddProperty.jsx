@@ -1,6 +1,5 @@
-// src/components/AddProperty.jsx
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Save, X, Image as ImageIcon, Video, FileText, Plus, Trash2, LayoutTemplate, Building2 } from 'lucide-react';
+import { ArrowLeft, Save, X, Image as ImageIcon, Video, FileText, Plus, Trash2, LayoutTemplate, Building2, IndianRupee, Globe, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,26 +9,22 @@ const emptyForm = {
   title: '', description: '', price: '', category: 'buy', property_type: 'apartment',
   city: '', state: '', location: '', area: '', bhk: '', bathrooms: '', furnishing: 'unfurnished', 
   amenities: '', builder: '', rera: '', projectStatus: 'New Launch', possession: '',
-  youtube_link: ''
+  youtube_link: '', 
+  // NEW FIELDS added for the two new sections
+  bookingAmount: '', maintenance: '',
+  metaTitle: '', metaDescription: ''
 };
 
 export default function AddProperty({ onSave, editing, onCancel }) {
   const [form, setForm] = useState(emptyForm);
   
-  // States for handling actual global property media uploads
   const [media, setMedia] = useState({
-    images: [], 
-    videos: [], 
-    pdf: null,  
-    existingImages: [], 
-    existingVideos: [], 
-    existingPdf: null   
+    images: [], videos: [], pdf: null, 
+    existingImages: [], existingVideos: [], existingPdf: null   
   });
 
-  // NEW: Dynamic State for Multiple Floor Plans / Configurations
   const [floorPlans, setFloorPlans] = useState([]);
 
-  // Helper function to safely extract YouTube video ID and create an embed URL
   const getYoutubeEmbedUrl = (url) => {
     if (!url) return null;
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
@@ -59,24 +54,25 @@ export default function AddProperty({ onSave, editing, onCancel }) {
         rera: editing.rera || '',
         projectStatus: editing.projectStatus || 'New Launch',
         possession: editing.possession || '',
-        youtube_link: editing.youtube_link || '' 
+        youtube_link: editing.youtube_link || '',
+        bookingAmount: editing.bookingAmount || '',
+        maintenance: editing.maintenance || '',
+        metaTitle: editing.metaTitle || '',
+        metaDescription: editing.metaDescription || ''
       });
       setMedia({
-        images: [],
-        videos: [],
-        pdf: null,
+        images: [], videos: [], pdf: null,
         existingImages: Array.isArray(editing.images) ? editing.images : (editing.imageUrl ? [editing.imageUrl] : []),
         existingVideos: Array.isArray(editing.videos) ? editing.videos : [],
         existingPdf: editing.brochure || null
       });
-      // Load existing floor plans if editing
       if (editing.floorPlans && Array.isArray(editing.floorPlans)) {
         setFloorPlans(editing.floorPlans.map(fp => ({ ...fp, id: Math.random().toString(), newImage: null })));
       }
     } else {
       setForm(emptyForm);
       setMedia({ images: [], videos: [], pdf: null, existingImages: [], existingVideos: [], existingPdf: null });
-      setFloorPlans([]); // Start empty
+      setFloorPlans([]); 
     }
   }, [editing]);
 
@@ -86,18 +82,14 @@ export default function AddProperty({ onSave, editing, onCancel }) {
 
   const handleFileUpload = (e, type) => {
     const files = Array.from(e.target.files);
-    
     if (type === 'images') {
-      const totalImages = media.images.length + media.existingImages.length + files.length;
-      if (totalImages > 10) {
-        toast.error("Maximum 10 property images allowed combined.");
-        return;
+      if (media.images.length + media.existingImages.length + files.length > 10) {
+        return toast.error("Maximum 10 property images allowed combined.");
       }
       setMedia({ ...media, images: [...media.images, ...files] });
     } else if (type === 'videos') {
       if (media.videos.length + media.existingVideos.length + files.length > 2) {
-        toast.error("Maximum 2 videos allowed.");
-        return;
+        return toast.error("Maximum 2 videos allowed.");
       }
       setMedia({ ...media, videos: [...media.videos, ...files] });
     } else if (type === 'pdf') {
@@ -106,47 +98,28 @@ export default function AddProperty({ onSave, editing, onCancel }) {
   };
 
   const removeMedia = (index, type) => {
-    if (type === 'pdf') {
-      setMedia({ ...media, pdf: null });
-    } else if (type === 'existingPdf') {
-      setMedia({ ...media, existingPdf: null });
-    } else {
+    if (type === 'pdf') setMedia({ ...media, pdf: null });
+    else if (type === 'existingPdf') setMedia({ ...media, existingPdf: null });
+    else {
       const updated = [...media[type]];
       updated.splice(index, 1);
       setMedia({ ...media, [type]: updated });
     }
   };
 
-  // --- FLOOR PLAN DYNAMIC LOGIC ---
-  const addFloorPlan = () => {
-    setFloorPlans([...floorPlans, { id: Math.random().toString(), type: '', size: '', price: '', newImage: null, existingImage: null }]);
-  };
-
-  const updateFloorPlan = (id, field, value) => {
-    setFloorPlans(floorPlans.map(fp => fp.id === id ? { ...fp, [field]: value } : fp));
-  };
-
-  const handleFloorPlanImage = (id, file) => {
-    setFloorPlans(floorPlans.map(fp => fp.id === id ? { ...fp, newImage: file } : fp));
-  };
-
-  const removeFloorPlan = (id) => {
-    setFloorPlans(floorPlans.filter(fp => fp.id !== id));
-  };
+  const addFloorPlan = () => setFloorPlans([...floorPlans, { id: Math.random().toString(), type: '', size: '', price: '', newImage: null, existingImage: null }]);
+  const updateFloorPlan = (id, field, value) => setFloorPlans(floorPlans.map(fp => fp.id === id ? { ...fp, [field]: value } : fp));
+  const handleFloorPlanImage = (id, file) => setFloorPlans(floorPlans.map(fp => fp.id === id ? { ...fp, newImage: file } : fp));
+  const removeFloorPlan = (id) => setFloorPlans(floorPlans.filter(fp => fp.id !== id));
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    // Basic Validation
     if (!form.title.trim()) return toast.error("Property Title is required.");
     if (!form.price) return toast.error("Price is required.");
     if (!form.city) return toast.error("City is required.");
     if (!form.location) return toast.error("Location/Sector is required.");
 
-    // Prepare FormData
     const formData = new FormData();
-    
-    // Append all text fields securely
     Object.keys(form).forEach(key => {
       if (key === 'amenities') {
         const amArray = form.amenities.split(',').map(i => i.trim()).filter(Boolean);
@@ -156,32 +129,21 @@ export default function AddProperty({ onSave, editing, onCancel }) {
       }
     });
 
-    if (editing) {
-      formData.append('existing_images', JSON.stringify(media.existingImages));
-    }
+    if (editing) formData.append('existing_images', JSON.stringify(media.existingImages));
 
-    // Append Global Media files
     media.images.forEach(img => formData.append('new_images', img));
     media.videos.forEach(vid => formData.append('new_videos', vid));
     if (media.pdf) formData.append('brochure', media.pdf);
 
-    // Append Floor Plans Data & Specific Images
     const cleanFloorPlans = floorPlans.map((fp, index) => {
-      // If a new image was uploaded for this floor plan, append it with a unique key
-      if (fp.newImage) {
-        formData.append(`floor_plan_image_${index}`, fp.newImage);
-      }
+      if (fp.newImage) formData.append(`floor_plan_image_${index}`, fp.newImage);
       return {
-        type: fp.type,
-        size: fp.size,
-        price: fp.price,
-        existingImage: fp.existingImage, // Keep old image url if no new one
-        imageIndex: fp.newImage ? index : null // Tells backend which file belongs to this plan
+        type: fp.type, size: fp.size, price: fp.price,
+        existingImage: fp.existingImage,
+        imageIndex: fp.newImage ? index : null 
       };
     });
-    
     formData.append('floorPlans', JSON.stringify(cleanFloorPlans));
-
     onSave(formData);
   };
 
@@ -204,11 +166,11 @@ export default function AddProperty({ onSave, editing, onCancel }) {
 
       <form className="grid grid-cols-1 lg:grid-cols-3 gap-6" onSubmit={handleSubmit}>
         
-        {/* LEFT COLUMN: Main Details & Floor Plans */}
+        {/* LEFT COLUMN: Main Details */}
         <div className="lg:col-span-2 space-y-6">
           
           {/* BASIC INFO */}
-          <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm space-y-5">
+          <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm space-y-5 transition-all hover:shadow-md">
             <h2 className="text-lg font-extrabold text-slate-900 border-b border-slate-100 pb-3 flex items-center">
               <FileText className="w-5 h-5 mr-2 text-[#D4AF37]"/> Basic Information
             </h2>
@@ -219,14 +181,14 @@ export default function AddProperty({ onSave, editing, onCancel }) {
                 <Input name="title" placeholder="e.g. Luxury 4BHK Villa in Sector 150" value={form.title} onChange={handleChange} required className="h-12 rounded-xl focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 font-medium" />
               </div>
               
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3 md:col-span-2">
                 <div>
                   <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 block">Category</label>
                   <select name="category" value={form.category} onChange={handleChange} className="w-full h-12 px-4 border border-slate-200 rounded-xl text-sm font-medium bg-white focus:border-[#D4AF37] outline-none">
                     <option value="buy">Buy</option>
                     <option value="resale">Resale</option>
-                    <option value="rent">Rent</option>
-                    <option value="client-project">Corporate Lease</option>
+                    <option value="construction">Construction</option>
+                    <option value="corporate-lease">Corporate Lease</option>
                   </select>
                 </div>
                 <div>
@@ -238,11 +200,6 @@ export default function AddProperty({ onSave, editing, onCancel }) {
                     <option value="plot">Plot</option>
                   </select>
                 </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 block">Base Price (₹) *</label>
-                <Input name="price" type="number" placeholder="e.g. 15000000" value={form.price} onChange={handleChange} required className="h-12 rounded-xl focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 font-medium" />
               </div>
 
               <div className="grid grid-cols-3 gap-3 md:col-span-2">
@@ -267,8 +224,29 @@ export default function AddProperty({ onSave, editing, onCancel }) {
             </div>
           </div>
 
-          {/* --- NEW SECTION: CONFIGURATIONS & FLOOR PLANS --- */}
-          <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm space-y-5">
+          {/* NEW SECTION 1: PRICING & FINANCIALS */}
+          <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm space-y-5 transition-all hover:shadow-md">
+            <h2 className="text-lg font-extrabold text-slate-900 border-b border-slate-100 pb-3 flex items-center">
+              <IndianRupee className="w-5 h-5 mr-2 text-[#8B0000]"/> Pricing & Financial Details
+            </h2>
+            <div className="grid md:grid-cols-3 gap-5 pt-2">
+              <div>
+                <label className="text-xs font-bold text-[#8B0000] uppercase tracking-widest mb-1 block">Base Price (₹) *</label>
+                <Input name="price" type="number" placeholder="e.g. 15000000" value={form.price} onChange={handleChange} required className="h-12 rounded-xl focus:border-[#8B0000] focus:ring-[#8B0000]/20 font-medium border-[#8B0000]/20 bg-red-50/30" />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 block">Booking Amount (₹)</label>
+                <Input name="bookingAmount" type="number" placeholder="e.g. 500000" value={form.bookingAmount} onChange={handleChange} className="h-12 rounded-xl focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 font-medium" />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 block">Maintenance (Monthly)</label>
+                <Input name="maintenance" type="number" placeholder="e.g. 5000" value={form.maintenance} onChange={handleChange} className="h-12 rounded-xl focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 font-medium" />
+              </div>
+            </div>
+          </div>
+
+          {/* CONFIGURATIONS & FLOOR PLANS */}
+          <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm space-y-5 transition-all hover:shadow-md">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h2 className="text-lg font-extrabold text-slate-900 flex items-center">
                 <LayoutTemplate className="w-5 h-5 mr-2 text-[#D4AF37]"/> Configurations & Floor Plans
@@ -307,7 +285,6 @@ export default function AddProperty({ onSave, editing, onCancel }) {
                     </div>
                   </div>
 
-                  {/* Floor Plan Image Upload */}
                   <div>
                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 block">Floor Plan Image</label>
                      <div className="flex items-center gap-4">
@@ -334,8 +311,8 @@ export default function AddProperty({ onSave, editing, onCancel }) {
             </div>
           </div>
 
-          {/* LOCATION & EXTRA DETAILS */}
-          <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm space-y-5">
+          {/* LOCATION & STATUS */}
+          <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm space-y-5 transition-all hover:shadow-md">
             <h2 className="text-lg font-extrabold text-slate-900 border-b border-slate-100 pb-3 flex items-center">
               <Building2 className="w-5 h-5 mr-2 text-[#D4AF37]"/> Location & Status
             </h2>
@@ -359,33 +336,22 @@ export default function AddProperty({ onSave, editing, onCancel }) {
               
               <div className="md:col-span-2">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 block">Amenities (Comma Separated)</label>
-                <Input name="amenities" value={form.amenities} onChange={handleChange} placeholder="e.g. Grade-A Office, Cafeteria, Power Backup, Security" className="h-12 rounded-xl focus:border-[#D4AF37] font-medium" />
+                <div className="relative">
+                  <Input name="amenities" value={form.amenities} onChange={handleChange} placeholder="e.g. Swimming Pool, Gym, Club House, 24x7 Security" className="h-12 rounded-xl focus:border-[#D4AF37] font-medium pl-4 pr-10" />
+                </div>
               </div>
 
-              {/* YOUTUBE LINK & PREVIEW SECTION */}
+              {/* YOUTUBE LINK */}
               <div className="md:col-span-2 mt-2 pt-6 border-t border-slate-100">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 block">YouTube Video Link</label>
-                <Input 
-                  name="youtube_link" 
-                  value={form.youtube_link} 
-                  onChange={handleChange} 
-                  placeholder="e.g. https://www.youtube.com/watch?v=..." 
-                  className="h-12 rounded-xl focus:border-[#D4AF37] font-medium" 
-                />
+                <Input name="youtube_link" value={form.youtube_link} onChange={handleChange} placeholder="e.g. https://www.youtube.com/watch?v=..." className="h-12 rounded-xl focus:border-[#D4AF37] font-medium" />
 
                 {form.youtube_link && (
                   <div className="mt-4">
                     <h4 className="text-xs font-bold text-slate-700 mb-2">Video Preview</h4>
                     {embedUrl ? (
                       <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-slate-900 border-[4px] border-slate-100 shadow-md">
-                        <iframe
-                          className="absolute top-0 left-0 w-full h-full opacity-90 hover:opacity-100 transition-opacity"
-                          src={embedUrl}
-                          title="YouTube Preview"
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                        ></iframe>
+                        <iframe className="absolute top-0 left-0 w-full h-full opacity-90 hover:opacity-100 transition-opacity" src={embedUrl} title="YouTube Preview" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
                       </div>
                     ) : (
                       <p className="text-xs text-red-500 font-bold bg-red-50 p-3 rounded-lg">Invalid YouTube URL. Please provide a valid link to preview.</p>
@@ -395,6 +361,24 @@ export default function AddProperty({ onSave, editing, onCancel }) {
               </div>
             </div>
           </div>
+
+          {/* NEW SECTION 2: SEO & MARKETING */}
+          <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm space-y-5 transition-all hover:shadow-md">
+            <h2 className="text-lg font-extrabold text-slate-900 border-b border-slate-100 pb-3 flex items-center">
+              <Globe className="w-5 h-5 mr-2 text-[#D4AF37]"/> SEO & Marketing Discoverability
+            </h2>
+            <div className="grid md:grid-cols-2 gap-5 pt-2">
+              <div className="md:col-span-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 flex items-center"><Search className="w-3 h-3 mr-1" /> Meta Title</label>
+                <Input name="metaTitle" placeholder="SEO Title (Recommended: 50-60 chars)" value={form.metaTitle} onChange={handleChange} className="h-12 rounded-xl focus:border-[#D4AF37] font-medium" />
+              </div>
+              <div className="md:col-span-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 block">Meta Description</label>
+                <Textarea name="metaDescription" rows={3} placeholder="Brief summary for Google search results..." value={form.metaDescription} onChange={handleChange} className="rounded-xl resize-none focus:border-[#D4AF37] font-medium p-4" />
+              </div>
+            </div>
+          </div>
+
         </div>
 
         {/* RIGHT COLUMN: Media Uploads */}
@@ -493,7 +477,6 @@ export default function AddProperty({ onSave, editing, onCancel }) {
 
           </div>
         </div>
-
       </form>
     </div>
   );
