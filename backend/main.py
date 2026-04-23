@@ -276,10 +276,15 @@ async def create_property(request: Request, current_user: dict = Depends(get_cur
     try:
         form_data = await request.form()
         
+        # Parse numbers securely
         parsed_price = float(form_data.get("price", "0")) if str(form_data.get("price", "")).strip() else 0.0
         parsed_area = float(form_data.get("area", "0")) if str(form_data.get("area", "")).strip() else 0.0
         parsed_bhk = int(form_data.get("bhk", "0")) if str(form_data.get("bhk", "")).strip() else 0
         parsed_bathrooms = int(form_data.get("bathrooms", "0")) if str(form_data.get("bathrooms", "")).strip() else 0
+        
+        # NEW PARSED FIELDS
+        parsed_booking_amount = float(form_data.get("bookingAmount", "0")) if str(form_data.get("bookingAmount", "")).strip() else 0.0
+        parsed_maintenance = float(form_data.get("maintenance", "0")) if str(form_data.get("maintenance", "")).strip() else 0.0
         
         try: parsed_amenities = json.loads(form_data.get("amenities", "[]"))
         except: parsed_amenities = []
@@ -329,6 +334,13 @@ async def create_property(request: Request, current_user: dict = Depends(get_cur
             "rera": str(form_data.get("rera", "")), "project_status": str(form_data.get("projectStatus", "New Launch")),
             "possession": str(form_data.get("possession", "")),
             "youtube_link": str(form_data.get("youtube_link", "")) if form_data.get("youtube_link") else None,
+            
+            # NEW FIELDS ADDED HERE
+            "bookingAmount": parsed_booking_amount,
+            "maintenance": parsed_maintenance,
+            "metaTitle": str(form_data.get("metaTitle", "")),
+            "metaDescription": str(form_data.get("metaDescription", "")),
+
             "images": image_urls, "videos": video_urls, "brochure": brochure_url, "floorPlans": final_floor_plans,
             "status": "approved" if current_user.get("role") == "admin" else "pending",
             "verified": current_user.get("role") == "admin", "created_at": datetime.now(timezone.utc).isoformat()
@@ -353,14 +365,22 @@ async def update_property(property_id: str, request: Request, current_user: dict
     form_data = await request.form()
     update_data = {}
     
-    fields = ["title", "description", "location", "city", "state", "property_type", "category", "furnishing", "builder", "rera", "projectStatus", "possession", "youtube_link"]
+    # NEW STRING FIELDS ADDED TO LOOP
+    fields = [
+        "title", "description", "location", "city", "state", "property_type", 
+        "category", "furnishing", "builder", "rera", "projectStatus", 
+        "possession", "youtube_link", "metaTitle", "metaDescription"
+    ]
     for f in fields:
         if f in form_data: update_data[f if f != "projectStatus" else "project_status"] = str(form_data.get(f, ""))
 
+    # NUMERIC PARSING (Including New Fields)
     if "price" in form_data: update_data["price"] = float(form_data.get("price")) if str(form_data.get("price")).strip() else 0.0
     if "area" in form_data: update_data["area"] = float(form_data.get("area")) if str(form_data.get("area")).strip() else 0.0
     if "bhk" in form_data: update_data["bhk"] = int(form_data.get("bhk")) if str(form_data.get("bhk")).strip() else 0
     if "bathrooms" in form_data: update_data["bathrooms"] = int(form_data.get("bathrooms")) if str(form_data.get("bathrooms")).strip() else 0
+    if "bookingAmount" in form_data: update_data["bookingAmount"] = float(form_data.get("bookingAmount")) if str(form_data.get("bookingAmount")).strip() else 0.0
+    if "maintenance" in form_data: update_data["maintenance"] = float(form_data.get("maintenance")) if str(form_data.get("maintenance")).strip() else 0.0
     
     if "amenities" in form_data:
         try: update_data["amenities"] = json.loads(form_data.get("amenities"))
