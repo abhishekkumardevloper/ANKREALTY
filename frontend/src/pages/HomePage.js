@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import axios from 'axios';
@@ -20,7 +20,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://ankrealty.onrender.com/api";
 
-// --- STATIC DATA & CONTENT EXPANSION ---
+// --- STATIC DATA ---
 const bankOffers = Array.isArray(siteData?.bankOffers) ? siteData.bankOffers : [
   { bank: 'HDFC Bank', rate: '8.35%', note: 'Zero Processing Fee' },
   { bank: 'SBI Home Loans', rate: '8.40%', note: 'Women Borrower Discount' },
@@ -28,8 +28,16 @@ const bankOffers = Array.isArray(siteData?.bankOffers) ? siteData.bankOffers : [
 ];
 const socialLinks = siteData?.socialLinks || {};
 
-const topRowLogos = ['/images (3).png', '/images__9_-removebg-preview.png', '/images (1).png', '/images (2).png', '/183f468e401f4220bce9e4f7b1e3ffd820251112162925170.png'];
-const bottomRowLogos = ['/images.png', '/4f3bb698972531.Y3JvcCw5NTAsNzQzLDIyMywyMQ-removebg-preview.png', '/Max_Estates_logo.svg.png', '/M3M-Jacob-and-Co-logo.png'];
+const topRowLogos = [
+  '/images (3).png', '/images__9_-removebg-preview.png', '/images (1).png',
+  '/images (2).png', '/183f468e401f4220bce9e4f7b1e3ffd820251112162925170.png'
+];
+const bottomRowLogos = [
+  '/images.png', '/4f3bb698972531.Y3JvcCw5NTAsNzQzLDIyMywyMQ-removebg-preview.png',
+  '/Max_Estates_logo.svg.png', '/M3M-Jacob-and-Co-logo.png'
+];
+
+const FALLBACK_LOGO = 'https://via.placeholder.com/160x60/1e293b/94a3b8?text=Partner';
 
 const categoryOptions = [
   { label: 'Buy Property', value: 'buy' },
@@ -38,14 +46,26 @@ const categoryOptions = [
 ];
 
 const exploreCategories = [
-  { title: 'Luxury Villas', desc: 'Exclusive independent homes', icon: Home, image: 'https://images.unsplash.com/photo-1613490908578-81cc3d17961b?q=80&w=800&auto=format&fit=crop' },
-  { title: 'Premium Apartments', desc: 'High-rise luxury living', icon: Building, image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=800&auto=format&fit=crop' },
-  { title: 'Commercial Spaces', desc: 'Grade-A office & retail', icon: Briefcase, image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=800&auto=format&fit=crop' },
-  { title: 'Residential Plots', desc: 'Build your dream home', icon: MapIcon, image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=800&auto=format&fit=crop' },
+  {
+    title: 'Luxury Villas', desc: 'Exclusive independent homes', icon: Home,
+    image: 'https://images.unsplash.com/photo-1613490908578-81cc3d17961b?q=80&w=800&auto=format&fit=crop'
+  },
+  {
+    title: 'Premium Apartments', desc: 'High-rise luxury living', icon: Building,
+    image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=800&auto=format&fit=crop'
+  },
+  {
+    title: 'Commercial Spaces', desc: 'Grade-A office & retail', icon: Briefcase,
+    image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=800&auto=format&fit=crop'
+  },
+  {
+    title: 'Residential Plots', desc: 'Build your dream home', icon: MapIcon,
+    image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=800&auto=format&fit=crop'
+  },
 ];
 
 const processSteps = [
-  { title: 'Discover', desc: 'Browse our curated collection of verified properties matching your unique lifestyle and financial criteria.', icon: Search },
+  { title: 'Discover', desc: 'Browse our curated collection of verified properties matching your lifestyle and financial criteria.', icon: Search },
   { title: 'Visit & Evaluate', desc: 'Schedule accompanied site visits with our local experts who provide deep market insights.', icon: MapPin },
   { title: 'Negotiate & Finance', desc: 'Leverage our banking tie-ups and negotiation expertise to secure the absolute best deal.', icon: Handshake },
   { title: 'Seamless Handover', desc: 'From legal paperwork to registry and possession, we manage the entire lifecycle.', icon: Key },
@@ -54,14 +74,14 @@ const processSteps = [
 const testimonials = [
   { name: 'Rajesh Singhania', role: 'Tech Executive', text: 'ANK Realty made finding my luxury apartment in Noida completely effortless. Their transparency and knowledge are unmatched.', rating: 5 },
   { name: 'Meera Kapoor', role: 'Business Owner', text: 'Securing our new corporate office space was a breeze. The team handled negotiations brilliantly, saving us 15% on lease terms.', rating: 5 },
-  { name: 'Amit Desai', role: 'NRI Investor', text: 'Managing investments from abroad is tough, but ANK Realty’s video tours and legal assistance gave me absolute peace of mind.', rating: 5 },
+  { name: 'Amit Desai', role: 'NRI Investor', text: 'Managing investments from abroad is tough, but ANK Realty\'s video tours and legal assistance gave me absolute peace of mind.', rating: 5 },
 ];
 
 const topCities = [
   { name: 'Noida', count: '1,200+ Properties', image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?q=80&w=800&auto=format&fit=crop' },
-  { name: 'Gurugram', count: '950+ Properties', image: 'https://images.unsplash.com/photo-1605647540924-852290f6b0d5?q=80&w=800&auto=format&fit=crop' },
-  { name: 'Delhi', count: '800+ Properties', image: 'https://images.unsplash.com/photo-1585084335487-f653d0e213b3?q=80&w=800&auto=format&fit=crop' },
-  { name: 'Greater Noida', count: '1,500+ Properties', image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=800&auto=format&fit=crop' },
+  { name: 'Gurugram', count: '950+ Properties', image: 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?q=80&w=800&auto=format&fit=crop' },
+  { name: 'Delhi', count: '800+ Properties', image: 'https://images.unsplash.com/photo-1597040663342-45b6af3d91a5?q=80&w=800&auto=format&fit=crop' },
+  { name: 'Greater Noida', count: '1,500+ Properties', image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=800&auto=format&fit=crop' },
 ];
 
 const faqs = [
@@ -71,11 +91,23 @@ const faqs = [
   { q: 'Do you manage NRI property investments?', a: 'Yes, we provide end-to-end portfolio management, virtual tours, and legal compliance specifically tailored for NRI investors.' },
 ];
 
-// --- 3D ANIMATION VARIANTS ---
-const staggerContainer = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.1 } } };
-const fadeUp = { hidden: { opacity: 0, y: 50 }, visible: { opacity: 1, y: 0, transition: { duration: 0.8, type: 'spring', bounce: 0.4 } } };
-const scaleUp = { hidden: { opacity: 0, scale: 0.8 }, visible: { opacity: 1, scale: 1, transition: { duration: 0.6, type: 'spring' } } };
-const textReveal = { hidden: { opacity: 0, y: 40, rotateX: -45 }, visible: { opacity: 1, y: 0, rotateX: 0, transition: { type: 'spring', stiffness: 100, damping: 20 } } };
+// --- ANIMATION VARIANTS ---
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.1 } }
+};
+const fadeUp = {
+  hidden: { opacity: 0, y: 40 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.7, type: 'spring', bounce: 0.3 } }
+};
+const scaleUp = {
+  hidden: { opacity: 0, scale: 0.85 },
+  visible: { opacity: 1, scale: 1, transition: { duration: 0.6, type: 'spring' } }
+};
+const textReveal = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 90, damping: 18 } }
+};
 
 const getYouTubeID = (url) => {
   if (!url) return null;
@@ -83,17 +115,171 @@ const getYouTubeID = (url) => {
     if (url.includes('youtube.com/watch')) return new URLSearchParams(new URL(url).search).get('v');
     if (url.includes('youtu.be/')) return url.split('youtu.be/')[1]?.split('?')[0];
     if (url.includes('youtube.com/embed/')) return url.split('youtube.com/embed/')[1]?.split('?')[0];
-  } catch (error) { return null; }
+  } catch { return null; }
   return null;
 };
 
+// --- 3D BUILDING SVG ---
+const Building3D = () => (
+  <svg viewBox="0 0 420 520" xmlns="http://www.w3.org/2000/svg" className="w-full h-full" style={{ filter: 'drop-shadow(0 40px 60px rgba(212,175,55,0.25))' }}>
+    <defs>
+      <linearGradient id="bFace" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#1a1a2e" />
+        <stop offset="100%" stopColor="#16213e" />
+      </linearGradient>
+      <linearGradient id="bSide" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#0f3460" />
+        <stop offset="100%" stopColor="#0a2447" />
+      </linearGradient>
+      <linearGradient id="bTop" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#D4AF37" stopOpacity="0.9" />
+        <stop offset="100%" stopColor="#AA8000" stopOpacity="0.7" />
+      </linearGradient>
+      <linearGradient id="winLit" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#FFE47A" stopOpacity="0.95" />
+        <stop offset="100%" stopColor="#D4AF37" stopOpacity="0.7" />
+      </linearGradient>
+      <linearGradient id="winDark" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#1a2a5e" stopOpacity="0.8" />
+        <stop offset="100%" stopColor="#0a1535" stopOpacity="0.6" />
+      </linearGradient>
+      <linearGradient id="glow" x1="50%" y1="0%" x2="50%" y2="100%">
+        <stop offset="0%" stopColor="#D4AF37" stopOpacity="0.6" />
+        <stop offset="100%" stopColor="#D4AF37" stopOpacity="0" />
+      </linearGradient>
+      <filter id="gf">
+        <feGaussianBlur stdDeviation="4" result="blur" />
+        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+      </filter>
+    </defs>
+
+    {/* Ground glow */}
+    <ellipse cx="210" cy="500" rx="130" ry="18" fill="url(#glow)" />
+
+    {/* === TOWER 1 (main, center) === */}
+    {/* Front face */}
+    <polygon points="105,460 245,460 245,60 105,60" fill="url(#bFace)" />
+    {/* Side face */}
+    <polygon points="245,460 310,420 310,20 245,60" fill="url(#bSide)" />
+    {/* Top face */}
+    <polygon points="105,60 245,60 310,20 170,20" fill="url(#bTop)" />
+
+    {/* Windows - front */}
+    {[...Array(12)].map((_, row) =>
+      [0, 1, 2].map((col) => {
+        const lit = Math.random() > 0.35;
+        return (
+          <rect
+            key={`fw-${row}-${col}`}
+            x={120 + col * 38}
+            y={75 + row * 32}
+            width={22} height={20}
+            rx={2}
+            fill={lit ? 'url(#winLit)' : 'url(#winDark)'}
+            opacity={lit ? 0.95 : 0.7}
+          />
+        );
+      })
+    )}
+
+    {/* Windows - side */}
+    {[...Array(12)].map((_, row) =>
+      [0, 1].map((col) => {
+        const lit = Math.random() > 0.4;
+        return (
+          <polygon
+            key={`sw-${row}-${col}`}
+            points={`
+              ${252 + col * 24},${78 + row * 32}
+              ${270 + col * 24},${75 + row * 32}
+              ${270 + col * 24},${92 + row * 32}
+              ${252 + col * 24},${95 + row * 32}
+            `}
+            fill={lit ? 'url(#winLit)' : 'url(#winDark)'}
+            opacity={lit ? 0.9 : 0.6}
+          />
+        );
+      })
+    )}
+
+    {/* Antenna / spire */}
+    <line x1="175" y1="20" x2="175" y2="-10" stroke="#D4AF37" strokeWidth="2.5" />
+    <circle cx="175" cy="-12" r="4" fill="#D4AF37" opacity="0.9" />
+    <circle cx="175" cy="-12" r="8" fill="#D4AF37" opacity="0.2" filter="url(#gf)" />
+
+    {/* === TOWER 2 (left, shorter) === */}
+    <polygon points="30,460 105,460 105,160 30,160" fill="#111827" />
+    <polygon points="105,460 140,435 140,135 105,160" fill="#0d1e40" />
+    <polygon points="30,160 105,160 140,135 65,135" fill="#D4AF37" opacity="0.5" />
+    {[...Array(7)].map((_, row) =>
+      [0, 1].map((col) => (
+        <rect key={`lw-${row}-${col}`} x={40 + col * 30} y={172 + row * 38} width={18} height={16} rx={2}
+          fill={Math.random() > 0.4 ? 'url(#winLit)' : 'url(#winDark)'} opacity={0.8} />
+      ))
+    )}
+
+    {/* === TOWER 3 (right, shorter) === */}
+    <polygon points="310,460 380,460 380,190 310,190" fill="#0f172a" />
+    <polygon points="380,460 410,445 410,175 380,190" fill="#0a1f40" />
+    <polygon points="310,190 380,190 410,175 340,175" fill="#D4AF37" opacity="0.45" />
+    {[...Array(7)].map((_, row) =>
+      [0, 1].map((col) => (
+        <rect key={`rw-${row}-${col}`} x={318 + col * 30} y={202 + row * 35} width={18} height={16} rx={2}
+          fill={Math.random() > 0.4 ? 'url(#winLit)' : 'url(#winDark)'} opacity={0.8} />
+      ))
+    )}
+
+    {/* Ground base */}
+    <rect x="20" y="458" width="390" height="12" fill="#0a0a0a" rx="2" />
+    <rect x="30" y="468" width="370" height="6" fill="#D4AF37" opacity="0.3" rx="1" />
+
+    {/* Entrance */}
+    <rect x="152" y="420" width="42" height="40" rx="4" fill="#D4AF37" opacity="0.15" />
+    <rect x="165" y="420" width="5" height="40" rx="1" fill="#D4AF37" opacity="0.3" />
+    <rect x="180" y="420" width="5" height="40" rx="1" fill="#D4AF37" opacity="0.3" />
+
+    {/* Gold accent lines */}
+    <line x1="105" y1="60" x2="105" y2="460" stroke="#D4AF37" strokeWidth="0.8" opacity="0.4" />
+    <line x1="245" y1="60" x2="245" y2="460" stroke="#D4AF37" strokeWidth="0.8" opacity="0.4" />
+    <line x1="105" y1="260" x2="245" y2="260" stroke="#D4AF37" strokeWidth="0.5" opacity="0.3" />
+
+    {/* Floating particles */}
+    {[
+      { cx: 80, cy: 100, r: 2.5 }, { cx: 340, cy: 140, r: 2 },
+      { cx: 60, cy: 300, r: 1.5 }, { cx: 360, cy: 250, r: 2 },
+      { cx: 200, cy: 15, r: 3 }, { cx: 155, cy: 40, r: 1.5 },
+    ].map((p, i) => (
+      <circle key={i} cx={p.cx} cy={p.cy} r={p.r} fill="#D4AF37" opacity="0.6">
+        <animate attributeName="opacity" values="0.3;0.9;0.3" dur={`${2 + i * 0.5}s`} repeatCount="indefinite" />
+        <animate attributeName="cy" values={`${p.cy};${p.cy - 8};${p.cy}`} dur={`${3 + i * 0.4}s`} repeatCount="indefinite" />
+      </circle>
+    ))}
+  </svg>
+);
+
+// --- SAFE IMAGE ---
+const SafeImg = ({ src, alt, className, fallback }) => {
+  const [errored, setErrored] = useState(false);
+  return (
+    <img
+      src={errored ? (fallback || FALLBACK_LOGO) : src}
+      alt={alt}
+      className={className}
+      onError={() => setErrored(true)}
+    />
+  );
+};
+
+// =============================================
+//  MAIN COMPONENT
+// =============================================
 export default function HomePage() {
   const navigate = useNavigate();
   const { user, api } = useAuth();
-  
+
   const { scrollYProgress } = useScroll();
-  const heroParallax = useTransform(scrollYProgress, [0, 1], [0, 300]);
-  
+  const heroParallax = useTransform(scrollYProgress, [0, 0.5], [0, 120]);
+
   const [search, setSearch] = useState({ category: 'buy', location: '', property_type: '', max_price: '' });
   const [featuredProperties, setFeaturedProperties] = useState([]);
   const [resaleProperties, setResaleProperties] = useState([]);
@@ -102,15 +288,14 @@ export default function HomePage() {
   const [availableLocations, setAvailableLocations] = useState([]);
   const [savedProperties, setSavedProperties] = useState(new Set());
 
-  // Loan State
   const [loanLead, setLoanLead] = useState({ name: '', phone: '' });
   const [isLoanSubmitting, setIsLoanSubmitting] = useState(false);
   const [loanAmount, setLoanAmount] = useState(7500000);
   const [interestRate, setInterestRate] = useState(8.5);
   const [loanTenure, setLoanTenure] = useState(20);
 
-  // FAQ State
   const [openFaq, setOpenFaq] = useState(0);
+  const [newsletterEmail, setNewsletterEmail] = useState('');
 
   useEffect(() => {
     const fetchHomePageData = async () => {
@@ -121,18 +306,15 @@ export default function HomePage() {
           axios.get(`${API_BASE}/properties?category=resale&limit=4`),
           axios.get(`${API_BASE}/youtube-videos`),
         ]);
-
         if (featuredRes.status === 'fulfilled' && featuredRes.value.data) {
           const allProps = featuredRes.value.data;
           setFeaturedProperties(allProps.slice(0, 4));
           const uniqueLocs = [...new Set(allProps.map(p => p.location).filter(Boolean))].sort();
           setAvailableLocations(uniqueLocs);
         }
-        
         if (resaleRes.status === 'fulfilled' && resaleRes.value.data) {
           setResaleProperties(Array.isArray(resaleRes.value.data) ? resaleRes.value.data.slice(0, 4) : []);
         }
-        
         if (videoRes.status === 'fulfilled' && videoRes.value.data) {
           setVideos(Array.isArray(videoRes.value.data) ? videoRes.value.data.slice(0, 3) : []);
         }
@@ -163,40 +345,35 @@ export default function HomePage() {
   };
 
   const handleSaveProperty = async (e, propertyId) => {
-    e.stopPropagation(); 
-    if (!user) {
-      toast.error('Please login to save properties.');
-      return navigate('/auth');
-    }
+    e.stopPropagation();
+    if (!user) { toast.error('Please login to save properties.'); return navigate('/auth'); }
     try {
       if (savedProperties.has(propertyId)) {
         await api.delete(`/favorites/${propertyId}`);
-        setSavedProperties(prev => { const newSet = new Set(prev); newSet.delete(propertyId); return newSet; });
+        setSavedProperties(prev => { const s = new Set(prev); s.delete(propertyId); return s; });
         toast.success('Removed from your collection.');
       } else {
         await api.post('/favorites', { property_id: propertyId });
-        setSavedProperties(prev => { const newSet = new Set(prev); newSet.add(propertyId); return newSet; });
-        toast.success('Property saved! Added to your dashboard.');
+        setSavedProperties(prev => new Set([...prev, propertyId]));
+        toast.success('Property saved to your dashboard.');
       }
-    } catch (error) {
-      toast.error('Failed to update favorites. Please try again.');
-    }
+    } catch { toast.error('Failed to update favorites. Please try again.'); }
   };
 
   const handleLoanLead = async () => {
-    if (!loanLead.name || loanLead.phone.replace(/\D/g, '').length < 10) return toast.error('Please enter a valid name and 10-digit phone number.');
+    if (!loanLead.name || loanLead.phone.replace(/\D/g, '').length < 10)
+      return toast.error('Please enter a valid name and 10-digit phone number.');
     setIsLoanSubmitting(true);
     try {
       await axios.post(`${API_BASE}/contacts`, {
-        name: loanLead.name, phone: loanLead.phone, email: 'N/A', interest: 'Home Loan Inquiry', message: 'Client requested a callback regarding home loan and EMI consultation from the homepage.',
+        name: loanLead.name, phone: loanLead.phone, email: 'N/A',
+        interest: 'Home Loan Inquiry',
+        message: 'Client requested a callback regarding home loan and EMI consultation from the homepage.',
       });
-      toast.success('Request received successfully! Our loan expert will call you shortly.');
+      toast.success('Request received! Our loan expert will call you shortly.');
       setLoanLead({ name: '', phone: '' });
-    } catch (error) {
-      toast.error('Failed to submit request. Please try again.');
-    } finally {
-      setIsLoanSubmitting(false);
-    }
+    } catch { toast.error('Failed to submit. Please try again.'); }
+    finally { setIsLoanSubmitting(false); }
   };
 
   const calculateEMI = () => {
@@ -209,146 +386,225 @@ export default function HomePage() {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
   };
 
-  const getMainImage = (property) => property?.images?.[0] || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=800&auto=format&fit=crop';
+  const getMainImage = (property) =>
+    property?.images?.[0] || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=800&auto=format&fit=crop';
+
   const mapLocation = search.location || 'Noida, Uttar Pradesh';
-  const dynamicMapSrc = `https://maps.google.com/maps?q=$${encodeURIComponent(mapLocation)}&t=&z=12&ie=UTF8&iwloc=&output=embed`;
+  const dynamicMapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(mapLocation)}&t=&z=12&ie=UTF8&iwloc=&output=embed`;
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-[#D4AF37]/30 relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#f8f6f1] font-sans text-slate-900 selection:bg-[#D4AF37]/30 relative overflow-x-hidden">
+      {/* Google Fonts */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+        :root {
+          --gold: #D4AF37;
+          --gold-light: #F3E5AB;
+          --gold-dark: #AA8000;
+          --crimson: #8B0000;
+          --crimson-dark: #5a0000;
+          --ink: #020202;
+          --ink-soft: #0f0f0f;
+          --cream: #f8f6f1;
+          --slate-muted: #94a3b8;
+        }
+        * { box-sizing: border-box; }
+        body { font-family: 'DM Sans', sans-serif; }
+        .font-display { font-family: 'Cormorant Garamond', serif; }
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-12px); } }
+        @keyframes pulse-gold { 0%, 100% { box-shadow: 0 0 0 0 rgba(212,175,55,0.4); } 50% { box-shadow: 0 0 0 12px rgba(212,175,55,0); } }
+        .shimmer-btn::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent); transform: translateX(-100%); }
+        .shimmer-btn:hover::after { animation: shimmer 1.2s ease; }
+        .float-anim { animation: float 5s ease-in-out infinite; }
+        .accent-line { position: relative; }
+        .accent-line::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 48px; height: 3px; background: var(--gold); border-radius: 2px; }
+        input[type=range] { -webkit-appearance: none; appearance: none; height: 4px; border-radius: 4px; background: #1e293b; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--gold); cursor: pointer; border: 3px solid #fff; box-shadow: 0 2px 8px rgba(212,175,55,0.5); }
+        select option { background: #1e293b; color: #fff; }
+        .card-3d { transform-style: preserve-3d; }
+        .card-3d:hover { transform: translateY(-8px) rotateX(2deg); }
+        /* Mobile-first scrollbars */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 3px; }
+      `}</style>
+
       <Navbar />
       <RegisterPopup />
 
-      {/* =========================================
-          1. CINEMATIC 3D HERO SECTION
-      ========================================= */}
-      <section className="relative pt-32 pb-32 px-4 md:px-6 overflow-hidden min-h-[95vh] flex flex-col justify-center perspective-[2000px]">
-        <motion.div style={{ y: heroParallax }} className="absolute inset-0 z-0 bg-[#020202]">
-          <motion.div
-            initial={{ scale: 1.1, rotate: 1 }} animate={{ scale: 1, rotate: 0 }} transition={{ duration: 30, ease: 'easeOut' }}
-            className="absolute inset-0 opacity-40 mix-blend-luminosity"
-            style={{ backgroundImage: `url('https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=2000&auto=format&fit=crop')`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+      {/* ===================================================
+          1. HERO
+      =================================================== */}
+      <section className="relative min-h-screen flex items-center overflow-hidden bg-[var(--ink)]">
+        {/* Background texture */}
+        <motion.div style={{ y: heroParallax }} className="absolute inset-0 z-0">
+          <div className="absolute inset-0"
+            style={{
+              backgroundImage: `url('https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=2000&auto=format&fit=crop')`,
+              backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.18
+            }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#020202] via-[#020202]/50 to-[#020202]/80 z-10" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#020202]/20 to-[#020202] z-10" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#020202] via-[#0d0d0d]/90 to-[#0a0a12]" />
+          {/* Radial accent */}
+          <div className="absolute top-1/4 right-1/4 w-[600px] h-[600px] rounded-full"
+            style={{ background: 'radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%)' }} />
         </motion.div>
 
-        <div className="relative z-20 max-w-6xl mx-auto text-center mt-12 w-full">
-          <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="space-y-6">
-            <motion.div variants={textReveal} className="inline-flex items-center gap-2 mb-4 px-6 py-2.5 rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 backdrop-blur-md text-[#D4AF37] text-xs font-black tracking-[0.25em] uppercase shadow-[0_0_40px_rgba(212,175,55,0.3)]">
-              <Award className="w-4 h-4" /> India's Premier Real Estate Network
-            </motion.div>
+        <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
 
-            <motion.h1 variants={textReveal} className="text-5xl md:text-7xl lg:text-[6rem] font-black text-white leading-[1.05] tracking-tight drop-shadow-2xl">
-              Elevate Your Standard <br className="hidden md:block" /> of{' '}
-              <span className="relative inline-block">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#AA8000]">Living</span>
-                <motion.span initial={{ width: 0 }} animate={{ width: '100%' }} transition={{ delay: 1, duration: 1 }} className="absolute bottom-2 left-0 h-2 bg-[#D4AF37]/40 rounded-full blur-[2px]" />
-              </span>
-            </motion.h1>
+            {/* Left: text + search */}
+            <div>
+              <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="space-y-6">
+                <motion.div variants={textReveal}
+                  className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-[var(--gold)]/25 bg-[var(--gold)]/8 text-[var(--gold)] text-xs font-bold tracking-[0.2em] uppercase backdrop-blur-sm">
+                  <Award className="w-3.5 h-3.5" /> India's Premier Real Estate Network
+                </motion.div>
 
-            <motion.p variants={textReveal} className="text-lg md:text-2xl text-slate-300 max-w-3xl mx-auto font-light leading-relaxed drop-shadow-md">
-              Discover verified luxury estates, high-ROI commercial spaces, and premium plots with our elite advisory team.
-            </motion.p>
-          </motion.div>
+                <motion.h1 variants={textReveal}
+                  className="font-display text-5xl sm:text-6xl lg:text-7xl text-white leading-[1.05] tracking-tight">
+                  Find Your <br />
+                  <span className="italic text-[var(--gold)]">Perfect</span>{' '}
+                  <span className="text-white">Estate</span>
+                </motion.h1>
 
-          {/* 3D Search Glassmorphism Panel */}
-          <motion.div
-            initial={{ opacity: 0, y: 60, rotateX: 15 }} animate={{ opacity: 1, y: 0, rotateX: 0 }} transition={{ delay: 0.6, duration: 0.8, type: "spring", stiffness: 100 }}
-            whileHover={{ y: -5, boxShadow: "0 40px 80px -15px rgba(212, 175, 55, 0.2)" }}
-            className="mt-16 bg-white/95 backdrop-blur-3xl rounded-[2.5rem] shadow-2xl p-6 md:p-8 max-w-5xl mx-auto border border-white/50 text-left relative z-30 transform-gpu"
-          >
-            <div className="flex flex-wrap justify-center md:justify-start gap-4 mb-8 border-b border-slate-200 pb-6">
-              {categoryOptions.map((cat) => (
-                <button
-                  key={cat.value}
-                  onClick={() => setSearch((prev) => ({ ...prev, category: cat.value }))}
-                  className={`px-8 py-3.5 rounded-full text-sm font-black uppercase tracking-wider transition-all duration-300 ${
-                    search.category === cat.value
-                      ? 'bg-gradient-to-r from-[#8B0000] to-[#600000] text-white shadow-xl shadow-[#8B0000]/30 scale-105'
-                      : 'bg-slate-50 text-slate-500 hover:bg-slate-100 hover:text-slate-900 border border-slate-200'
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
+                <motion.p variants={textReveal}
+                  className="text-base sm:text-lg text-slate-400 max-w-lg leading-relaxed font-light">
+                  Discover verified luxury estates, high-ROI commercial spaces, and premium plots with our elite advisory team across India's top cities.
+                </motion.p>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 relative">
-              {[
-                { icon: MapPin, value: search.location, key: 'location', default: 'City, Locality, or Project', options: availableLocations.map(l => ({label: l, value: l})) },
-                { icon: Building2, value: search.property_type, key: 'property_type', default: 'Property Type', options: [{label: 'Apartment', value: 'apartment'}, {label: 'Villa', value: 'villa'}, {label: 'Commercial', value: 'commercial'}, {label: 'Plot', value: 'plot'}] },
-                { icon: DollarSign, value: search.max_price, key: 'max_price', default: 'Max Budget', options: [{label: 'Up to ₹50 Lac', value: '5000000'}, {label: 'Up to ₹1 Cr', value: '10000000'}, {label: 'Up to ₹3 Cr', value: '30000000'}, {label: 'Above ₹3 Cr', value: '50000000'}] }
-              ].map((select, i) => (
-                <div key={i} className="relative group bg-slate-50 rounded-2xl border border-slate-200 hover:border-[#D4AF37]/60 transition-colors shadow-inner">
-                  <select.icon className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-hover:text-[#D4AF37] transition-colors" />
-                  <select
-                    value={select.value}
-                    onChange={(e) => setSearch((prev) => ({ ...prev, [select.key]: e.target.value }))}
-                    className="h-16 pl-14 pr-5 bg-transparent border-0 w-full text-slate-800 appearance-none outline-none font-bold text-base cursor-pointer"
-                  >
-                    <option value="">{select.default}</option>
-                    {select.options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                  </select>
-                </div>
-              ))}
+                {/* Stats inline */}
+                <motion.div variants={textReveal} className="flex flex-wrap gap-6 pt-2">
+                  {[
+                    { v: '10K+', l: 'Listings' }, { v: '5K+', l: 'Families' }, { v: '25+', l: 'Cities' }
+                  ].map((s, i) => (
+                    <div key={i} className="text-center">
+                      <p className="text-2xl font-bold text-[var(--gold)]">{s.v}</p>
+                      <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">{s.l}</p>
+                    </div>
+                  ))}
+                </motion.div>
+              </motion.div>
 
-              <motion.button
-                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }} onClick={handleSearch}
-                className="relative overflow-hidden w-full h-16 bg-[#8B0000] text-white font-black text-lg rounded-2xl shadow-xl shadow-[#8B0000]/40 flex items-center justify-center group border border-[#600000]"
+              {/* Search Panel */}
+              <motion.div
+                initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.7, type: 'spring' }}
+                className="mt-10 bg-white/95 backdrop-blur-2xl rounded-2xl shadow-2xl p-5 border border-white/60"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
-                <Search className="mr-2 h-6 w-6" /> Search Assets
-              </motion.button>
+                {/* Category tabs */}
+                <div className="flex flex-wrap gap-2 mb-5 pb-4 border-b border-slate-100">
+                  {categoryOptions.map(cat => (
+                    <button key={cat.value} onClick={() => setSearch(p => ({ ...p, category: cat.value }))}
+                      className={`px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 ${
+                        search.category === cat.value
+                          ? 'bg-[var(--crimson)] text-white shadow-lg'
+                          : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                      }`}>
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Dropdowns */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+                  {[
+                    { icon: MapPin, key: 'location', label: 'Location', options: availableLocations.map(l => ({ label: l, value: l })) },
+                    { icon: Building2, key: 'property_type', label: 'Type', options: [{ label: 'Apartment', value: 'apartment' }, { label: 'Villa', value: 'villa' }, { label: 'Commercial', value: 'commercial' }, { label: 'Plot', value: 'plot' }] },
+                    { icon: DollarSign, key: 'max_price', label: 'Budget', options: [{ label: 'Up to ₹50 Lac', value: '5000000' }, { label: 'Up to ₹1 Cr', value: '10000000' }, { label: 'Up to ₹3 Cr', value: '30000000' }, { label: 'Above ₹3 Cr', value: '50000000' }] },
+                  ].map((s, i) => (
+                    <div key={i} className="relative bg-slate-50 rounded-xl border border-slate-200 hover:border-[var(--gold)]/50 transition-colors group">
+                      <s.icon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-hover:text-[var(--gold)] transition-colors" />
+                      <select value={search[s.key]} onChange={e => setSearch(p => ({ ...p, [s.key]: e.target.value }))}
+                        className="h-12 pl-10 pr-4 bg-transparent border-0 w-full text-slate-700 appearance-none outline-none text-sm font-medium cursor-pointer">
+                        <option value="">{s.label}</option>
+                        {s.options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                      </select>
+                    </div>
+                  ))}
+                </div>
+                <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
+                  onClick={handleSearch}
+                  className="shimmer-btn relative overflow-hidden w-full h-12 bg-[var(--crimson)] text-white font-bold text-sm rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all hover:bg-[var(--crimson-dark)]">
+                  <Search className="h-4 w-4" /> Search Properties
+                </motion.button>
+              </motion.div>
             </div>
-          </motion.div>
-        </div>
-      </section>
 
-      {/* =========================================
-          2. TRUST BAR & STATS
-      ========================================= */}
-      <section className="relative z-30 -mt-12 max-w-7xl mx-auto px-4">
-        <div className="bg-white rounded-[2rem] shadow-2xl border border-slate-100 p-8 md:p-12 grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-slate-100">
-          {[
-            { label: 'Verified Listings', value: '10,000+', icon: ShieldCheck },
-            { label: 'Happy Families', value: '5,000+', icon: Users },
-            { label: 'Cities Covered', value: '25+', icon: MapPin },
-            { label: 'Years of Legacy', value: '15+', icon: TrendingUp },
-          ].map((stat, i) => (
-            <motion.div key={i} whileHover={{ y: -5 }} className="text-center px-4 group cursor-default">
-              <stat.icon className="w-10 h-10 mx-auto text-[#D4AF37] mb-4 group-hover:scale-110 transition-transform duration-500" />
-              <h3 className="text-4xl font-black text-slate-900 md:text-5xl">{stat.value}</h3>
-              <p className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-widest">{stat.label}</p>
+            {/* Right: 3D Building */}
+            <motion.div
+              initial={{ opacity: 0, x: 60 }} animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3, duration: 1, type: 'spring' }}
+              className="hidden lg:flex items-end justify-center float-anim"
+              style={{ height: '560px' }}
+            >
+              <Building3D />
             </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* =========================================
-          3. EXPLORE CATEGORIES GRID
-      ========================================= */}
-      <section className="py-32 px-6 bg-slate-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16 max-w-3xl mx-auto">
-            <p className="text-[#8B0000] font-black uppercase tracking-[0.3em] text-xs mb-4">Portfolio Segments</p>
-            <h2 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tight">Explore Our Assets</h2>
           </div>
-          
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {exploreCategories.map((cat, i) => (
-              <motion.div 
-                key={i} variants={scaleUp} whileHover={{ y: -10, boxShadow: '0 30px 60px -15px rgba(0,0,0,0.1)' }}
-                onClick={() => navigate(`/properties?property_type=${cat.title.split(' ')[1].toLowerCase()}`)}
-                className="relative h-96 rounded-[2.5rem] overflow-hidden group cursor-pointer"
-              >
-                <div className="absolute inset-0 bg-slate-900 z-0">
-                  <img src={cat.image} alt={cat.title} className="w-full h-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-110 transition-all duration-700 ease-out" />
+        </div>
+
+        {/* Bottom gradient fade */}
+        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[var(--cream)] to-transparent z-10 pointer-events-none" />
+      </section>
+
+      {/* ===================================================
+          2. STATS BAR
+      =================================================== */}
+      <section className="relative z-20 bg-white border-y border-slate-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-slate-100">
+            {[
+              { label: 'Verified Listings', value: '10,000+', icon: ShieldCheck },
+              { label: 'Happy Families', value: '5,000+', icon: Users },
+              { label: 'Cities Covered', value: '25+', icon: MapPin },
+              { label: 'Years of Legacy', value: '15+', icon: TrendingUp },
+            ].map((stat, i) => (
+              <motion.div key={i} whileHover={{ y: -3 }} className="flex flex-col items-center py-8 px-4 text-center group">
+                <div className="w-12 h-12 rounded-full bg-[var(--gold)]/10 flex items-center justify-center mb-3 group-hover:bg-[var(--gold)]/20 transition-colors">
+                  <stat.icon className="w-5 h-5 text-[var(--gold)]" />
                 </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-[#020202] via-[#020202]/40 to-transparent z-10" />
-                <div className="absolute bottom-8 left-8 right-8 z-20">
-                  <cat.icon className="w-10 h-10 text-[#D4AF37] mb-4 drop-shadow-lg" />
-                  <h3 className="text-2xl font-black text-white mb-2">{cat.title}</h3>
-                  <p className="text-slate-300 text-sm font-medium">{cat.desc}</p>
+                <p className="text-3xl sm:text-4xl font-bold text-slate-900">{stat.value}</p>
+                <p className="text-xs font-semibold text-slate-400 mt-1 uppercase tracking-widest">{stat.label}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===================================================
+          3. EXPLORE CATEGORIES
+      =================================================== */}
+      <section className="py-20 sm:py-28 px-4 sm:px-6 bg-[var(--cream)]">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-12 sm:mb-16">
+            <p className="text-[var(--crimson)] font-bold uppercase tracking-[0.25em] text-xs mb-3">Portfolio</p>
+            <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl text-slate-900 leading-tight">
+              Explore Our <em>Asset Classes</em>
+            </h2>
+          </div>
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}
+            variants={staggerContainer}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {exploreCategories.map((cat, i) => (
+              <motion.div key={i} variants={scaleUp}
+                onClick={() => navigate(`/properties?property_type=${cat.title.split(' ')[1]?.toLowerCase() || cat.title.toLowerCase()}`)}
+                className="relative h-80 sm:h-96 rounded-2xl overflow-hidden group cursor-pointer"
+                whileHover={{ y: -6, transition: { duration: 0.2 } }}
+              >
+                <img src={cat.image} alt={cat.title}
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                  onError={e => { e.target.src = 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=800&auto=format&fit=crop'; }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#020202]/90 via-[#020202]/30 to-transparent" />
+                <div className="absolute inset-0 bg-[var(--gold)]/0 group-hover:bg-[var(--gold)]/5 transition-colors duration-500" />
+                <div className="absolute bottom-6 left-6 right-6">
+                  <cat.icon className="w-8 h-8 text-[var(--gold)] mb-3" />
+                  <h3 className="text-xl font-bold text-white">{cat.title}</h3>
+                  <p className="text-slate-300 text-sm mt-1">{cat.desc}</p>
+                </div>
+                <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <ArrowUpRight className="w-4 h-4 text-white" />
                 </div>
               </motion.div>
             ))}
@@ -356,102 +612,95 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* =========================================
-          4. HOW IT WORKS (Timeline Journey)
-      ========================================= */}
-      <section className="py-32 px-6 bg-white border-y border-slate-100 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-br from-slate-50 to-transparent pointer-events-none" />
-        <div className="max-w-7xl mx-auto relative z-10">
-           <div className="text-center mb-20 max-w-3xl mx-auto">
-            <p className="text-[#8B0000] font-black uppercase tracking-[0.3em] text-xs mb-4">The ANK Process</p>
-            <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">Your Journey to the Perfect Property</h2>
+      {/* ===================================================
+          4. HOW IT WORKS
+      =================================================== */}
+      <section className="py-20 sm:py-28 px-4 sm:px-6 bg-white border-y border-slate-100">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-14 max-w-2xl mx-auto">
+            <p className="text-[var(--crimson)] font-bold uppercase tracking-[0.25em] text-xs mb-3">Process</p>
+            <h2 className="font-display text-4xl sm:text-5xl text-slate-900 leading-tight">Your Journey to the <em>Perfect Property</em></h2>
           </div>
-
-          <div className="grid md:grid-cols-4 gap-8 relative">
-            {/* Connecting Line */}
-            <div className="hidden md:block absolute top-12 left-10 right-10 h-0.5 bg-slate-200" />
-            
+          <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-8 relative">
+            <div className="hidden md:block absolute top-10 left-16 right-16 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
             {processSteps.map((step, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.2 }} className="relative text-center group">
-                <div className="w-24 h-24 mx-auto bg-white border-4 border-slate-50 rounded-full shadow-xl flex items-center justify-center relative z-10 group-hover:border-[#D4AF37]/50 transition-colors duration-500 group-hover:scale-110">
-                  <step.icon className="w-10 h-10 text-[#8B0000]" />
-                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#D4AF37] text-white font-black rounded-full flex items-center justify-center border-2 border-white shadow-md">
+              <motion.div key={i} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }} transition={{ delay: i * 0.15 }}
+                className="text-center relative group"
+              >
+                <div className="w-20 h-20 mx-auto bg-white border-2 border-slate-100 rounded-full shadow-lg flex items-center justify-center relative z-10 group-hover:border-[var(--gold)]/40 transition-colors duration-300">
+                  <step.icon className="w-8 h-8 text-[var(--crimson)]" />
+                  <div className="absolute -top-2 -right-2 w-7 h-7 bg-[var(--gold)] text-white text-xs font-black rounded-full flex items-center justify-center border-2 border-white shadow">
                     {i + 1}
                   </div>
                 </div>
-                <h3 className="text-xl font-black text-slate-900 mt-8 mb-3">{step.title}</h3>
-                <p className="text-slate-500 font-medium text-sm px-4">{step.desc}</p>
+                <h3 className="text-lg font-bold text-slate-900 mt-6 mb-2">{step.title}</h3>
+                <p className="text-slate-500 text-sm leading-relaxed">{step.desc}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* =========================================
-          5. FEATURED PROPERTIES (3D Cards)
-      ========================================= */}
-      <section className="py-32 px-6 bg-[#020202] text-white">
+      {/* ===================================================
+          5. FEATURED PROPERTIES
+      =================================================== */}
+      <section className="py-20 sm:py-28 px-4 sm:px-6 bg-[var(--ink)] text-white">
         <div className="max-w-7xl mx-auto">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }} variants={fadeUp} className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}
+            variants={fadeUp}
+            className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-12 gap-4">
             <div>
-              <p className="text-[#D4AF37] font-black uppercase tracking-[0.3em] text-xs mb-4 flex items-center gap-2">
-                <Award className="w-5 h-5" /> Signature Collection
+              <p className="text-[var(--gold)] font-bold uppercase tracking-[0.25em] text-xs mb-3 flex items-center gap-2">
+                <Sparkles className="w-4 h-4" /> Signature Collection
               </p>
-              <h2 className="text-4xl md:text-6xl font-black tracking-tight">Exclusive Primary Listings</h2>
+              <h2 className="font-display text-4xl sm:text-5xl text-white">Exclusive <em>Primary Listings</em></h2>
             </div>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Link to="/properties" className="inline-flex items-center justify-center h-14 px-8 rounded-full border-2 border-white/20 font-bold text-white hover:bg-white hover:text-slate-900 transition-colors">
-                View Complete Collection <ArrowUpRight className="w-5 h-5 ml-2" />
-              </Link>
-            </motion.div>
+            <Link to="/properties"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-white/20 text-sm font-semibold text-white hover:bg-white hover:text-slate-900 transition-all whitespace-nowrap">
+              View All <ArrowUpRight className="w-4 h-4" />
+            </Link>
           </motion.div>
 
           {loading ? (
-            <div className="flex justify-center items-center py-20"><Loader2 className="w-10 h-10 animate-spin text-[#D4AF37]" /></div>
+            <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-[var(--gold)]" /></div>
           ) : featuredProperties.length > 0 ? (
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 perspective-1000">
-              {featuredProperties.map((property) => {
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}
+              variants={staggerContainer}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {featuredProperties.map(property => {
                 const isSaved = savedProperties.has(property.id);
                 return (
-                  <motion.div
-                    variants={fadeUp} key={property.id}
-                    whileHover={{ y: -15, rotateX: 2, rotateY: -2, boxShadow: '0 40px 60px -15px rgba(212,175,55,0.2)' }}
+                  <motion.div variants={fadeUp} key={property.id}
+                    className="card-3d bg-[#111] rounded-2xl overflow-hidden border border-white/10 cursor-pointer group flex flex-col transition-all duration-300 hover:border-[var(--gold)]/30"
                     onClick={() => navigate(`/property/${property.id}`, { state: { property } })}
-                    className="bg-[#111] rounded-[2.5rem] overflow-hidden border border-white/10 cursor-pointer relative group flex flex-col transform-gpu transition-all duration-300"
                   >
-                    <div className="absolute top-5 left-5 bg-white/95 backdrop-blur-md px-4 py-2 rounded-full text-[10px] font-black text-slate-900 shadow-xl z-20 flex items-center gap-2 uppercase tracking-widest">
-                      <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" /> {property.projectStatus || 'Featured'}
+                    <div className="absolute top-4 left-4 bg-white/95 px-3 py-1.5 rounded-full text-[10px] font-bold text-slate-900 z-20 flex items-center gap-1.5 uppercase tracking-widest">
+                      <Sparkles className="w-3 h-3 text-[var(--gold)]" /> {property.projectStatus || 'Featured'}
                     </div>
-                    
-                    <motion.button 
-                      whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={(e) => handleSaveProperty(e, property.id)} 
-                      className={`absolute top-5 right-5 w-12 h-12 bg-[#020202]/50 backdrop-blur-md rounded-full flex items-center justify-center z-20 border border-white/20 shadow-xl ${isSaved ? 'text-[#8B0000] border-[#8B0000]' : 'text-white hover:text-[#8B0000]'}`}
-                    >
-                      <Heart className={`w-5 h-5 transition-colors ${isSaved ? 'fill-[#8B0000]' : ''}`} />
-                    </motion.button>
-
-                    <div className="relative h-72 overflow-hidden bg-[#020202]">
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#111] via-transparent to-transparent z-10 opacity-90" />
-                      <img src={getMainImage(property)} alt={property.title} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out opacity-80 group-hover:opacity-100" />
-                      
-                      <div className="absolute bottom-5 left-6 right-6 z-20 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
-                         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D4AF37] mb-1.5">
-                           {property.category} • {property.property_type}
-                         </p>
-                         <h3 className="text-2xl font-black text-white leading-tight line-clamp-1 drop-shadow-lg">
-                           {property.title}
-                         </h3>
+                    <button onClick={e => handleSaveProperty(e, property.id)}
+                      className={`absolute top-4 right-4 w-10 h-10 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center z-20 border transition-colors ${isSaved ? 'border-[var(--crimson)] text-[var(--crimson)]' : 'border-white/20 text-white hover:text-[var(--crimson)]'}`}>
+                      <Heart className={`w-4 h-4 ${isSaved ? 'fill-[var(--crimson)]' : ''}`} />
+                    </button>
+                    <div className="relative h-56 overflow-hidden bg-slate-800">
+                      <img src={getMainImage(property)} alt={property.title}
+                        className="h-full w-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 ease-out"
+                        onError={e => { e.target.src = 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=800&auto=format&fit=crop'; }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#111] to-transparent" />
+                      <div className="absolute bottom-4 left-4 right-4 z-10">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--gold)] mb-1">{property.category} · {property.property_type}</p>
+                        <h3 className="text-lg font-bold text-white line-clamp-1">{property.title}</h3>
                       </div>
                     </div>
-
-                    <div className="p-6 flex-1 flex flex-col bg-[#111] relative z-20">
-                      <p className="text-slate-400 text-sm mb-6 flex items-center font-medium">
-                        <MapPin className="w-4 h-4 mr-2 text-[#D4AF37]" /> {property.location}, {property.city}
+                    <div className="p-5 flex-1 flex flex-col">
+                      <p className="text-slate-400 text-sm mb-4 flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-[var(--gold)] shrink-0" /> {property.location}, {property.city}
                       </p>
-                      <div className="mt-auto flex items-center justify-between pt-5 border-t border-white/10">
-                        <span className="font-black text-white text-2xl">{formatCurrency(property.price)}</span>
-                        <div className="bg-white/5 group-hover:bg-[#8B0000] text-slate-400 group-hover:text-white w-12 h-12 rounded-full flex items-center justify-center transition-colors duration-500 transform group-hover:rotate-45 border border-white/10">
-                          <ArrowUpRight className="w-5 h-5" />
+                      <div className="mt-auto flex items-center justify-between pt-4 border-t border-white/10">
+                        <span className="font-bold text-white text-xl">{formatCurrency(property.price)}</span>
+                        <div className="w-9 h-9 rounded-full bg-white/5 group-hover:bg-[var(--crimson)] flex items-center justify-center transition-colors border border-white/10">
+                          <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-white" />
                         </div>
                       </div>
                     </div>
@@ -460,92 +709,94 @@ export default function HomePage() {
               })}
             </motion.div>
           ) : (
-            <div className="text-center py-10 text-slate-400 font-medium">No premium properties currently available.</div>
+            <p className="text-center py-10 text-slate-500">No premium properties currently available.</p>
           )}
         </div>
       </section>
 
-      {/* =========================================
-          6. PERFECT LOGO ANIMATION
-      ========================================= */}
-      <section className="py-20 relative w-full overflow-hidden bg-white z-20 border-b border-slate-100">
-        <div className="w-full max-w-7xl mx-auto px-6">
-          <h2 className="text-xs font-black uppercase tracking-[0.3em] text-slate-400 mb-12 text-center">
-            Network & Developer Partners
-          </h2>
-          <div className="relative flex flex-col gap-10 overflow-hidden w-full" style={{ WebkitMaskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)' }}>
-            <motion.div animate={{ x: ['0%', '-50%'] }} transition={{ duration: 30, repeat: Infinity, ease: 'linear' }} className="flex gap-16 sm:gap-24 w-max items-center">
-              {[...topRowLogos, ...topRowLogos, ...topRowLogos, ...topRowLogos].map((src, i) => (
-                <div key={`top-${i}`} className="flex-shrink-0 w-32 sm:w-44 h-16 flex items-center justify-center">
-                  <img src={src} alt="Partner" className="max-w-full max-h-full object-contain grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-500 hover:scale-110" />
-                </div>
-              ))}
-            </motion.div>
-            <motion.div animate={{ x: ['-50%', '0%'] }} transition={{ duration: 30, repeat: Infinity, ease: 'linear' }} className="flex gap-16 sm:gap-24 w-max items-center">
-              {[...bottomRowLogos, ...bottomRowLogos, ...bottomRowLogos, ...bottomRowLogos].map((src, i) => (
-                <div key={`bottom-${i}`} className="flex-shrink-0 w-32 sm:w-44 h-16 flex items-center justify-center">
-                  <img src={src} alt="Partner" className="max-w-full max-h-full object-contain grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-500 hover:scale-110" />
-                </div>
-              ))}
-            </motion.div>
+      {/* ===================================================
+          6. PARTNER LOGOS
+      =================================================== */}
+      <section className="py-16 bg-white border-b border-slate-100 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <p className="text-xs font-bold uppercase tracking-[0.25em] text-slate-400 mb-10 text-center">Network & Developer Partners</p>
+          <div className="relative flex flex-col gap-8"
+            style={{ WebkitMaskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)' }}>
+            {[
+              { logos: topRowLogos, dir: -1 },
+              { logos: bottomRowLogos, dir: 1 },
+            ].map((row, ri) => (
+              <motion.div key={ri}
+                animate={{ x: row.dir === -1 ? ['0%', '-50%'] : ['-50%', '0%'] }}
+                transition={{ duration: 28, repeat: Infinity, ease: 'linear' }}
+                className="flex gap-12 sm:gap-20 w-max items-center">
+                {[...row.logos, ...row.logos, ...row.logos, ...row.logos].map((src, i) => (
+                  <div key={i} className="shrink-0 w-28 sm:w-36 h-14 flex items-center justify-center">
+                    <SafeImg src={src} alt="Partner" fallback={FALLBACK_LOGO}
+                      className="max-w-full max-h-full object-contain grayscale opacity-35 hover:grayscale-0 hover:opacity-90 transition-all duration-400" />
+                  </div>
+                ))}
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* =========================================
+      {/* ===================================================
           7. RESALE PROPERTIES
-      ========================================= */}
-      <section className="py-32 px-6 bg-slate-50">
+      =================================================== */}
+      <section className="py-20 sm:py-28 px-4 sm:px-6 bg-[var(--cream)]">
         <div className="max-w-7xl mx-auto">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }} variants={fadeUp} className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}
+            variants={fadeUp}
+            className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-12 gap-4">
             <div>
-              <p className="text-[#8B0000] font-black uppercase tracking-[0.3em] text-xs mb-4 flex items-center gap-2">
-                <RefreshCw className="w-5 h-5" /> Secondary Market
+              <p className="text-[var(--crimson)] font-bold uppercase tracking-[0.25em] text-xs mb-3 flex items-center gap-2">
+                <RefreshCw className="w-4 h-4" /> Secondary Market
               </p>
-              <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">Ready to Move-In Homes</h2>
+              <h2 className="font-display text-4xl sm:text-5xl text-slate-900">Ready to <em>Move-In Homes</em></h2>
             </div>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Link to="/properties?category=resale" className="inline-flex items-center justify-center h-14 px-8 rounded-full bg-[#8B0000] font-bold text-white shadow-lg shadow-[#8B0000]/30 transition-colors">
-                View All Resale <ChevronRight className="w-5 h-5 ml-2" />
-              </Link>
-            </motion.div>
+            <Link to="/properties?category=resale"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[var(--crimson)] text-sm font-semibold text-white hover:bg-[var(--crimson-dark)] transition-colors whitespace-nowrap">
+              View All Resale <ChevronRight className="w-4 h-4" />
+            </Link>
           </motion.div>
 
           {loading ? (
-            <div className="flex justify-center items-center py-20"><Loader2 className="w-10 h-10 animate-spin text-[#8B0000]" /></div>
+            <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-[var(--crimson)]" /></div>
           ) : resaleProperties.length > 0 ? (
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 perspective-1000">
-              {resaleProperties.map((property) => {
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}
+              variants={staggerContainer}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {resaleProperties.map(property => {
                 const isSaved = savedProperties.has(property.id);
                 return (
-                  <motion.div
-                    variants={fadeUp} key={property.id}
-                    whileHover={{ y: -10, boxShadow: '0 30px 50px -10px rgba(0,0,0,0.1)' }}
+                  <motion.div variants={fadeUp} key={property.id}
+                    className="bg-white rounded-2xl overflow-hidden border border-slate-200 cursor-pointer group flex flex-col hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300"
                     onClick={() => navigate(`/property/${property.id}`, { state: { property } })}
-                    className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-200 cursor-pointer relative group flex flex-col transition-all duration-300"
                   >
-                    <div className="absolute top-5 left-5 bg-emerald-500/95 backdrop-blur-md px-4 py-2 rounded-full text-[10px] font-black text-white shadow-md z-20 flex items-center gap-2 uppercase tracking-widest">
-                      <Key className="w-3.5 h-3.5" /> {property.projectStatus || 'Ready'}
+                    <div className="absolute top-4 left-4 bg-emerald-500 px-3 py-1.5 rounded-full text-[10px] font-bold text-white z-20 flex items-center gap-1.5 uppercase tracking-widest">
+                      <Key className="w-3 h-3" /> {property.projectStatus || 'Ready'}
                     </div>
-                    
-                    <motion.button 
-                      whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={(e) => handleSaveProperty(e, property.id)} 
-                      className={`absolute top-5 right-5 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center z-20 shadow-md ${isSaved ? 'text-[#8B0000] border-2 border-red-100' : 'text-slate-400 hover:text-[#8B0000]'}`}
-                    >
-                      <Heart className={`w-5 h-5 transition-colors ${isSaved ? 'fill-[#8B0000]' : ''}`} />
-                    </motion.button>
-
-                    <div className="relative h-64 overflow-hidden bg-slate-100">
-                      <img src={getMainImage(property)} alt={property.title} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out" />
+                    <button onClick={e => handleSaveProperty(e, property.id)}
+                      className={`absolute top-4 right-4 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center z-20 shadow-sm transition-colors ${isSaved ? 'text-[var(--crimson)]' : 'text-slate-400 hover:text-[var(--crimson)]'}`}>
+                      <Heart className={`w-4 h-4 ${isSaved ? 'fill-[var(--crimson)]' : ''}`} />
+                    </button>
+                    <div className="relative h-52 overflow-hidden bg-slate-100">
+                      <img src={getMainImage(property)} alt={property.title}
+                        className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                        onError={e => { e.target.src = 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=800&auto=format&fit=crop'; }}
+                      />
                     </div>
-
-                    <div className="p-6 flex-1 flex flex-col bg-white">
-                      <h3 className="text-xl font-black text-slate-900 mb-2 group-hover:text-[#8B0000] transition-colors line-clamp-1">{property.title}</h3>
-                      <p className="text-slate-500 text-sm mb-6 flex items-center font-medium"><MapPin className="w-4 h-4 mr-2 text-slate-400" /> {property.location}, {property.city}</p>
-                      <div className="mt-auto flex items-center justify-between pt-5 border-t border-slate-100">
-                        <span className="font-black text-slate-900 text-2xl">{formatCurrency(property.price)}</span>
-                        <div className="bg-slate-50 group-hover:bg-[#8B0000] text-slate-400 group-hover:text-white w-12 h-12 rounded-full flex items-center justify-center transition-colors">
-                          <ArrowRight className="w-5 h-5" />
+                    <div className="p-5 flex-1 flex flex-col">
+                      <h3 className="text-base font-bold text-slate-900 mb-1.5 group-hover:text-[var(--crimson)] transition-colors line-clamp-1">{property.title}</h3>
+                      <p className="text-slate-400 text-sm flex items-center gap-1.5 mb-4">
+                        <MapPin className="w-3.5 h-3.5 shrink-0" /> {property.location}, {property.city}
+                      </p>
+                      <div className="mt-auto flex items-center justify-between pt-4 border-t border-slate-100">
+                        <span className="font-bold text-slate-900 text-lg">{formatCurrency(property.price)}</span>
+                        <div className="w-9 h-9 rounded-full bg-slate-50 group-hover:bg-[var(--crimson)] flex items-center justify-center transition-colors">
+                          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white" />
                         </div>
                       </div>
                     </div>
@@ -554,32 +805,34 @@ export default function HomePage() {
               })}
             </motion.div>
           ) : (
-            <div className="text-center py-10 text-slate-500 font-medium">No resale properties currently available.</div>
+            <p className="text-center py-10 text-slate-500">No resale properties currently available.</p>
           )}
         </div>
       </section>
 
-      {/* =========================================
-          8. TOP CITIES / NEIGHBORHOODS
-      ========================================= */}
-      <section className="py-24 px-6 bg-white border-t border-slate-100">
+      {/* ===================================================
+          8. TOP CITIES
+      =================================================== */}
+      <section className="py-20 sm:py-24 px-4 sm:px-6 bg-white border-t border-slate-100">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16 max-w-3xl mx-auto">
-            <p className="text-[#8B0000] font-black uppercase tracking-[0.3em] text-xs mb-4">Locations</p>
-            <h2 className="text-4xl font-black text-slate-900">Discover Top Neighborhoods</h2>
+          <div className="text-center mb-12">
+            <p className="text-[var(--crimson)] font-bold uppercase tracking-[0.25em] text-xs mb-3">Locations</p>
+            <h2 className="font-display text-4xl sm:text-5xl text-slate-900">Top <em>Neighborhoods</em></h2>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {topCities.map((city, i) => (
-              <motion.div 
-                key={i} whileHover={{ scale: 1.03 }} onClick={() => navigate(`/properties?location=${city.name}`)}
-                className="relative h-80 rounded-[2rem] overflow-hidden group cursor-pointer shadow-lg"
+              <motion.div key={i} whileHover={{ scale: 1.02 }}
+                onClick={() => navigate(`/properties?location=${city.name}`)}
+                className="relative h-72 rounded-2xl overflow-hidden group cursor-pointer shadow-md"
               >
-                <img src={city.image} alt={city.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 to-transparent" />
-                <div className="absolute bottom-6 left-6 text-left">
-                  <h3 className="text-2xl font-black text-white mb-1">{city.name}</h3>
-                  <p className="text-slate-300 font-medium text-sm">{city.count}</p>
+                <img src={city.image} alt={city.name}
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  onError={e => { e.target.src = 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=800&auto=format&fit=crop'; }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/85 to-transparent" />
+                <div className="absolute bottom-5 left-5">
+                  <h3 className="text-xl font-bold text-white">{city.name}</h3>
+                  <p className="text-slate-300 text-sm mt-0.5">{city.count}</p>
                 </div>
               </motion.div>
             ))}
@@ -587,46 +840,45 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* =========================================
-          9. YOUTUBE VIDEO TOURS (RESTORED & ENHANCED)
-      ========================================= */}
+      {/* ===================================================
+          9. VIDEO TOURS
+      =================================================== */}
       {videos.length > 0 && (
-        <section className="py-32 px-6 bg-[#020202] text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-[#8B0000]/20 rounded-full blur-[100px] pointer-events-none" />
+        <section className="py-20 sm:py-28 px-4 sm:px-6 bg-[var(--ink)] text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-[var(--crimson)]/10 rounded-full blur-[80px] pointer-events-none" />
           <div className="max-w-7xl mx-auto relative z-10">
-            <div className="text-center mb-16 max-w-3xl mx-auto">
-              <p className="text-[#D4AF37] font-black uppercase tracking-[0.3em] text-xs mb-4">Virtual Experience</p>
-              <h2 className="text-4xl md:text-5xl font-black leading-tight">Immersive Property Tours</h2>
+            <div className="text-center mb-12">
+              <p className="text-[var(--gold)] font-bold uppercase tracking-[0.25em] text-xs mb-3">Virtual Tours</p>
+              <h2 className="font-display text-4xl sm:text-5xl text-white">Immersive <em>Property Tours</em></h2>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {videos.map((vid) => {
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {videos.map(vid => {
                 const ytId = getYouTubeID(vid.videoUrl);
                 return (
-                  <motion.div key={vid.id} whileHover={{ y: -10 }} className="bg-white/5 rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl flex flex-col group backdrop-blur-sm">
+                  <motion.div key={vid.id} whileHover={{ y: -6 }}
+                    className="bg-white/5 rounded-2xl overflow-hidden border border-white/10 flex flex-col backdrop-blur-sm hover:border-[var(--gold)]/30 transition-colors">
                     <div className="relative aspect-video bg-black">
-                      {ytId ? (
-                        <iframe src={`https://www.youtube.com/embed/${ytId}?rel=0`} title={vid.title} className="w-full h-full absolute inset-0" allowFullScreen />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-slate-500"><Video className="w-10 h-10" /></div>
-                      )}
+                      {ytId
+                        ? <iframe src={`https://www.youtube.com/embed/${ytId}?rel=0`} title={vid.title} className="w-full h-full absolute inset-0" allowFullScreen />
+                        : <div className="w-full h-full flex items-center justify-center text-slate-600"><Video className="w-8 h-8" /></div>
+                      }
                     </div>
-                    <div className="p-8 flex-1 flex flex-col">
-                      <div className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37] mb-3 flex items-center gap-2">
-                        <PlayCircle className="w-4 h-4" /> Watch Now
-                      </div>
-                      <h3 className="font-black text-white text-xl mb-3 line-clamp-2">{vid.title}</h3>
-                      <p className="text-sm text-slate-400 line-clamp-3 mt-auto leading-relaxed">{vid.description || 'Exclusive insights and walkthroughs from our real estate experts.'}</p>
+                    <div className="p-6 flex-1 flex flex-col">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--gold)] mb-2 flex items-center gap-1.5">
+                        <PlayCircle className="w-3.5 h-3.5" /> Watch Now
+                      </p>
+                      <h3 className="font-bold text-white text-base mb-2 line-clamp-2">{vid.title}</h3>
+                      <p className="text-sm text-slate-400 line-clamp-2 leading-relaxed">{vid.description || 'Exclusive insights and walkthroughs from our real estate experts.'}</p>
                     </div>
                   </motion.div>
                 );
               })}
             </div>
-            
-            <div className="text-center mt-16">
+            <div className="text-center mt-12">
               <Link to="/videos">
-                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="inline-flex items-center justify-center h-14 px-8 rounded-full border border-[#D4AF37] font-bold text-[#D4AF37] hover:bg-[#D4AF37] hover:text-slate-900 transition-colors">
-                  Explore Video Gallery <ArrowRight className="w-5 h-5 ml-2" />
+                <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                  className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full border border-[var(--gold)] text-[var(--gold)] font-semibold text-sm hover:bg-[var(--gold)] hover:text-slate-900 transition-all">
+                  Explore Video Gallery <ArrowRight className="w-4 h-4" />
                 </motion.button>
               </Link>
             </div>
@@ -634,51 +886,54 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* =========================================
-          10. USPs / WHY CHOOSE ANK REALTY
-      ========================================= */}
-      <section className="py-32 px-6 bg-slate-50">
+      {/* ===================================================
+          10. WHY ANK REALTY
+      =================================================== */}
+      <section className="py-20 sm:py-28 px-4 sm:px-6 bg-[var(--cream)]">
         <div className="max-w-7xl mx-auto">
-           <div className="text-center mb-20 max-w-3xl mx-auto">
-            <p className="text-[#8B0000] font-black uppercase tracking-[0.3em] text-xs mb-4">The ANK Advantage</p>
-            <h2 className="text-4xl md:text-5xl font-black text-slate-900">Why Investors Choose Us</h2>
+          <div className="text-center mb-14">
+            <p className="text-[var(--crimson)] font-bold uppercase tracking-[0.25em] text-xs mb-3">The ANK Advantage</p>
+            <h2 className="font-display text-4xl sm:text-5xl text-slate-900">Why Investors <em>Choose Us</em></h2>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid sm:grid-cols-3 gap-6">
             {[
-              { t: 'Zero Brokerage', d: 'We charge absolutely no brokerage on new developer projects.', i: DollarSign },
-              { t: 'Legal Verification', d: '40-point legal and physical check before any listing goes live.', i: Shield },
-              { t: 'End-to-End Support', d: 'From initial search and loan approval to final registry.', i: ThumbsUp },
+              { t: 'Zero Brokerage', d: 'We charge absolutely no brokerage on new developer projects. Every rupee stays with you.', i: DollarSign },
+              { t: 'Legal Verification', d: '40-point legal and physical verification before any listing goes live on our platform.', i: Shield },
+              { t: 'End-to-End Support', d: 'From initial search and loan approval to final registry and possession handover.', i: ThumbsUp },
             ].map((usp, i) => (
-               <motion.div key={i} whileHover={{ y: -10 }} className="bg-white p-10 rounded-[2.5rem] border border-slate-200 shadow-sm text-center group hover:border-[#D4AF37]/50 transition-colors">
-                 <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-[#8B0000] transition-colors">
-                   <usp.i className="w-10 h-10 text-[#D4AF37] group-hover:text-white" />
-                 </div>
-                 <h3 className="text-2xl font-black text-slate-900 mb-4">{usp.t}</h3>
-                 <p className="text-slate-500 font-medium leading-relaxed">{usp.d}</p>
-               </motion.div>
+              <motion.div key={i} whileHover={{ y: -6 }}
+                className="bg-white p-8 rounded-2xl border border-slate-200 group hover:border-[var(--gold)]/40 transition-all duration-300 hover:shadow-lg">
+                <div className="w-14 h-14 bg-slate-50 rounded-xl flex items-center justify-center mb-5 group-hover:bg-[var(--crimson)] transition-colors">
+                  <usp.i className="w-7 h-7 text-[var(--gold)] group-hover:text-white transition-colors" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">{usp.t}</h3>
+                <p className="text-slate-500 leading-relaxed text-sm">{usp.d}</p>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* =========================================
-          11. CLIENT TESTIMONIALS
-      ========================================= */}
-      <section className="py-32 px-6 bg-white border-t border-slate-100">
+      {/* ===================================================
+          11. TESTIMONIALS
+      =================================================== */}
+      <section className="py-20 sm:py-28 px-4 sm:px-6 bg-white border-t border-slate-100">
         <div className="max-w-7xl mx-auto">
-           <div className="text-center mb-20">
-            <h2 className="text-4xl font-black text-slate-900">Voices of Trust</h2>
+          <div className="text-center mb-14">
+            <h2 className="font-display text-4xl sm:text-5xl text-slate-900">Voices of <em>Trust</em></h2>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((test, i) => (
-              <motion.div key={i} whileHover={{ scale: 1.02 }} className="bg-slate-50 p-10 rounded-[2.5rem] border border-slate-200">
-                <div className="flex gap-1 mb-6">
-                  {[...Array(test.rating)].map((_, j) => <Star key={j} className="w-5 h-5 fill-[#D4AF37] text-[#D4AF37]" />)}
+          <div className="grid sm:grid-cols-3 gap-6">
+            {testimonials.map((t, i) => (
+              <motion.div key={i} whileHover={{ scale: 1.02 }}
+                className="bg-slate-50 p-8 rounded-2xl border border-slate-200 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-[var(--gold)]" />
+                <div className="flex gap-1 mb-5 pl-2">
+                  {[...Array(t.rating)].map((_, j) => <Star key={j} className="w-4 h-4 fill-[var(--gold)] text-[var(--gold)]" />)}
                 </div>
-                <p className="text-slate-700 font-medium text-lg leading-relaxed mb-8 italic">"{test.text}"</p>
-                <div>
-                  <h4 className="font-black text-slate-900">{test.name}</h4>
-                  <p className="text-sm font-bold text-[#8B0000] uppercase tracking-widest mt-1">{test.role}</p>
+                <p className="text-slate-700 leading-relaxed mb-6 text-sm italic pl-2">"{t.text}"</p>
+                <div className="pl-2">
+                  <p className="font-bold text-slate-900">{t.name}</p>
+                  <p className="text-xs font-semibold text-[var(--crimson)] uppercase tracking-widest mt-0.5">{t.role}</p>
                 </div>
               </motion.div>
             ))}
@@ -686,115 +941,136 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* =========================================
-          12. LUXURY EMI CALCULATOR
-      ========================================= */}
-      <section className="py-32 px-6 bg-[#020202] border-y border-slate-800 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-[800px] h-[800px] bg-[#8B0000]/20 rounded-full blur-[150px] pointer-events-none -translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-[#D4AF37]/10 rounded-full blur-[150px] pointer-events-none translate-x-1/2 translate-y-1/2" />
-        
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="text-center mb-20 max-w-3xl mx-auto">
-            <p className="text-[#D4AF37] font-black uppercase tracking-[0.3em] text-xs mb-4">Financial Planning</p>
-            <h2 className="text-4xl md:text-6xl font-black text-white leading-tight mb-6">Smart EMI Calculator</h2>
-            <p className="text-slate-400 text-lg leading-relaxed">Plan your luxury property purchase with absolute precision.</p>
+      {/* ===================================================
+          12. EMI CALCULATOR
+      =================================================== */}
+      <section className="py-20 sm:py-28 px-4 sm:px-6 bg-[var(--ink)] relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-0 w-96 h-96 bg-[var(--crimson)]/15 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2" />
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-[var(--gold)]/8 rounded-full blur-[120px] translate-x-1/2 translate-y-1/2" />
+        </div>
+        <div className="max-w-5xl mx-auto relative z-10">
+          <div className="text-center mb-14">
+            <p className="text-[var(--gold)] font-bold uppercase tracking-[0.25em] text-xs mb-3">Financial Planning</p>
+            <h2 className="font-display text-4xl sm:text-5xl text-white">Smart <em>EMI Calculator</em></h2>
           </div>
-
-          <div className="bg-white/5 backdrop-blur-2xl rounded-[3rem] p-8 md:p-14 shadow-2xl border border-white/10 max-w-5xl mx-auto grid md:grid-cols-2 gap-16 items-center">
-            <div className="space-y-10">
+          <div className="bg-white/5 backdrop-blur-xl rounded-3xl p-6 sm:p-10 border border-white/10 grid md:grid-cols-2 gap-10 items-center">
+            <div className="space-y-8">
               {[
                 { label: 'Loan Amount', value: formatCurrency(loanAmount), state: loanAmount, set: setLoanAmount, min: 500000, max: 100000000, step: 100000 },
-                { label: 'Interest Rate (p.a.)', value: `${interestRate}%`, state: interestRate, set: setInterestRate, min: 5, max: 15, step: 0.1 },
+                { label: 'Interest Rate (p.a.)', value: `${interestRate.toFixed(1)}%`, state: interestRate, set: setInterestRate, min: 5, max: 15, step: 0.1 },
                 { label: 'Loan Tenure', value: `${loanTenure} Years`, state: loanTenure, set: setLoanTenure, min: 1, max: 30, step: 1 }
-              ].map((input, i) => (
+              ].map((inp, i) => (
                 <div key={i}>
-                  <div className="flex justify-between items-center mb-4">
-                    <label className="text-sm font-bold text-slate-300 uppercase tracking-widest">{input.label}</label>
-                    <span className="text-2xl font-black text-[#D4AF37]">{input.value}</span>
+                  <div className="flex justify-between items-center mb-3">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">{inp.label}</label>
+                    <span className="text-lg font-bold text-[var(--gold)]">{inp.value}</span>
                   </div>
-                  <input type="range" min={input.min} max={input.max} step={input.step} value={input.state} onChange={(e) => input.set(Number(e.target.value))} className="w-full h-2.5 bg-slate-800 rounded-full appearance-none cursor-pointer accent-[#D4AF37] hover:accent-[#e5c453] transition-all" />
+                  <input type="range" min={inp.min} max={inp.max} step={inp.step} value={inp.state}
+                    onChange={e => inp.set(Number(e.target.value))} className="w-full" />
                 </div>
               ))}
             </div>
-
-            <motion.div whileHover={{ scale: 1.02 }} className="bg-gradient-to-br from-[#8B0000] to-[#500000] p-12 rounded-[2.5rem] border border-[#8B0000]/50 text-center relative overflow-hidden shadow-2xl shadow-[#8B0000]/40">
-              <Calculator className="w-12 h-12 text-[#D4AF37] mb-6 mx-auto opacity-80" />
-              <p className="text-white/70 font-bold uppercase tracking-widest text-xs mb-3">Equated Monthly Installment</p>
-              <h3 className="text-5xl lg:text-6xl font-black text-white mb-10 drop-shadow-lg">{formatCurrency(calculateEMI())}</h3>
-              <div className="space-y-4 pt-8 border-t border-white/20 text-sm md:text-base w-full">
-                <div className="flex justify-between text-white/80"><span className="font-medium">Principal Amount</span><span className="font-bold text-white">{formatCurrency(loanAmount)}</span></div>
-                <div className="flex justify-between text-white/80"><span className="font-medium">Total Interest</span><span className="font-bold text-white">{formatCurrency((calculateEMI() * loanTenure * 12) - loanAmount)}</span></div>
-                <div className="flex justify-between pt-4 border-t border-white/20"><span className="text-white font-bold uppercase tracking-wider text-xs mt-1">Total Payable</span><span className="font-black text-[#D4AF37] text-xl">{formatCurrency(calculateEMI() * loanTenure * 12)}</span></div>
+            <div className="bg-gradient-to-br from-[var(--crimson)] to-[#3a0000] p-8 rounded-2xl text-center border border-[var(--crimson)]/30 shadow-2xl">
+              <Calculator className="w-10 h-10 text-[var(--gold)] mb-4 mx-auto opacity-80" />
+              <p className="text-white/60 text-xs font-semibold uppercase tracking-widest mb-2">Monthly EMI</p>
+              <h3 className="text-4xl sm:text-5xl font-black text-white mb-8">{formatCurrency(calculateEMI())}</h3>
+              <div className="space-y-3 pt-6 border-t border-white/15 text-sm">
+                <div className="flex justify-between text-white/70">
+                  <span>Principal</span><span className="font-bold text-white">{formatCurrency(loanAmount)}</span>
+                </div>
+                <div className="flex justify-between text-white/70">
+                  <span>Total Interest</span><span className="font-bold text-white">{formatCurrency((calculateEMI() * loanTenure * 12) - loanAmount)}</span>
+                </div>
+                <div className="flex justify-between pt-3 border-t border-white/15">
+                  <span className="text-white font-semibold text-xs uppercase tracking-wider">Total Payable</span>
+                  <span className="font-black text-[var(--gold)] text-lg">{formatCurrency(calculateEMI() * loanTenure * 12)}</span>
+                </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* =========================================
-          13. LOAN LEAD & ADVISORY SECTION
-      ========================================= */}
-      <section className="py-32 px-6 bg-white relative overflow-hidden">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-20 items-center">
+      {/* ===================================================
+          13. LOAN ADVISORY
+      =================================================== */}
+      <section className="py-20 sm:py-28 px-4 sm:px-6 bg-white relative overflow-hidden">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-14 items-center">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
-            <p className="text-[#8B0000] font-black uppercase tracking-[0.3em] text-xs mb-4">Financial Advisory</p>
-            <h2 className="text-4xl md:text-6xl font-black mb-8 leading-tight text-slate-900">Get pre-approved for your dream home.</h2>
-            <p className="text-slate-600 text-lg leading-relaxed mb-10">
-              Skip the bank queues. Our financial experts will guide you to the lowest interest rates and highest loan eligibility instantly.
+            <p className="text-[var(--crimson)] font-bold uppercase tracking-[0.25em] text-xs mb-4">Financial Advisory</p>
+            <h2 className="font-display text-4xl sm:text-5xl text-slate-900 leading-tight mb-6">
+              Get pre-approved for <em>your dream home.</em>
+            </h2>
+            <p className="text-slate-600 text-base leading-relaxed mb-8">
+              Skip the bank queues. Our financial experts guide you to the lowest interest rates and highest loan eligibility instantly.
             </p>
-            <div className="space-y-4 mb-8">
+            <div className="space-y-3">
               {bankOffers.map((offer, i) => (
-                <div key={i} className="p-5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                <div key={i} className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
                   <div>
-                    <p className="font-black text-lg text-slate-900">{offer.bank}</p>
-                    <p className="text-[#8B0000] text-xs font-bold uppercase tracking-widest mt-1">{offer.note}</p>
+                    <p className="font-bold text-base text-slate-900">{offer.bank}</p>
+                    <p className="text-[var(--crimson)] text-xs font-semibold uppercase tracking-wider mt-0.5">{offer.note}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[#D4AF37] font-black text-2xl">{offer.rate}</p>
-                    <p className="text-[10px] text-slate-400 uppercase tracking-wider mt-1">Indicative ROI</p>
+                    <p className="text-[var(--gold)] font-black text-xl">{offer.rate}</p>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-wider">Indicative ROI</p>
                   </div>
                 </div>
               ))}
             </div>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, x: 50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }} className="bg-slate-900 text-white rounded-[3rem] p-10 md:p-14 shadow-2xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-80 h-80 bg-[#D4AF37]/20 rounded-full blur-[80px] pointer-events-none -translate-y-1/2 translate-x-1/2" />
-            <div className="flex items-center gap-5 mb-10 relative z-10">
-              <div className="bg-[#D4AF37]/20 p-4 rounded-2xl border border-[#D4AF37]/30"><Banknote className="w-8 h-8 text-[#D4AF37]" /></div>
-              <h3 className="text-3xl md:text-4xl font-black">Request Loan Call</h3>
+          <motion.div initial={{ opacity: 0, x: 40 }} whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }} transition={{ duration: 0.7 }}
+            className="bg-slate-900 text-white rounded-3xl p-8 sm:p-10 shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-60 h-60 bg-[var(--gold)]/10 rounded-full blur-[60px] pointer-events-none -translate-y-1/3 translate-x-1/3" />
+            <div className="flex items-center gap-4 mb-8 relative z-10">
+              <div className="bg-[var(--gold)]/15 p-3.5 rounded-xl border border-[var(--gold)]/20">
+                <Banknote className="w-6 h-6 text-[var(--gold)]" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold">Request Loan Call</h3>
+                <p className="text-slate-400 text-sm">Get a free consultation today</p>
+              </div>
             </div>
-            <div className="grid md:grid-cols-2 gap-5 mb-8 relative z-10">
-              <Input value={loanLead.name} onChange={(e) => setLoanLead((prev) => ({ ...prev, name: e.target.value }))} placeholder="Your full name" className="bg-white/5 border-white/10 text-white h-16 rounded-2xl px-6 focus:border-[#D4AF37]" />
-              <Input value={loanLead.phone} onChange={(e) => setLoanLead((prev) => ({ ...prev, phone: e.target.value }))} placeholder="Phone number" type="tel" className="bg-white/5 border-white/10 text-white h-16 rounded-2xl px-6 focus:border-[#D4AF37]" />
+            <div className="grid sm:grid-cols-2 gap-4 mb-6 relative z-10">
+              <Input value={loanLead.name} onChange={e => setLoanLead(p => ({ ...p, name: e.target.value }))}
+                placeholder="Full name" className="bg-white/8 border-white/15 text-white h-13 rounded-xl px-4 placeholder:text-slate-500 focus:border-[var(--gold)]" />
+              <Input value={loanLead.phone} onChange={e => setLoanLead(p => ({ ...p, phone: e.target.value }))}
+                placeholder="Phone number" type="tel" className="bg-white/8 border-white/15 text-white h-13 rounded-xl px-4 placeholder:text-slate-500 focus:border-[var(--gold)]" />
             </div>
-            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }} onClick={handleLoanLead} disabled={isLoanSubmitting} className="w-full bg-gradient-to-r from-[#D4AF37] to-[#AA8000] text-slate-900 h-16 rounded-2xl text-lg font-black shadow-xl flex items-center justify-center relative overflow-hidden">
-               <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
-              {isLoanSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Get Free Consultation'}
+            <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
+              onClick={handleLoanLead} disabled={isLoanSubmitting}
+              className="w-full bg-gradient-to-r from-[var(--gold)] to-[var(--gold-dark)] text-slate-900 h-13 rounded-xl text-sm font-bold shadow-xl flex items-center justify-center gap-2 hover:opacity-90 transition-opacity relative z-10">
+              {isLoanSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Get Free Consultation <ArrowRight className="w-4 h-4" /></>}
             </motion.button>
           </motion.div>
         </div>
       </section>
 
-      {/* =========================================
-          14. FREQUENTLY ASKED QUESTIONS (FAQ)
-      ========================================= */}
-      <section className="py-32 px-6 bg-slate-50 border-t border-slate-200">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-black text-slate-900 mb-4">Frequently Asked Questions</h2>
-            <p className="text-slate-500 font-medium">Everything you need to know about buying and leasing with ANK Realty.</p>
+      {/* ===================================================
+          14. FAQ
+      =================================================== */}
+      <section className="py-20 sm:py-28 px-4 sm:px-6 bg-[var(--cream)] border-t border-slate-200">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="font-display text-4xl sm:text-5xl text-slate-900 mb-3">Frequently Asked <em>Questions</em></h2>
+            <p className="text-slate-500 text-sm">Everything you need to know about buying and leasing with ANK Realty.</p>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {faqs.map((faq, i) => (
-              <div key={i} className="bg-white border border-slate-200 rounded-2xl overflow-hidden transition-all duration-300">
-                <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full p-6 text-left flex justify-between items-center font-black text-slate-900 text-lg hover:text-[#8B0000]">
-                  {faq.q}
-                  <Plus className={`w-5 h-5 text-[#D4AF37] transition-transform duration-300 ${openFaq === i ? 'rotate-45' : ''}`} />
+              <div key={i} className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+                <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  className="w-full p-5 sm:p-6 text-left flex justify-between items-center text-slate-900 font-semibold text-sm sm:text-base hover:text-[var(--crimson)] transition-colors gap-4">
+                  <span>{faq.q}</span>
+                  <Plus className={`w-5 h-5 text-[var(--gold)] shrink-0 transition-transform duration-300 ${openFaq === i ? 'rotate-45' : ''}`} />
                 </button>
                 <AnimatePresence>
                   {openFaq === i && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="px-6 pb-6 text-slate-600 font-medium leading-relaxed">
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}
+                      className="px-5 sm:px-6 pb-5 text-slate-600 text-sm leading-relaxed">
                       {faq.a}
                     </motion.div>
                   )}
@@ -805,105 +1081,113 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* =========================================
-          15. DYNAMIC MAP & NEWSLETTER
-      ========================================= */}
-      <section className="py-24 px-6 bg-white border-t border-slate-200">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+      {/* ===================================================
+          15. MAP & NEWSLETTER
+      =================================================== */}
+      <section className="py-20 sm:py-24 px-4 sm:px-6 bg-white border-t border-slate-200">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
           <div>
-            <p className="text-[#8B0000] font-black uppercase tracking-[0.3em] text-xs mb-4 flex items-center gap-2"><MapIcon className="w-5 h-5" /> Location Intelligence</p>
-            <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-6 leading-tight">Explore {search.location || 'Top Regions'} Visually</h2>
-            <p className="text-slate-600 text-lg leading-relaxed mb-10">Use our interactive map view to discover connectivity hubs, upcoming metro lines, and social infrastructure driving real estate appreciation.</p>
-            
-            <div className="bg-slate-900 p-8 rounded-[2rem] text-white shadow-xl relative overflow-hidden">
-               <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-[#D4AF37] opacity-20 blur-3xl rounded-full" />
-               <h4 className="text-2xl font-black mb-2">Join our VIP list</h4>
-               <p className="text-slate-400 text-sm mb-6 font-medium">Get exclusive access to pre-launch properties and market reports.</p>
-               <div className="flex gap-3 relative z-10">
-                 <Input placeholder="Enter your email" className="bg-white/10 border-white/20 text-white h-14 rounded-xl focus:border-[#D4AF37]" />
-                 <Button className="h-14 px-6 bg-[#D4AF37] hover:bg-[#c09b2e] text-slate-900 font-black rounded-xl"><Send className="w-5 h-5" /></Button>
-               </div>
+            <p className="text-[var(--crimson)] font-bold uppercase tracking-[0.25em] text-xs mb-4 flex items-center gap-2">
+              <MapIcon className="w-4 h-4" /> Location Intelligence
+            </p>
+            <h2 className="font-display text-4xl sm:text-5xl text-slate-900 mb-5 leading-tight">
+              Explore {search.location || 'Top Regions'} <em>Visually</em>
+            </h2>
+            <p className="text-slate-600 leading-relaxed mb-8 text-sm sm:text-base">
+              Use our interactive map to discover connectivity hubs, upcoming metro lines, and social infrastructure driving real estate appreciation.
+            </p>
+            <div className="bg-slate-900 p-6 sm:p-8 rounded-2xl text-white shadow-lg relative overflow-hidden">
+              <div className="absolute -right-8 -bottom-8 w-36 h-36 bg-[var(--gold)] opacity-10 blur-3xl rounded-full pointer-events-none" />
+              <h4 className="text-xl font-bold mb-1.5 relative z-10">Join our VIP list</h4>
+              <p className="text-slate-400 text-sm mb-5 relative z-10">Get exclusive access to pre-launch properties and market reports.</p>
+              <div className="flex gap-3 relative z-10">
+                <Input value={newsletterEmail} onChange={e => setNewsletterEmail(e.target.value)}
+                  placeholder="Enter your email" className="bg-white/10 border-white/20 text-white h-12 rounded-xl placeholder:text-slate-500 focus:border-[var(--gold)] flex-1" />
+                <Button onClick={() => { toast.success('Welcome to the VIP list!'); setNewsletterEmail(''); }}
+                  className="h-12 px-5 bg-[var(--gold)] hover:bg-[var(--gold-dark)] text-slate-900 font-bold rounded-xl">
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </div>
-          
-          <div className="w-full h-[600px] rounded-[3rem] overflow-hidden shadow-2xl border-[8px] border-slate-50 relative bg-slate-200">
-            <iframe src={dynamicMapSrc} width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" className="grayscale-[30%] hover:grayscale-0 transition-all duration-700 opacity-90 hover:opacity-100" />
+          <div className="w-full h-[400px] sm:h-[500px] rounded-3xl overflow-hidden shadow-2xl border-4 border-slate-100">
+            <iframe src={dynamicMapSrc} width="100%" height="100%"
+              style={{ border: 0 }} allowFullScreen loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              className="grayscale-[20%] hover:grayscale-0 transition-all duration-700" />
           </div>
         </div>
       </section>
 
-      {/* =========================================
-          16. MEGA FOOTER
-      ========================================= */}
-      <footer className="bg-[#020202] text-white pt-24 pb-12 px-6 border-t-[8px] border-[#8B0000]">
+      {/* ===================================================
+          16. FOOTER
+      =================================================== */}
+      <footer className="bg-[var(--ink)] text-white pt-16 sm:pt-20 pb-10 px-4 sm:px-6 border-t-4 border-[var(--crimson)]">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-16 mb-20">
-            <div className="space-y-8 pr-4">
-              <h3 className="text-4xl font-black tracking-tight text-[#D4AF37]">ANK <span className="text-white">REALTY</span></h3>
-              <p className="text-slate-400 text-sm leading-relaxed font-medium">Premium property discovery, verified advisory, corporate leasing help, and owner-first listing support. Your Trusted Partner.</p>
-              <div className="flex space-x-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-14">
+            <div className="space-y-6">
+              <h3 className="font-display text-3xl text-[var(--gold)]">ANK <span className="text-white not-italic">REALTY</span></h3>
+              <p className="text-slate-400 text-sm leading-relaxed">Premium property discovery, verified advisory, corporate leasing, and owner-first listing support. Your Trusted Partner.</p>
+              <div className="flex gap-3">
                 {[Linkedin, Twitter, Facebook, Instagram].map((Icon, i) => (
-                  <motion.a whileHover={{ scale: 1.1, backgroundColor: '#8B0000', borderColor: '#8B0000' }} key={i} href="#" className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[#D4AF37] hover:text-white transition-colors">
-                    <Icon className="w-5 h-5" />
-                  </motion.a>
+                  <a key={i} href="#"
+                    className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[var(--gold)] hover:bg-[var(--crimson)] hover:border-[var(--crimson)] hover:text-white transition-all">
+                    <Icon className="w-4 h-4" />
+                  </a>
                 ))}
               </div>
             </div>
 
             <div>
-              <h4 className="font-black text-sm mb-8 text-white uppercase tracking-widest">Quick Links</h4>
-              <ul className="space-y-5 text-slate-400 font-medium">
+              <h4 className="font-bold text-xs mb-6 text-white uppercase tracking-[0.2em]">Quick Links</h4>
+              <ul className="space-y-3.5 text-slate-400 text-sm">
                 {['All Properties', 'About Us', 'Careers', 'Contact Support', 'Submit Property'].map((item, i) => (
-                   <li key={i}><Link to="#" className="hover:text-[#D4AF37] transition-colors flex items-center"><ChevronRight className="w-4 h-4 mr-2 text-[#8B0000]" /> {item}</Link></li>
+                  <li key={i}><Link to="#" className="hover:text-[var(--gold)] transition-colors flex items-center gap-2">
+                    <ChevronRight className="w-3.5 h-3.5 text-[var(--crimson)]" /> {item}
+                  </Link></li>
                 ))}
               </ul>
             </div>
 
             <div>
-              <h4 className="font-black text-sm mb-8 text-white uppercase tracking-widest">Categories</h4>
-              <ul className="space-y-5 text-slate-400 font-medium">
-                 {['Premium Plots', 'Residential Homes', 'Corporate Leasing', 'Rental Homes', 'New Launches'].map((item, i) => (
-                   <li key={i}><Link to="#" className="hover:text-[#D4AF37] transition-colors flex items-center"><ChevronRight className="w-4 h-4 mr-2 text-[#8B0000]" /> {item}</Link></li>
+              <h4 className="font-bold text-xs mb-6 text-white uppercase tracking-[0.2em]">Categories</h4>
+              <ul className="space-y-3.5 text-slate-400 text-sm">
+                {['Premium Plots', 'Residential Homes', 'Corporate Leasing', 'Rental Homes', 'New Launches'].map((item, i) => (
+                  <li key={i}><Link to="#" className="hover:text-[var(--gold)] transition-colors flex items-center gap-2">
+                    <ChevronRight className="w-3.5 h-3.5 text-[var(--crimson)]" /> {item}
+                  </Link></li>
                 ))}
               </ul>
             </div>
 
             <div>
-              <h4 className="font-black text-sm mb-8 text-white uppercase tracking-widest">Contact Headquarters</h4>
-              <div className="space-y-5 text-slate-400 font-medium">
-                <div className="flex items-start bg-white/5 p-5 rounded-2xl border border-white/5 hover:border-[#D4AF37]/50 transition-colors">
-                  <MapPin className="w-6 h-6 mr-4 text-[#D4AF37] shrink-0" />
-                  <p className="text-sm leading-relaxed">Sector 62, Noida, <br/>Uttar Pradesh 201309</p>
-                </div>
-                <div className="flex items-center bg-white/5 p-5 rounded-2xl border border-white/5 hover:border-[#D4AF37]/50 transition-colors">
-                  <Mail className="w-6 h-6 mr-4 text-[#D4AF37] shrink-0" />
-                  <p className="text-sm">info@ankrealty.com</p>
-                </div>
-                <div className="flex items-center bg-white/5 p-5 rounded-2xl border border-white/5 hover:border-[#D4AF37]/50 transition-colors">
-                  <Phone className="w-6 h-6 mr-4 text-[#D4AF37] shrink-0" />
-                  <p className="text-sm">+91 92664 58945</p>
-                </div>
+              <h4 className="font-bold text-xs mb-6 text-white uppercase tracking-[0.2em]">Headquarters</h4>
+              <div className="space-y-3.5">
+                {[
+                  { icon: MapPin, text: 'Sector 62, Noida, Uttar Pradesh 201309' },
+                  { icon: Mail, text: 'info@ankrealty.com' },
+                  { icon: Phone, text: '+91 92664 58945' },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-3 bg-white/5 p-3.5 rounded-xl border border-white/5 hover:border-[var(--gold)]/30 transition-colors group">
+                    <item.icon className="w-4.5 h-4.5 text-[var(--gold)] shrink-0 mt-0.5" />
+                    <p className="text-slate-400 text-sm group-hover:text-slate-300 transition-colors">{item.text}</p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
 
-          <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-slate-500 font-medium">
+          <div className="border-t border-white/10 pt-7 flex flex-col sm:flex-row justify-between items-center gap-5 text-sm text-slate-500">
             <p>© {new Date().getFullYear()} ANK Realty. All rights reserved.</p>
-            <div className="flex space-x-8 mt-6 md:mt-0">
-              <Link to="/privacy" className="hover:text-[#D4AF37] transition-colors">Privacy Policy</Link>
-              <Link to="/terms" className="hover:text-[#D4AF37] transition-colors">Terms of Service</Link>
-              <Link to="/sitemap" className="hover:text-[#D4AF37] transition-colors">Sitemap</Link>
+            <div className="flex gap-6">
+              {['Privacy Policy', 'Terms of Service', 'Sitemap'].map((t, i) => (
+                <Link key={i} to={`/${t.toLowerCase().replace(/ /g, '-')}`}
+                  className="hover:text-[var(--gold)] transition-colors">{t}</Link>
+              ))}
             </div>
           </div>
         </div>
       </footer>
-
-      {/* Global CSS for Advanced Animations */}
-      <style dangerouslySetInlineStyle={{__html: `
-        @keyframes shimmer { 100% { transform: translateX(100%); } }
-        .perspective-1000 { perspective: 1000px; }
-        .transform-gpu { transform: translateZ(0); }
-      `}} />
     </div>
   );
 }
