@@ -45,6 +45,7 @@ import {
   Users,
   Video,
   X,
+  Award
 } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://ankrealty.onrender.com/api';
