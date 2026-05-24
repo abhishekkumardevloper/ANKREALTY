@@ -41,6 +41,7 @@ import {
   Sparkles,
   Star,
   ThumbsUp,
+  Twitter,
   TrendingUp,
   Users,
   Video,
