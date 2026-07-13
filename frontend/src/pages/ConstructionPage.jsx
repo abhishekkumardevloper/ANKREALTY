@@ -7,19 +7,58 @@ import Navbar from '../components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  HardHat, Hammer, Ruler, ShieldCheck, Clock, CheckCircle, 
+import {
+  HardHat, Hammer, Ruler, ShieldCheck, Clock, CheckCircle,
   ArrowRight, MapPin, Building, Phone, Mail, Loader2, Maximize,
-  ChevronRight, Instagram, Linkedin, Twitter, Facebook, ArrowUpRight
+  ChevronRight, Instagram, Linkedin, Twitter, Facebook, ArrowUpRight,
+  Plus, Layers, HomeIcon, Warehouse, FileCheck2
 } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://ankrealty.onrender.com/api";
 
+const SITE_URL = 'https://www.ankrealty.com';
+const PAGE_PATH = '/construction';
+
+// --- SEO CONSTANTS ---
+const SEO_TITLE = 'Construction Company in Noida | Turnkey Building & Development Services | ANK Realty';
+const SEO_DESCRIPTION = 'ANK Realty is a leading construction company in Noida offering turnkey construction, architectural design, RERA-compliant project management, and commercial & residential construction services across Noida, Greater Noida, Gurugram and Delhi NCR.';
+const SEO_KEYWORDS = [
+  'Construction Company in Noida', 'Building Construction Noida', 'Turnkey Construction Services',
+  'Commercial Construction Noida', 'Residential Construction Delhi NCR', 'RERA Approved Construction',
+  'Architectural Design Services', 'Best Construction Company in Delhi NCR', 'Under Construction Projects Noida',
+  'New Launch Projects Noida', 'Pre Launch Property Noida', 'Project Management Construction',
+  'Construction Company Greater Noida', 'Construction Company Gurugram', 'Civil Contractor Noida',
+  'Commercial Property in Noida', 'Real Estate Consultant', 'Verified Property Listings',
+  'Best Property Investment in India', 'High ROI Property'
+].join(', ');
+
 const services = [
-  { title: "Turnkey Construction", desc: "End-to-end building solutions from foundation to final handover with strict quality control.", icon: Hammer },
-  { title: "Architectural Design", desc: "Modern, sustainable, and space-efficient blueprints crafted by top-tier architects.", icon: Ruler },
-  { title: "Project Management", desc: "Dedicated supervisors ensuring your project is delivered exactly on time and within budget.", icon: Clock },
-  { title: "Legal & Compliance", desc: "Hassle-free approvals, RERA compliance, and environmental clearances handled by experts.", icon: ShieldCheck }
+  { title: "Turnkey Construction", desc: "End-to-end building solutions from foundation to final handover with strict quality control, delivered by a trusted construction company in Noida.", icon: Hammer },
+  { title: "Architectural Design", desc: "Modern, sustainable, and space-efficient blueprints crafted by top-tier architects for residential and commercial projects.", icon: Ruler },
+  { title: "Project Management", desc: "Dedicated supervisors ensuring your construction project is delivered exactly on time and within budget.", icon: Clock },
+  { title: "Legal & Compliance", desc: "Hassle-free approvals, RERA compliance, and environmental clearances handled by our in-house legal experts.", icon: ShieldCheck }
+];
+
+// Construction categories targeting long-tail residential + commercial keywords
+const constructionTypes = [
+  { title: 'Residential Construction', desc: 'Independent houses, builder floors and residential towers built to last.', icon: HomeIcon },
+  { title: 'Commercial Construction', desc: 'Office space, retail complexes and commercial property construction in Noida.', icon: Building },
+  { title: 'Industrial & Warehousing', desc: 'Warehouse and industrial construction engineered for logistics and manufacturing.', icon: Warehouse },
+  { title: 'Renovation & Interiors', desc: 'Structural renovation and interior fit-outs for existing residential and commercial spaces.', icon: Layers },
+];
+
+const areasServed = [
+  { name: 'Noida', desc: 'Construction company in Noida for residential and commercial builds' },
+  { name: 'Greater Noida', desc: 'Turnkey construction services in Greater Noida' },
+  { name: 'Gurugram', desc: 'Commercial construction and office build-outs in Gurugram' },
+  { name: 'Delhi', desc: 'Residential construction and renovation across Delhi' },
+];
+
+const faqs = [
+  { q: 'What construction services does ANK Realty offer in Noida?', a: 'We offer turnkey construction, architectural design, project management, and legal & RERA compliance services for residential and commercial construction across Noida, Greater Noida, Gurugram and Delhi NCR.' },
+  { q: 'Are your construction projects RERA compliant?', a: 'Yes. Every project we undertake follows RERA compliance guidelines, with our legal team managing approvals and environmental clearances from start to finish.' },
+  { q: 'Do you handle both residential and commercial construction?', a: 'Yes, ANK Realty handles residential construction (independent houses, apartments, builder floors) as well as commercial construction (office space, retail, warehouses) across Delhi NCR.' },
+  { q: 'How do I get a construction quote?', a: 'Fill out the inquiry form below with your project details, or call us directly — our team typically responds within one business day with a custom quote.' },
 ];
 
 const fadeUp = {
@@ -32,27 +71,119 @@ const staggerContainer = {
   visible: { opacity: 1, transition: { staggerChildren: 0.15 } }
 };
 
+// =============================================
+//  SEO HEAD MANAGER
+//  Sets document title, meta tags, canonical link
+//  and JSON-LD structured data (GeneralContractor + FAQPage)
+// =============================================
+function useSEO() {
+  useEffect(() => {
+    document.title = SEO_TITLE;
+
+    const setMeta = (attr, key, content) => {
+      let tag = document.querySelector(`meta[${attr}="${key}"]`);
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.setAttribute(attr, key);
+        document.head.appendChild(tag);
+      }
+      tag.setAttribute('content', content);
+    };
+
+    setMeta('name', 'description', SEO_DESCRIPTION);
+    setMeta('name', 'keywords', SEO_KEYWORDS);
+    setMeta('name', 'robots', 'index, follow');
+    setMeta('property', 'og:title', SEO_TITLE);
+    setMeta('property', 'og:description', SEO_DESCRIPTION);
+    setMeta('property', 'og:type', 'website');
+    setMeta('property', 'og:url', `${SITE_URL}${PAGE_PATH}`);
+    setMeta('name', 'twitter:card', 'summary_large_image');
+    setMeta('name', 'twitter:title', SEO_TITLE);
+    setMeta('name', 'twitter:description', SEO_DESCRIPTION);
+
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', `${SITE_URL}${PAGE_PATH}`);
+
+    // JSON-LD: GeneralContractor / Service provider
+    const contractorSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'GeneralContractor',
+      name: 'ANK Realty Construction',
+      description: SEO_DESCRIPTION,
+      url: `${SITE_URL}${PAGE_PATH}`,
+      areaServed: areasServed.map(a => ({ '@type': 'City', name: a.name })),
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: 'Sector 62',
+        addressLocality: 'Noida',
+        addressRegion: 'Uttar Pradesh',
+        postalCode: '201309',
+        addressCountry: 'IN'
+      },
+      telephone: '+91-92664-58945',
+      email: 'info@ankrealty.com',
+      makesOffer: services.map(s => ({
+        '@type': 'Offer',
+        itemOffered: { '@type': 'Service', name: s.title, description: s.desc }
+      }))
+    };
+
+    // JSON-LD: FAQPage
+    const faqSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqs.map(f => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a }
+      }))
+    };
+
+    const injectSchema = (id, data) => {
+      let script = document.getElementById(id);
+      if (!script) {
+        script = document.createElement('script');
+        script.type = 'application/ld+json';
+        script.id = id;
+        document.head.appendChild(script);
+      }
+      script.textContent = JSON.stringify(data);
+    };
+
+    injectSchema('schema-general-contractor', contractorSchema);
+    injectSchema('schema-construction-faq', faqSchema);
+  }, []);
+}
+
 export default function ConstructionPage() {
   const navigate = useNavigate();
   const [properties, setProperties] = useState([]);
   const [loadingProps, setLoadingProps] = useState(true);
-  
+  const [openFaq, setOpenFaq] = useState(0);
+
   const [form, setForm] = useState({ name: '', phone: '', email: '', projectType: '', message: '' });
   const [status, setStatus] = useState('idle');
+
+  useSEO();
 
   // CRITICAL FIX: Fetch directly by category to ensure construction properties show here
   useEffect(() => {
     const fetchConstructionProps = async () => {
       try {
         const res = await axios.get(`${API_BASE}/properties?category=construction`);
-        
+
         // Fallback filter just in case any older properties use 'Under Construction' status but 'buy' category
-        const combinedProps = res.data.filter(p => 
-          p.category === 'construction' || 
-          p.project_status === 'Under Construction' || 
+        const combinedProps = res.data.filter(p =>
+          p.category === 'construction' ||
+          p.project_status === 'Under Construction' ||
           p.project_status === 'New Launch'
         );
-        
+
         setProperties(combinedProps);
       } catch (error) {
         console.error("Failed to load properties:", error);
@@ -66,7 +197,7 @@ export default function ConstructionPage() {
   const handleLeadSubmit = async (e) => {
     e.preventDefault();
     if (!form.name || !form.phone) return toast.error("Name and Phone are required.");
-    
+
     setStatus('submitting');
     try {
       await axios.post(`${API_BASE}/contacts`, {
@@ -76,7 +207,7 @@ export default function ConstructionPage() {
         interest: `Construction Services: ${form.projectType || 'General'}`,
         message: form.message
       });
-      
+
       setStatus('success');
       setForm({ name: '', phone: '', email: '', projectType: '', message: '' });
       setTimeout(() => setStatus('idle'), 4000);
@@ -100,30 +231,33 @@ export default function ConstructionPage() {
 
       {/* --- HERO SECTION --- */}
       <section className="bg-[#050505] text-white pt-32 pb-24 px-6 relative overflow-hidden flex items-center min-h-[90vh]">
-        <motion.div 
-          initial={{ scale: 1.1, opacity: 0 }} 
-          animate={{ scale: 1, opacity: 0.4 }} 
+        <motion.div
+          initial={{ scale: 1.1, opacity: 0 }}
+          animate={{ scale: 1, opacity: 0.4 }}
           transition={{ duration: 1.5, ease: "easeOut" }}
-          className="absolute inset-0 mix-blend-overlay" 
+          className="absolute inset-0 mix-blend-overlay"
           style={{ backgroundImage: `url('https://images.unsplash.com/photo-1541888086425-d81bb19240f5?auto=format&fit=crop&w=2000&q=80')`, backgroundSize: 'cover', backgroundPosition: 'center' }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-[#050505]/80 via-[#050505]/60 to-[#050505] z-0" />
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#D4AF37]/10 via-transparent to-transparent z-0" />
-        
+
         <div className="max-w-7xl mx-auto relative z-10 grid lg:grid-cols-2 gap-16 items-center">
           <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="space-y-8">
             <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#D4AF37]/10 backdrop-blur-md border border-[#D4AF37]/30 text-[#D4AF37] text-xs font-black tracking-[0.2em] uppercase shadow-[0_0_30px_rgba(212,175,55,0.15)]">
-              <HardHat className="w-4 h-4" /> Premium Construction
+              <HardHat className="w-4 h-4" /> Premium Construction Company in Noida
             </motion.div>
-            
+
+            {/* H1 carries the primary construction keyword cluster */}
             <motion.h1 variants={fadeUp} className="text-5xl md:text-7xl lg:text-[5rem] font-black leading-[1.1] tracking-tight">
               Building the <br/>Future of <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#AA8000]">Real Estate.</span>
             </motion.h1>
-            
+
             <motion.p variants={fadeUp} className="text-lg md:text-xl text-slate-300 font-light leading-relaxed max-w-xl">
-              From luxury residential estates to state-of-the-art commercial hubs, ANK Realty delivers engineering excellence with zero compromises on quality.
+              ANK Realty is a trusted construction company in Noida delivering turnkey construction services,
+              RERA-compliant residential construction and commercial construction across Noida, Greater Noida,
+              Gurugram and Delhi NCR — with zero compromises on quality.
             </motion.p>
-            
+
             <motion.div variants={fadeUp} className="flex flex-wrap gap-5 pt-2">
               <Button onClick={() => document.getElementById('contact-form').scrollIntoView({ behavior: 'smooth' })} className="bg-gradient-to-r from-[#8B0000] to-[#600000] hover:from-[#600000] hover:to-[#400000] text-white font-black h-14 px-8 rounded-full shadow-xl shadow-[#8B0000]/30 text-base transition-all hover:-translate-y-1">
                 Consult Our Engineers
@@ -151,6 +285,23 @@ export default function ConstructionPage() {
         </div>
       </section>
 
+      {/* --- SEO INTRO CONTENT --- */}
+      <section className="py-14 px-6 bg-white border-b border-slate-100">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mb-4">
+            A Trusted Construction Company in Noida &amp; Delhi NCR
+          </h2>
+          <p className="text-slate-500 text-sm sm:text-base leading-relaxed font-medium">
+            Looking for a reliable <strong>construction company in Noida</strong> for your next residential or commercial
+            build? ANK Realty provides <strong>turnkey construction services</strong>, <strong>architectural design services</strong>,
+            and end-to-end <strong>project management</strong> with full <strong>RERA compliance</strong>. We specialise in{' '}
+            <strong>residential construction in Delhi NCR</strong>, <strong>commercial construction in Noida</strong>, and
+            industrial &amp; warehousing projects — backed by transparent pricing and on-time delivery commitments across
+            Noida, Greater Noida, Gurugram and Delhi.
+          </p>
+        </div>
+      </section>
+
       {/* --- SERVICES SECTION --- */}
       <section className="py-32 px-6 bg-white relative z-20">
         <div className="max-w-7xl mx-auto">
@@ -175,13 +326,36 @@ export default function ConstructionPage() {
         </div>
       </section>
 
+      {/* --- CONSTRUCTION TYPES (long-tail keyword coverage) --- */}
+      <section className="py-24 px-6 bg-slate-50 border-y border-slate-200">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <p className="text-[#8B0000] font-black uppercase tracking-[0.3em] text-xs mb-4">What We Build</p>
+            <h2 className="text-4xl md:text-5xl font-black text-slate-900 leading-tight">Residential &amp; Commercial Construction</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {constructionTypes.map((ct, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="bg-white p-7 rounded-[2rem] border border-slate-200 hover:border-[#D4AF37]/50 hover:shadow-xl transition-all duration-300 group">
+                <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-[#8B0000] transition-colors duration-300">
+                  <ct.icon className="w-7 h-7 text-[#D4AF37] group-hover:text-white transition-colors duration-300" />
+                </div>
+                <h3 className="text-lg font-black text-slate-900 mb-2">{ct.title}</h3>
+                <p className="text-slate-500 text-sm leading-relaxed font-medium">{ct.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* --- ONGOING PROJECTS (API FETCHED) --- */}
       <section id="projects" className="py-32 px-6 bg-slate-50 border-t border-slate-200 relative">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
             <div>
               <p className="text-[#8B0000] font-black uppercase tracking-[0.3em] text-xs mb-4 flex items-center gap-2"><Building className="w-4 h-4" /> Active Developments</p>
-              <h2 className="text-4xl md:text-5xl font-black text-slate-900">Under Construction Sites</h2>
+              <h2 className="text-4xl md:text-5xl font-black text-slate-900">Under Construction Projects in Noida</h2>
             </div>
             <Link to="/properties">
               <Button variant="outline" className="border-slate-300 font-bold hover:bg-[#8B0000] hover:text-white hover:border-[#8B0000] transition-colors h-14 px-8 rounded-full text-base">Explore All <ArrowUpRight className="w-4 h-4 ml-2" /></Button>
@@ -204,28 +378,29 @@ export default function ConstructionPage() {
           ) : properties.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {properties.slice(0, 6).map((property) => (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5 }}
-                  key={property.id} 
-                  onClick={() => navigate(`/property/${property.id}`)} 
+                  key={property.id}
+                  onClick={() => navigate(`/property/${property.id}`)}
                   className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-200 shadow-sm hover:shadow-2xl hover:shadow-[#D4AF37]/10 hover:-translate-y-2 hover:border-[#D4AF37]/50 transition-all duration-500 cursor-pointer relative group flex flex-col"
                 >
-                  
+
                   {/* Status Badge */}
                   <div className="absolute top-5 left-5 bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl text-xs font-black text-[#8B0000] shadow-xl z-20 flex items-center gap-2 uppercase tracking-widest border border-white/50">
-                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" /> 
+                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
                     {property.project_status || 'Under Construction'}
                   </div>
-                  
+
                   <div className="relative h-72 overflow-hidden bg-slate-100">
                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent z-10 opacity-70 group-hover:opacity-90 transition-opacity duration-500" />
-                     <img 
-                       src={property.images?.[0] || 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=800&q=80'} 
-                       alt={property.title} 
-                       className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                     <img
+                       src={property.images?.[0] || 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=800&q=80'}
+                       alt={`${property.title} - under construction project in ${property.location || 'Noida'}`}
+                       loading="lazy"
+                       className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700"
                      />
                      <div className="absolute bottom-6 left-6 z-20 pr-6">
                         <h3 className="text-2xl font-black text-white mb-2 line-clamp-1 drop-shadow-lg">{property.title}</h3>
@@ -234,7 +409,7 @@ export default function ConstructionPage() {
                         </p>
                      </div>
                   </div>
-                  
+
                   <div className="p-8 flex-1 flex flex-col bg-white">
                     <div className="grid grid-cols-2 gap-4 mb-8">
                       <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
@@ -272,20 +447,44 @@ export default function ConstructionPage() {
         </div>
       </section>
 
+      {/* --- AREAS WE SERVE (local SEO) --- */}
+      <section className="py-24 px-6 bg-white border-t border-slate-200">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <p className="text-[#8B0000] font-black uppercase tracking-[0.3em] text-xs mb-4 flex items-center justify-center gap-2"><MapPin className="w-4 h-4" /> Service Area</p>
+            <h2 className="text-4xl md:text-5xl font-black text-slate-900 leading-tight">Construction Services Across Delhi NCR</h2>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+            {areasServed.map((area, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                onClick={() => navigate(`/properties?location=${area.name}`)}
+                className="bg-slate-50 p-6 rounded-[2rem] border border-slate-200 hover:border-[#D4AF37]/50 hover:shadow-lg transition-all duration-300 cursor-pointer text-center group">
+                <div className="w-12 h-12 mx-auto bg-white rounded-full border border-slate-200 flex items-center justify-center mb-4 group-hover:bg-[#8B0000] group-hover:border-[#8B0000] transition-colors duration-300">
+                  <Building className="w-5 h-5 text-[#D4AF37] group-hover:text-white transition-colors duration-300" />
+                </div>
+                <h3 className="font-black text-slate-900 mb-1.5">{area.name}</h3>
+                <p className="text-slate-500 text-xs leading-relaxed font-medium">{area.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* --- CONTACT FORM (CRM INTEGRATED) --- */}
       <section id="contact-form" className="py-32 px-6 bg-[#050505] relative overflow-hidden">
         <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-[#8B0000]/10 rounded-full blur-[150px] pointer-events-none -translate-y-1/2 translate-x-1/3" />
         <div className="absolute bottom-0 left-0 w-[800px] h-[800px] bg-[#D4AF37]/10 rounded-full blur-[150px] pointer-events-none translate-y-1/2 -translate-x-1/3" />
-        
+
         <div className="max-w-7xl mx-auto grid lg:grid-cols-5 gap-16 items-center relative z-10">
-          
+
           <motion.div initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="lg:col-span-2 text-white">
             <p className="text-[#D4AF37] font-black uppercase tracking-[0.3em] text-xs mb-4">Partner With Us</p>
             <h2 className="text-4xl md:text-6xl font-black mb-8 leading-tight">Start Your Next Big Project.</h2>
             <p className="text-slate-400 text-lg leading-relaxed mb-12 font-medium">
               Whether you are looking to invest in a pre-launch property, need a reliable contractor for a commercial build, or require architectural consulting, our experts are ready.
             </p>
-            
+
             <ul className="space-y-8">
               {[
                 { title: 'Transparent Pricing', desc: 'No hidden costs, complete bill of quantities provided.' },
@@ -294,7 +493,7 @@ export default function ConstructionPage() {
               ].map((item, idx) => (
                 <li key={idx} className="flex items-start">
                   <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shrink-0 mr-5">
-                    <CheckCircle className="w-5 h-5 text-[#D4AF37]" /> 
+                    <CheckCircle className="w-5 h-5 text-[#D4AF37]" />
                   </div>
                   <div>
                     <h4 className="font-bold text-xl text-white mb-1">{item.title}</h4>
@@ -308,10 +507,10 @@ export default function ConstructionPage() {
           <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="lg:col-span-3">
             <div className="bg-white p-8 md:p-14 rounded-[3rem] shadow-2xl relative overflow-hidden border border-slate-100">
               <div className="absolute top-0 right-0 w-40 h-40 bg-[#8B0000]/5 rounded-bl-full pointer-events-none" />
-              
+
               <AnimatePresence mode="wait">
                 {status === 'success' ? (
-                  <motion.div 
+                  <motion.div
                     key="success"
                     initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
                     className="h-[500px] flex flex-col items-center justify-center text-center"
@@ -333,7 +532,7 @@ export default function ConstructionPage() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
                           <label className="text-xs font-black text-slate-900 uppercase tracking-widest ml-1 mb-2 block">Full Name *</label>
-                          <Input 
+                          <Input
                             required placeholder="e.g. Rahul Sharma"
                             value={form.name} onChange={(e) => setForm({...form, name: e.target.value})}
                             className="h-14 bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#D4AF37] focus:ring-4 focus:ring-[#D4AF37]/10 rounded-2xl font-medium text-base transition-all outline-none px-5"
@@ -341,18 +540,18 @@ export default function ConstructionPage() {
                         </div>
                         <div>
                           <label className="text-xs font-black text-slate-900 uppercase tracking-widest ml-1 mb-2 block">Phone Number *</label>
-                          <Input 
+                          <Input
                             required type="tel" placeholder="+91 92664 58945"
                             value={form.phone} onChange={(e) => setForm({...form, phone: e.target.value})}
                             className="h-14 bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#D4AF37] focus:ring-4 focus:ring-[#D4AF37]/10 rounded-2xl font-medium text-base transition-all outline-none px-5"
                           />
                         </div>
                       </div>
-                      
+
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
                           <label className="text-xs font-black text-slate-900 uppercase tracking-widest ml-1 mb-2 block">Email Address</label>
-                          <Input 
+                          <Input
                             type="email" placeholder="rahul@example.com"
                             value={form.email} onChange={(e) => setForm({...form, email: e.target.value})}
                             className="h-14 bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#D4AF37] focus:ring-4 focus:ring-[#D4AF37]/10 rounded-2xl font-medium text-base transition-all outline-none px-5"
@@ -360,7 +559,7 @@ export default function ConstructionPage() {
                         </div>
                         <div>
                           <label className="text-xs font-black text-slate-900 uppercase tracking-widest ml-1 mb-2 block">Service Type</label>
-                          <select 
+                          <select
                             value={form.projectType} onChange={(e) => setForm({...form, projectType: e.target.value})}
                             className="w-full h-14 px-5 bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#D4AF37] focus:ring-4 focus:ring-[#D4AF37]/10 rounded-2xl outline-none appearance-none font-medium text-slate-700 text-base transition-all cursor-pointer"
                           >
@@ -375,7 +574,7 @@ export default function ConstructionPage() {
 
                       <div>
                         <label className="text-xs font-black text-slate-900 uppercase tracking-widest ml-1 mb-2 block">Project Details *</label>
-                        <Textarea 
+                        <Textarea
                           required placeholder="Briefly describe your requirements, land area, or the project you are interested in..." rows={5}
                           value={form.message} onChange={(e) => setForm({...form, message: e.target.value})}
                           className="bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#D4AF37] focus:ring-4 focus:ring-[#D4AF37]/10 rounded-2xl font-medium resize-none p-5 text-base transition-all outline-none"
@@ -398,6 +597,38 @@ export default function ConstructionPage() {
         </div>
       </section>
 
+      {/* --- FAQ SECTION (drives FAQPage rich snippets) --- */}
+      <section className="py-28 px-6 bg-slate-50 border-t border-slate-200">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-[#8B0000] font-black uppercase tracking-[0.3em] text-xs mb-4 flex items-center justify-center gap-2"><FileCheck2 className="w-4 h-4" /> FAQs</p>
+            <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-3">Construction Services <span className="text-[#D4AF37]">FAQs</span></h2>
+            <p className="text-slate-500 text-sm font-medium">Common questions about our construction company in Noida and Delhi NCR.</p>
+          </div>
+          <div className="space-y-3">
+            {faqs.map((faq, i) => (
+              <div key={i} className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+                <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  aria-expanded={openFaq === i}
+                  className="w-full p-5 sm:p-6 text-left flex justify-between items-center text-slate-900 font-bold text-sm sm:text-base hover:text-[#8B0000] transition-colors gap-4">
+                  <span>{faq.q}</span>
+                  <Plus className={`w-5 h-5 text-[#D4AF37] shrink-0 transition-transform duration-300 ${openFaq === i ? 'rotate-45' : ''}`} />
+                </button>
+                <AnimatePresence>
+                  {openFaq === i && (
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}
+                      className="px-5 sm:px-6 pb-5 text-slate-600 text-sm leading-relaxed font-medium">
+                      {faq.a}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* --- FOOTER --- */}
       <footer className="bg-[#050505] text-white pt-24 pb-10 px-6 border-t border-slate-800 font-sans">
         <div className="max-w-7xl mx-auto">
@@ -407,13 +638,14 @@ export default function ConstructionPage() {
                 ANK <span className="text-white">REALTY</span>
               </h3>
               <p className="text-slate-400 text-sm leading-relaxed mb-8 font-medium">
-                Your trusted partner for premium commercial real estate, corporate leasing, and development solutions across Delhi NCR.
+                A trusted construction company in Noida offering premium commercial real estate, corporate leasing,
+                and turnkey construction & development solutions across Delhi NCR.
               </p>
               <div className="flex gap-4">
-                <a href="#" className="w-12 h-12 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all duration-300 group"><Linkedin className="w-5 h-5 group-hover:scale-110 transition-transform" /></a>
-                <a href="#" className="w-12 h-12 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all duration-300 group"><Twitter className="w-5 h-5 group-hover:scale-110 transition-transform" /></a>
-                <a href="#" className="w-12 h-12 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all duration-300 group"><Facebook className="w-5 h-5 group-hover:scale-110 transition-transform" /></a>
-                <a href="#" className="w-12 h-12 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all duration-300 group"><Instagram className="w-5 h-5 group-hover:scale-110 transition-transform" /></a>
+                <a href="#" aria-label="Follow ANK Realty on LinkedIn" className="w-12 h-12 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all duration-300 group"><Linkedin className="w-5 h-5 group-hover:scale-110 transition-transform" /></a>
+                <a href="#" aria-label="Follow ANK Realty on Twitter" className="w-12 h-12 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all duration-300 group"><Twitter className="w-5 h-5 group-hover:scale-110 transition-transform" /></a>
+                <a href="#" aria-label="Follow ANK Realty on Facebook" className="w-12 h-12 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all duration-300 group"><Facebook className="w-5 h-5 group-hover:scale-110 transition-transform" /></a>
+                <a href="#" aria-label="Follow ANK Realty on Instagram" className="w-12 h-12 rounded-full bg-slate-800/80 border border-[#D4AF37]/30 flex items-center justify-center hover:bg-[#8B0000] hover:border-[#8B0000] text-[#D4AF37] hover:text-white transition-all duration-300 group"><Instagram className="w-5 h-5 group-hover:scale-110 transition-transform" /></a>
               </div>
             </div>
 
