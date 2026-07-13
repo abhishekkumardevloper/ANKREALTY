@@ -9,7 +9,8 @@ import {
   Award, ShieldCheck, Home, Key, PieChart, Map as MapIcon, Sparkles,
   Building, RefreshCw, DollarSign, Phone, Loader2, Video, PlayCircle,
   CheckCircle, Twitter, Facebook, Heart, ArrowUpRight, Star, Clock,
-  ThumbsUp, Shield, HelpCircle, Send, Plus
+  ThumbsUp, Shield, HelpCircle, Send, Plus, BookOpen, Store, Warehouse,
+  LandPlot, FileCheck2
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import RegisterPopup from './RegisterPopup';
@@ -19,6 +20,24 @@ import * as siteData from '@/lib/siteData';
 import { useAuth } from '../contexts/AuthContext';
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://ankrealty.onrender.com/api";
+
+const SITE_URL = 'https://www.ankrealty.com';
+
+// --- SEO CONSTANTS ---
+const SEO_TITLE = 'ANK Realty | Buy Luxury Property in Noida, Greater Noida & Delhi NCR | Verified Real Estate';
+const SEO_DESCRIPTION = 'Buy verified luxury apartments, villas, plots and commercial properties with ANK Realty. Zero brokerage on selected projects, expert property consultation and home loan assistance across Noida, Greater Noida, Gurugram and Delhi NCR.';
+const SEO_KEYWORDS = [
+  'Real Estate in Noida', 'Property in Noida', 'Buy Property in Noida', 'Real Estate Company in Noida',
+  'Best Property Dealer in Noida', 'Luxury Apartments in Noida', 'Premium Property in Delhi NCR',
+  'Real Estate Consultant', 'Commercial Property in Noida', 'Verified Property Listings',
+  'Flats for Sale in Noida', 'Apartments in Noida', 'Villas in Noida', 'Property Consultant Noida',
+  'Flats in Greater Noida', 'Buy Property in Greater Noida', 'Residential Plots Greater Noida',
+  'Commercial Shops Greater Noida', 'Luxury Apartments Gurgaon', 'Property Dealer Gurgaon',
+  'Buy Flats Gurgaon', 'Commercial Office Gurgaon', 'Buy Property in Delhi', 'Luxury Homes Delhi',
+  'Real Estate Consultant Delhi', 'Best Property Investment in India', 'High ROI Property',
+  'Rental Income Property', 'Pre Launch Projects', 'New Launch Projects', 'Ready to Move Flats',
+  'RERA Approved Projects in Noida', 'Zero Brokerage Property in Noida'
+].join(', ');
 
 // --- STATIC DATA ---
 const bankOffers = Array.isArray(siteData?.bankOffers) ? siteData.bankOffers : [
@@ -47,48 +66,97 @@ const categoryOptions = [
 
 const exploreCategories = [
   {
-    title: 'Luxury Villas', desc: 'Exclusive independent homes', icon: Home,
+    title: 'Luxury Villas', desc: 'Independent luxury villas in Noida and Delhi NCR', icon: Home,
+    alt: 'Luxury villa for sale in Noida - independent house exterior',
     image: 'https://images.unsplash.com/photo-1613490908578-81cc3d17961b?q=80&w=800&auto=format&fit=crop'
   },
   {
-    title: 'Premium Apartments', desc: 'High-rise luxury living', icon: Building,
+    title: 'Premium Apartments', desc: '2 BHK, 3 BHK & 4 BHK luxury apartments in Noida', icon: Building,
+    alt: '2 BHK 3 BHK premium apartment building in Noida Delhi NCR',
     image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=800&auto=format&fit=crop'
   },
   {
-    title: 'Commercial Spaces', desc: 'Grade-A office & retail', icon: Briefcase,
+    title: 'Commercial Spaces', desc: 'Office space, retail shops & commercial property in Noida', icon: Briefcase,
+    alt: 'Commercial office space and retail shops for sale in Noida',
     image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=800&auto=format&fit=crop'
   },
   {
-    title: 'Residential Plots', desc: 'Build your dream home', icon: MapIcon,
+    title: 'Residential Plots', desc: 'Freehold residential plots in Noida & Greater Noida', icon: MapIcon,
+    alt: 'Residential plot for sale in Greater Noida',
     image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=800&auto=format&fit=crop'
   },
 ];
 
+// Property types targeting residential + commercial long-tail keywords
+const propertyTypes = [
+  { title: '2 & 3 BHK Flats', desc: 'Ready to move and under-construction flats for sale in Noida & Greater Noida', icon: Home },
+  { title: '4 BHK Luxury Apartments', desc: 'Premium 4 BHK luxury apartments with clubhouse and amenities', icon: Building },
+  { title: 'Independent House', desc: 'Independent houses and builder floors across Delhi NCR', icon: Key },
+  { title: 'Residential Plot', desc: 'RERA approved residential plots in Noida and Greater Noida', icon: LandPlot },
+  { title: 'Office Space', desc: 'Grade-A office space for sale and lease in Noida & Gurugram', icon: Briefcase },
+  { title: 'Commercial Shops & Retail', desc: 'High street retail space and commercial shops in Delhi NCR', icon: Store },
+  { title: 'Warehouse & Industrial', desc: 'Warehouse and industrial property for business and logistics', icon: Warehouse },
+  { title: 'Rental Income Property', desc: 'High ROI rental income property for long-term investment', icon: RefreshCw },
+];
+
 const processSteps = [
-  { title: 'Discover', desc: 'Browse our curated collection of verified properties matching your lifestyle and financial criteria.', icon: Search },
-  { title: 'Visit & Evaluate', desc: 'Schedule accompanied site visits with our local experts who provide deep market insights.', icon: MapPin },
-  { title: 'Negotiate & Finance', desc: 'Leverage our banking tie-ups and negotiation expertise to secure the absolute best deal.', icon: Handshake },
-  { title: 'Seamless Handover', desc: 'From legal paperwork to registry and possession, we manage the entire lifecycle.', icon: Key },
+  { title: 'Discover', desc: 'Browse our curated collection of verified property listings in Noida, Greater Noida, Gurugram and Delhi matching your budget.', icon: Search },
+  { title: 'Visit & Evaluate', desc: 'Schedule accompanied site visits with our local property consultants who provide deep Delhi NCR market insights.', icon: MapPin },
+  { title: 'Negotiate & Finance', desc: 'Leverage our banking tie-ups and negotiation expertise to secure the absolute best deal with home loan assistance.', icon: Handshake },
+  { title: 'Seamless Handover', desc: 'From legal paperwork and RERA verification to registry and possession, we manage the entire lifecycle.', icon: Key },
 ];
 
 const testimonials = [
   { name: 'Rajesh Singhania', role: 'Tech Executive', text: 'ANK Realty made finding my luxury apartment in Noida completely effortless. Their transparency and knowledge are unmatched.', rating: 5 },
-  { name: 'Meera Kapoor', role: 'Business Owner', text: 'Securing our new corporate office space was a breeze. The team handled negotiations brilliantly, saving us 15% on lease terms.', rating: 5 },
+  { name: 'Meera Kapoor', role: 'Business Owner', text: 'Securing our new corporate office space in Gurugram was a breeze. The team handled negotiations brilliantly, saving us 15% on lease terms.', rating: 5 },
   { name: 'Amit Desai', role: 'NRI Investor', text: 'Managing investments from abroad is tough, but ANK Realty\'s video tours and legal assistance gave me absolute peace of mind.', rating: 5 },
 ];
 
+// City-specific SEO content (targets local search intent per city)
 const topCities = [
-  { name: 'Noida', count: '1,200+ Properties', image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?q=80&w=800&auto=format&fit=crop' },
-  { name: 'Gurugram', count: '950+ Properties', image: 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?q=80&w=800&auto=format&fit=crop' },
-  { name: 'Delhi', count: '800+ Properties', image: 'https://images.unsplash.com/photo-1597040663342-45b6af3d91a5?q=80&w=800&auto=format&fit=crop' },
-  { name: 'Greater Noida', count: '1,500+ Properties', image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=800&auto=format&fit=crop' },
+  {
+    name: 'Noida', count: '1,200+ Properties',
+    tag: 'Flats, Apartments & Commercial Property in Noida',
+    image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?q=80&w=800&auto=format&fit=crop',
+    alt: 'Flats and apartments for sale in Noida skyline'
+  },
+  {
+    name: 'Gurugram', count: '950+ Properties',
+    tag: 'Luxury Apartments & Office Space in Gurgaon',
+    image: 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?q=80&w=800&auto=format&fit=crop',
+    alt: 'Luxury apartments and commercial office space in Gurugram'
+  },
+  {
+    name: 'Delhi', count: '800+ Properties',
+    tag: 'Luxury Homes & Real Estate Consultant in Delhi',
+    image: 'https://images.unsplash.com/photo-1597040663342-45b6af3d91a5?q=80&w=800&auto=format&fit=crop',
+    alt: 'Luxury homes and property for sale in Delhi'
+  },
+  {
+    name: 'Greater Noida', count: '1,500+ Properties',
+    tag: 'Residential Plots & Commercial Shops in Greater Noida',
+    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=800&auto=format&fit=crop',
+    alt: 'Residential plots and commercial shops for sale in Greater Noida'
+  },
 ];
 
 const faqs = [
-  { q: 'Are all properties listed on your platform verified?', a: 'Yes. Every property undergoes a rigorous 40-point physical and legal verification process before it is listed on ANK Realty.' },
-  { q: 'Do you charge brokerage on new developer projects?', a: 'No, we charge absolutely ZERO brokerage on new launch and primary market developer projects.' },
-  { q: 'Can you assist with home loan approvals?', a: 'Absolutely. We have exclusive tie-ups with HDFC, SBI, and ICICI to offer you expedited approvals and the lowest interest rates.' },
-  { q: 'Do you manage NRI property investments?', a: 'Yes, we provide end-to-end portfolio management, virtual tours, and legal compliance specifically tailored for NRI investors.' },
+  { q: 'Are all properties listed on your platform verified?', a: 'Yes. Every property undergoes a rigorous 40-point physical and legal verification process before it is listed on ANK Realty, so you get verified property listings across Noida, Greater Noida, Gurugram and Delhi NCR.' },
+  { q: 'Do you charge brokerage on new developer projects?', a: 'No, we charge zero brokerage property in Noida on new launch and pre launch developer projects across Delhi NCR.' },
+  { q: 'Can you assist with home loan approvals?', a: 'Absolutely. We have exclusive tie-ups with HDFC, SBI, and ICICI to offer expedited approvals and the lowest interest rates as part of our home loan assistance for property buyers.' },
+  { q: 'Do you manage NRI property investments?', a: 'Yes, we provide end-to-end portfolio management, virtual tours, and legal compliance specifically tailored for NRI investors buying property in Noida and Delhi NCR.' },
+  { q: 'Are your listed projects RERA approved?', a: 'We prioritise RERA approved projects in Noida and Greater Noida, and our legal team verifies RERA registration before any project is listed.' },
+  { q: 'What is the difference between leasehold and freehold property?', a: 'Freehold property gives you full ownership of land and building, while leasehold property is held on a long-term lease from a development authority. Read our detailed guide in the Insights section below.' },
+];
+
+// Blog / insights keyword targets for content marketing and internal linking
+const blogInsights = [
+  { title: 'Best Places to Invest in Noida', desc: 'A locality-by-locality breakdown of the best investment in Noida for 2026.', slug: 'best-places-to-invest-in-noida', icon: TrendingUp },
+  { title: 'Top Residential Projects in Noida', desc: 'RERA approved residential projects ranked by connectivity, amenities and ROI.', slug: 'top-residential-projects-in-noida', icon: Building },
+  { title: 'Property Buying Guide', desc: 'A step-by-step property buying guide for first-time buyers in Delhi NCR.', slug: 'property-buying-guide', icon: BookOpen },
+  { title: 'Home Loan Guide', desc: 'Everything you need to know before applying for a home loan in India.', slug: 'home-loan-guide', icon: Banknote },
+  { title: 'Stamp Duty Guide', desc: 'Current stamp duty and registration charges across Noida, Greater Noida and Delhi.', slug: 'stamp-duty-guide', icon: FileCheck2 },
+  { title: 'Leasehold vs Freehold Property', desc: 'Understand the difference between leasehold and freehold before you buy.', slug: 'leasehold-vs-freehold-property', icon: Shield },
 ];
 
 // --- ANIMATION VARIANTS ---
@@ -121,7 +189,7 @@ const getYouTubeID = (url) => {
 
 // --- 3D BUILDING SVG ---
 const Building3D = () => (
-  <svg viewBox="0 0 420 520" xmlns="http://www.w3.org/2000/svg" className="w-full h-full" style={{ filter: 'drop-shadow(0 40px 60px rgba(212,175,55,0.25))' }}>
+  <svg viewBox="0 0 420 520" xmlns="http://www.w3.org/2000/svg" className="w-full h-full" style={{ filter: 'drop-shadow(0 40px 60px rgba(212,175,55,0.25))' }} role="img" aria-label="3D illustration of premium residential towers in Noida">
     <defs>
       <linearGradient id="bFace" x1="0%" y1="0%" x2="100%" y2="0%">
         <stop offset="0%" stopColor="#1a1a2e" />
@@ -264,6 +332,7 @@ const SafeImg = ({ src, alt, className, fallback }) => {
     <img
       src={errored ? (fallback || FALLBACK_LOGO) : src}
       alt={alt}
+      loading="lazy"
       className={className}
       onError={() => setErrored(true)}
     />
@@ -271,11 +340,108 @@ const SafeImg = ({ src, alt, className, fallback }) => {
 };
 
 // =============================================
+//  SEO HEAD MANAGER
+//  Sets document title, meta tags, canonical link
+//  and JSON-LD structured data (RealEstateAgent + FAQPage)
+// =============================================
+function useSEO() {
+  useEffect(() => {
+    document.title = SEO_TITLE;
+
+    const setMeta = (attr, key, content) => {
+      let tag = document.querySelector(`meta[${attr}="${key}"]`);
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.setAttribute(attr, key);
+        document.head.appendChild(tag);
+      }
+      tag.setAttribute('content', content);
+    };
+
+    setMeta('name', 'description', SEO_DESCRIPTION);
+    setMeta('name', 'keywords', SEO_KEYWORDS);
+    setMeta('name', 'robots', 'index, follow');
+    setMeta('property', 'og:title', SEO_TITLE);
+    setMeta('property', 'og:description', SEO_DESCRIPTION);
+    setMeta('property', 'og:type', 'website');
+    setMeta('property', 'og:url', SITE_URL);
+    setMeta('name', 'twitter:card', 'summary_large_image');
+    setMeta('name', 'twitter:title', SEO_TITLE);
+    setMeta('name', 'twitter:description', SEO_DESCRIPTION);
+
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', SITE_URL);
+
+    // JSON-LD: RealEstateAgent
+    const orgSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'RealEstateAgent',
+      name: 'ANK Realty',
+      description: SEO_DESCRIPTION,
+      url: SITE_URL,
+      areaServed: [
+        { '@type': 'City', name: 'Noida' },
+        { '@type': 'City', name: 'Greater Noida' },
+        { '@type': 'City', name: 'Gurugram' },
+        { '@type': 'City', name: 'Delhi' }
+      ],
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: 'Sector 62',
+        addressLocality: 'Noida',
+        addressRegion: 'Uttar Pradesh',
+        postalCode: '201309',
+        addressCountry: 'IN'
+      },
+      telephone: '+91-92664-58945',
+      email: 'info@ankrealty.com'
+    };
+
+    // JSON-LD: FAQPage (drives FAQ rich snippets)
+    const faqSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqs.map(f => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a }
+      }))
+    };
+
+    const injectSchema = (id, data) => {
+      let script = document.getElementById(id);
+      if (!script) {
+        script = document.createElement('script');
+        script.type = 'application/ld+json';
+        script.id = id;
+        document.head.appendChild(script);
+      }
+      script.textContent = JSON.stringify(data);
+    };
+
+    injectSchema('schema-real-estate-agent', orgSchema);
+    injectSchema('schema-faq-page', faqSchema);
+
+    return () => {
+      // Leave tags in place across route changes within an SPA;
+      // they get overwritten by the next page's useSEO call.
+    };
+  }, []);
+}
+
+// =============================================
 //  MAIN COMPONENT
 // =============================================
 export default function HomePage() {
   const navigate = useNavigate();
   const { user, api } = useAuth();
+
+  useSEO();
 
   const { scrollYProgress } = useScroll();
   const heroParallax = useTransform(scrollYProgress, [0, 0.5], [0, 120]);
@@ -459,25 +625,26 @@ export default function HomePage() {
               <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="space-y-6">
                 <motion.div variants={textReveal}
                   className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-[var(--gold)]/25 bg-[var(--gold)]/8 text-[var(--gold)] text-xs font-bold tracking-[0.2em] uppercase backdrop-blur-sm">
-                  <Award className="w-3.5 h-3.5" /> India's Premier Real Estate Network
+                  <Award className="w-3.5 h-3.5" /> Best Property Dealer in Noida &amp; Delhi NCR
                 </motion.div>
 
+                {/* H1 carries the primary keyword cluster for on-page SEO */}
                 <motion.h1 variants={textReveal}
-                  className="font-display text-5xl sm:text-6xl lg:text-7xl text-white leading-[1.05] tracking-tight">
-                  Find Your <br />
-                  <span className="italic text-[var(--gold)]">Perfect</span>{' '}
-                  <span className="text-white">Estate</span>
+                  className="font-display text-4xl sm:text-5xl lg:text-6xl text-white leading-[1.1] tracking-tight">
+                  Real Estate in Noida &amp; <br />
+                  <span className="italic text-[var(--gold)]">Premium Property</span>{' '}
+                  <span className="text-white">in Delhi NCR</span>
                 </motion.h1>
 
                 <motion.p variants={textReveal}
                   className="text-base sm:text-lg text-slate-400 max-w-lg leading-relaxed font-light">
-                  Discover verified luxury estates, high-ROI commercial spaces, and premium plots with our elite advisory team across India's top cities.
+                  ANK Realty is a trusted real estate company in Noida helping you buy verified luxury apartments, residential plots and commercial property across Noida, Greater Noida, Gurugram and Delhi — with zero brokerage and expert home loan assistance.
                 </motion.p>
 
                 {/* Stats inline */}
                 <motion.div variants={textReveal} className="flex flex-wrap gap-6 pt-2">
                   {[
-                    { v: '10K+', l: 'Listings' }, { v: '5K+', l: 'Families' }, { v: '25+', l: 'Cities' }
+                    { v: '10K+', l: 'Verified Listings' }, { v: '5K+', l: 'Families' }, { v: '25+', l: 'Cities' }
                   ].map((s, i) => (
                     <div key={i} className="text-center">
                       <p className="text-2xl font-bold text-[var(--gold)]">{s.v}</p>
@@ -555,7 +722,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-slate-100">
             {[
-              { label: 'Verified Listings', value: '10,000+', icon: ShieldCheck },
+              { label: 'Verified Property Listings', value: '10,000+', icon: ShieldCheck },
               { label: 'Happy Families', value: '5,000+', icon: Users },
               { label: 'Cities Covered', value: '25+', icon: MapPin },
               { label: 'Years of Legacy', value: '15+', icon: TrendingUp },
@@ -573,6 +740,26 @@ export default function HomePage() {
       </section>
 
       {/* ===================================================
+          2B. SEO INTRO CONTENT
+          Crawlable keyword-rich paragraph introducing the brand
+      =================================================== */}
+      <section className="py-14 px-4 sm:px-6 bg-white border-b border-slate-100">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="font-display text-2xl sm:text-3xl text-slate-900 mb-4">
+            Your Trusted Real Estate Consultant in Delhi NCR
+          </h2>
+          <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
+            Looking to <strong>buy property in Noida</strong> or explore <strong>commercial property in Noida</strong>?
+            ANK Realty is a full-service <strong>real estate company in Noida</strong> offering verified property listings
+            across <strong>Noida</strong>, <strong>Greater Noida</strong>, <strong>Gurugram</strong> and <strong>Delhi</strong>.
+            As a <strong>best property dealer in Noida</strong>, we help you find <strong>luxury apartments in Noida</strong>,
+            residential plots, independent houses and Grade-A office space — backed by RERA verification, zero
+            brokerage on select projects, and dedicated home loan assistance for property buyers.
+          </p>
+        </div>
+      </section>
+
+      {/* ===================================================
           3. EXPLORE CATEGORIES
       =================================================== */}
       <section className="py-20 sm:py-28 px-4 sm:px-6 bg-[var(--cream)]">
@@ -582,6 +769,9 @@ export default function HomePage() {
             <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl text-slate-900 leading-tight">
               Explore Our <em>Asset Classes</em>
             </h2>
+            <p className="text-slate-500 mt-4 max-w-2xl text-sm sm:text-base">
+              From luxury villas to commercial property in Noida — browse premium property in Delhi NCR by category.
+            </p>
           </div>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}
             variants={staggerContainer}
@@ -592,7 +782,8 @@ export default function HomePage() {
                 className="relative h-80 sm:h-96 rounded-2xl overflow-hidden group cursor-pointer"
                 whileHover={{ y: -6, transition: { duration: 0.2 } }}
               >
-                <img src={cat.image} alt={cat.title}
+                <img src={cat.image} alt={cat.alt || cat.title}
+                  loading="lazy"
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                   onError={e => { e.target.src = 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=800&auto=format&fit=crop'; }}
                 />
@@ -609,6 +800,36 @@ export default function HomePage() {
               </motion.div>
             ))}
           </motion.div>
+        </div>
+      </section>
+
+      {/* ===================================================
+          3B. PROPERTY TYPES (Residential + Commercial keywords)
+      =================================================== */}
+      <section className="py-20 sm:py-24 px-4 sm:px-6 bg-white border-y border-slate-100">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12 max-w-2xl mx-auto">
+            <p className="text-[var(--crimson)] font-bold uppercase tracking-[0.25em] text-xs mb-3">Property Types</p>
+            <h2 className="font-display text-4xl sm:text-5xl text-slate-900 leading-tight">
+              Residential &amp; <em>Commercial Property</em>
+            </h2>
+            <p className="text-slate-500 mt-4 text-sm sm:text-base">
+              Whether you need a 2 BHK flat, a 4 BHK luxury apartment, or warehouse and industrial space — we cover every property type in Delhi NCR.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
+            {propertyTypes.map((pt, i) => (
+              <motion.div key={i} whileHover={{ y: -4 }}
+                onClick={() => navigate('/properties')}
+                className="bg-slate-50 p-5 sm:p-6 rounded-2xl border border-slate-200 hover:border-[var(--gold)]/40 hover:shadow-md transition-all cursor-pointer group">
+                <div className="w-11 h-11 rounded-xl bg-white border border-slate-200 flex items-center justify-center mb-4 group-hover:bg-[var(--crimson)] transition-colors">
+                  <pt.icon className="w-5 h-5 text-[var(--crimson)] group-hover:text-white transition-colors" />
+                </div>
+                <h3 className="font-bold text-slate-900 text-sm sm:text-base mb-1.5">{pt.title}</h3>
+                <p className="text-slate-500 text-xs sm:text-sm leading-relaxed">{pt.desc}</p>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -655,6 +876,7 @@ export default function HomePage() {
                 <Sparkles className="w-4 h-4" /> Signature Collection
               </p>
               <h2 className="font-display text-4xl sm:text-5xl text-white">Exclusive <em>Primary Listings</em></h2>
+              <p className="text-slate-400 mt-3 text-sm sm:text-base max-w-xl">Verified property listings, new launch projects and pre launch projects across Noida and Delhi NCR.</p>
             </div>
             <Link to="/properties"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-white/20 text-sm font-semibold text-white hover:bg-white hover:text-slate-900 transition-all whitespace-nowrap">
@@ -679,11 +901,13 @@ export default function HomePage() {
                       <Sparkles className="w-3 h-3 text-[var(--gold)]" /> {property.projectStatus || 'Featured'}
                     </div>
                     <button onClick={e => handleSaveProperty(e, property.id)}
+                      aria-label={isSaved ? 'Remove from saved properties' : 'Save property'}
                       className={`absolute top-4 right-4 w-10 h-10 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center z-20 border transition-colors ${isSaved ? 'border-[var(--crimson)] text-[var(--crimson)]' : 'border-white/20 text-white hover:text-[var(--crimson)]'}`}>
                       <Heart className={`w-4 h-4 ${isSaved ? 'fill-[var(--crimson)]' : ''}`} />
                     </button>
                     <div className="relative h-56 overflow-hidden bg-slate-800">
-                      <img src={getMainImage(property)} alt={property.title}
+                      <img src={getMainImage(property)} alt={`${property.title} - ${property.property_type || 'property'} for sale in ${property.location || 'Noida'}`}
+                        loading="lazy"
                         className="h-full w-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 ease-out"
                         onError={e => { e.target.src = 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=800&auto=format&fit=crop'; }}
                       />
@@ -719,7 +943,7 @@ export default function HomePage() {
       =================================================== */}
       <section className="py-16 bg-white border-b border-slate-100 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <p className="text-xs font-bold uppercase tracking-[0.25em] text-slate-400 mb-10 text-center">Network & Developer Partners</p>
+          <p className="text-xs font-bold uppercase tracking-[0.25em] text-slate-400 mb-10 text-center">Network &amp; Developer Partners</p>
           <div className="relative flex flex-col gap-8"
             style={{ WebkitMaskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)' }}>
             {[
@@ -732,7 +956,7 @@ export default function HomePage() {
                 className="flex gap-12 sm:gap-20 w-max items-center">
                 {[...row.logos, ...row.logos, ...row.logos, ...row.logos].map((src, i) => (
                   <div key={i} className="shrink-0 w-28 sm:w-36 h-14 flex items-center justify-center">
-                    <SafeImg src={src} alt="Partner" fallback={FALLBACK_LOGO}
+                    <SafeImg src={src} alt="ANK Realty developer partner logo" fallback={FALLBACK_LOGO}
                       className="max-w-full max-h-full object-contain grayscale opacity-35 hover:grayscale-0 hover:opacity-90 transition-all duration-400" />
                   </div>
                 ))}
@@ -755,6 +979,7 @@ export default function HomePage() {
                 <RefreshCw className="w-4 h-4" /> Secondary Market
               </p>
               <h2 className="font-display text-4xl sm:text-5xl text-slate-900">Ready to <em>Move-In Homes</em></h2>
+              <p className="text-slate-500 mt-3 text-sm sm:text-base max-w-xl">Ready to move flats in Noida, Greater Noida and Gurugram with immediate possession.</p>
             </div>
             <Link to="/properties?category=resale"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[var(--crimson)] text-sm font-semibold text-white hover:bg-[var(--crimson-dark)] transition-colors whitespace-nowrap">
@@ -779,11 +1004,13 @@ export default function HomePage() {
                       <Key className="w-3 h-3" /> {property.projectStatus || 'Ready'}
                     </div>
                     <button onClick={e => handleSaveProperty(e, property.id)}
+                      aria-label={isSaved ? 'Remove from saved properties' : 'Save property'}
                       className={`absolute top-4 right-4 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center z-20 shadow-sm transition-colors ${isSaved ? 'text-[var(--crimson)]' : 'text-slate-400 hover:text-[var(--crimson)]'}`}>
                       <Heart className={`w-4 h-4 ${isSaved ? 'fill-[var(--crimson)]' : ''}`} />
                     </button>
                     <div className="relative h-52 overflow-hidden bg-slate-100">
-                      <img src={getMainImage(property)} alt={property.title}
+                      <img src={getMainImage(property)} alt={`${property.title} - resale property in ${property.location || 'Noida'}`}
+                        loading="lazy"
                         className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                         onError={e => { e.target.src = 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=800&auto=format&fit=crop'; }}
                       />
@@ -811,28 +1038,30 @@ export default function HomePage() {
       </section>
 
       {/* ===================================================
-          8. TOP CITIES
+          8. TOP CITIES (local SEO)
       =================================================== */}
       <section className="py-20 sm:py-24 px-4 sm:px-6 bg-white border-t border-slate-100">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
+          <div className="text-center mb-12 max-w-2xl mx-auto">
             <p className="text-[var(--crimson)] font-bold uppercase tracking-[0.25em] text-xs mb-3">Locations</p>
-            <h2 className="font-display text-4xl sm:text-5xl text-slate-900">Top <em>Neighborhoods</em></h2>
+            <h2 className="font-display text-4xl sm:text-5xl text-slate-900">Property in Noida, Greater Noida, <em>Gurugram &amp; Delhi</em></h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {topCities.map((city, i) => (
               <motion.div key={i} whileHover={{ scale: 1.02 }}
                 onClick={() => navigate(`/properties?location=${city.name}`)}
-                className="relative h-72 rounded-2xl overflow-hidden group cursor-pointer shadow-md"
+                className="relative h-80 rounded-2xl overflow-hidden group cursor-pointer shadow-md"
               >
-                <img src={city.image} alt={city.name}
+                <img src={city.image} alt={city.alt}
+                  loading="lazy"
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   onError={e => { e.target.src = 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=800&auto=format&fit=crop'; }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/85 to-transparent" />
-                <div className="absolute bottom-5 left-5">
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 to-transparent" />
+                <div className="absolute bottom-5 left-5 right-5">
                   <h3 className="text-xl font-bold text-white">{city.name}</h3>
                   <p className="text-slate-300 text-sm mt-0.5">{city.count}</p>
+                  <p className="text-slate-400 text-xs mt-1.5 leading-snug">{city.tag}</p>
                 </div>
               </motion.div>
             ))}
@@ -887,19 +1116,20 @@ export default function HomePage() {
       )}
 
       {/* ===================================================
-          10. WHY ANK REALTY
+          10. WHY ANK REALTY (investment keywords)
       =================================================== */}
       <section className="py-20 sm:py-28 px-4 sm:px-6 bg-[var(--cream)]">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-14">
+          <div className="text-center mb-14 max-w-2xl mx-auto">
             <p className="text-[var(--crimson)] font-bold uppercase tracking-[0.25em] text-xs mb-3">The ANK Advantage</p>
-            <h2 className="font-display text-4xl sm:text-5xl text-slate-900">Why Investors <em>Choose Us</em></h2>
+            <h2 className="font-display text-4xl sm:text-5xl text-slate-900">Best Property Investment <em>in India</em></h2>
+            <p className="text-slate-500 mt-4 text-sm sm:text-base">High ROI property, RERA approved projects and rental income property — chosen by serious investors.</p>
           </div>
           <div className="grid sm:grid-cols-3 gap-6">
             {[
-              { t: 'Zero Brokerage', d: 'We charge absolutely no brokerage on new developer projects. Every rupee stays with you.', i: DollarSign },
-              { t: 'Legal Verification', d: '40-point legal and physical verification before any listing goes live on our platform.', i: Shield },
-              { t: 'End-to-End Support', d: 'From initial search and loan approval to final registry and possession handover.', i: ThumbsUp },
+              { t: 'Zero Brokerage Property', d: 'Zero brokerage property in Noida on new launch and pre launch developer projects. Every rupee stays with you.', i: DollarSign },
+              { t: 'RERA Approved & Verified', d: '40-point legal and physical verification with a focus on RERA approved projects in Noida before any listing goes live.', i: Shield },
+              { t: 'High ROI Rental Income', d: 'Curated high ROI property and rental income property options for long-term wealth creation.', i: ThumbsUp },
             ].map((usp, i) => (
               <motion.div key={i} whileHover={{ y: -6 }}
                 className="bg-white p-8 rounded-2xl border border-slate-200 group hover:border-[var(--gold)]/40 transition-all duration-300 hover:shadow-lg">
@@ -967,7 +1197,7 @@ export default function HomePage() {
                     <span className="text-lg font-bold text-[var(--gold)]">{inp.value}</span>
                   </div>
                   <input type="range" min={inp.min} max={inp.max} step={inp.step} value={inp.state}
-                    onChange={e => inp.set(Number(e.target.value))} className="w-full" />
+                    onChange={e => inp.set(Number(e.target.value))} className="w-full" aria-label={inp.label} />
                 </div>
               ))}
             </div>
@@ -1000,10 +1230,10 @@ export default function HomePage() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
             <p className="text-[var(--crimson)] font-bold uppercase tracking-[0.25em] text-xs mb-4">Financial Advisory</p>
             <h2 className="font-display text-4xl sm:text-5xl text-slate-900 leading-tight mb-6">
-              Get pre-approved for <em>your dream home.</em>
+              Home Loan Assistance for <em>Property Buyers</em>
             </h2>
             <p className="text-slate-600 text-base leading-relaxed mb-8">
-              Skip the bank queues. Our financial experts guide you to the lowest interest rates and highest loan eligibility instantly.
+              Skip the bank queues. Our financial experts guide you to the lowest interest rates and highest loan eligibility instantly — part of our end-to-end real estate consultant service.
             </p>
             <div className="space-y-3">
               {bankOffers.map((offer, i) => (
@@ -1050,18 +1280,50 @@ export default function HomePage() {
       </section>
 
       {/* ===================================================
-          14. FAQ
+          13B. INSIGHTS / BLOG (content marketing keywords)
       =================================================== */}
       <section className="py-20 sm:py-28 px-4 sm:px-6 bg-[var(--cream)] border-t border-slate-200">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-14 max-w-2xl mx-auto">
+            <p className="text-[var(--crimson)] font-bold uppercase tracking-[0.25em] text-xs mb-3 flex items-center justify-center gap-2">
+              <BookOpen className="w-4 h-4" /> Insights
+            </p>
+            <h2 className="font-display text-4xl sm:text-5xl text-slate-900">Real Estate <em>Market Trends</em> &amp; Guides</h2>
+            <p className="text-slate-500 mt-4 text-sm sm:text-base">Property buying guides, home loan guides, and stamp duty guides to help you invest with confidence.</p>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {blogInsights.map((post, i) => (
+              <motion.div key={i} whileHover={{ y: -5 }}
+                onClick={() => navigate(`/blog/${post.slug}`)}
+                className="bg-white p-7 rounded-2xl border border-slate-200 hover:border-[var(--gold)]/40 hover:shadow-lg transition-all cursor-pointer group">
+                <div className="w-11 h-11 rounded-xl bg-slate-50 flex items-center justify-center mb-5 group-hover:bg-[var(--crimson)] transition-colors">
+                  <post.icon className="w-5 h-5 text-[var(--crimson)] group-hover:text-white transition-colors" />
+                </div>
+                <h3 className="font-bold text-slate-900 text-base mb-2 group-hover:text-[var(--crimson)] transition-colors">{post.title}</h3>
+                <p className="text-slate-500 text-sm leading-relaxed mb-4">{post.desc}</p>
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[var(--gold)]">
+                  Read Guide <ArrowRight className="w-3.5 h-3.5" />
+                </span>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===================================================
+          14. FAQ
+      =================================================== */}
+      <section className="py-20 sm:py-28 px-4 sm:px-6 bg-white border-t border-slate-200">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="font-display text-4xl sm:text-5xl text-slate-900 mb-3">Frequently Asked <em>Questions</em></h2>
-            <p className="text-slate-500 text-sm">Everything you need to know about buying and leasing with ANK Realty.</p>
+            <p className="text-slate-500 text-sm">Everything you need to know about buying and leasing property in Noida, Greater Noida, Gurugram and Delhi NCR.</p>
           </div>
           <div className="space-y-3">
             {faqs.map((faq, i) => (
               <div key={i} className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
                 <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  aria-expanded={openFaq === i}
                   className="w-full p-5 sm:p-6 text-left flex justify-between items-center text-slate-900 font-semibold text-sm sm:text-base hover:text-[var(--crimson)] transition-colors gap-4">
                   <span>{faq.q}</span>
                   <Plus className={`w-5 h-5 text-[var(--gold)] shrink-0 transition-transform duration-300 ${openFaq === i ? 'rotate-45' : ''}`} />
@@ -1091,15 +1353,15 @@ export default function HomePage() {
               <MapIcon className="w-4 h-4" /> Location Intelligence
             </p>
             <h2 className="font-display text-4xl sm:text-5xl text-slate-900 mb-5 leading-tight">
-              Explore {search.location || 'Top Regions'} <em>Visually</em>
+              Explore {search.location || 'Noida & Delhi NCR'} <em>Visually</em>
             </h2>
             <p className="text-slate-600 leading-relaxed mb-8 text-sm sm:text-base">
-              Use our interactive map to discover connectivity hubs, upcoming metro lines, and social infrastructure driving real estate appreciation.
+              Use our interactive map to discover connectivity hubs, upcoming metro lines, and social infrastructure driving real estate appreciation in Noida, Greater Noida, Gurugram and Delhi.
             </p>
             <div className="bg-slate-900 p-6 sm:p-8 rounded-2xl text-white shadow-lg relative overflow-hidden">
               <div className="absolute -right-8 -bottom-8 w-36 h-36 bg-[var(--gold)] opacity-10 blur-3xl rounded-full pointer-events-none" />
               <h4 className="text-xl font-bold mb-1.5 relative z-10">Join our VIP list</h4>
-              <p className="text-slate-400 text-sm mb-5 relative z-10">Get exclusive access to pre-launch properties and market reports.</p>
+              <p className="text-slate-400 text-sm mb-5 relative z-10">Get exclusive access to pre launch projects, new launch projects and market reports.</p>
               <div className="flex gap-3 relative z-10">
                 <Input value={newsletterEmail} onChange={e => setNewsletterEmail(e.target.value)}
                   placeholder="Enter your email" className="bg-white/10 border-white/20 text-white h-12 rounded-xl placeholder:text-slate-500 focus:border-[var(--gold)] flex-1" />
@@ -1111,7 +1373,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="w-full h-[400px] sm:h-[500px] rounded-3xl overflow-hidden shadow-2xl border-4 border-slate-100">
-            <iframe src={dynamicMapSrc} width="100%" height="100%"
+            <iframe src={dynamicMapSrc} width="100%" height="100%" title="ANK Realty property location map"
               style={{ border: 0 }} allowFullScreen loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
               className="grayscale-[20%] hover:grayscale-0 transition-all duration-700" />
@@ -1127,10 +1389,13 @@ export default function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-14">
             <div className="space-y-6">
               <h3 className="font-display text-3xl text-[var(--gold)]">ANK <span className="text-white not-italic">REALTY</span></h3>
-              <p className="text-slate-400 text-sm leading-relaxed">Premium property discovery, verified advisory, corporate leasing, and owner-first listing support. Your Trusted Partner.</p>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                A trusted real estate company in Noida offering premium property discovery, verified advisory,
+                corporate leasing, and owner-first listing support across Noida, Greater Noida, Gurugram and Delhi NCR.
+              </p>
               <div className="flex gap-3">
                 {[Linkedin, Twitter, Facebook, Instagram].map((Icon, i) => (
-                  <a key={i} href="#"
+                  <a key={i} href="#" aria-label="Follow ANK Realty on social media"
                     className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[var(--gold)] hover:bg-[var(--crimson)] hover:border-[var(--crimson)] hover:text-white transition-all">
                     <Icon className="w-4 h-4" />
                   </a>
@@ -1152,7 +1417,7 @@ export default function HomePage() {
             <div>
               <h4 className="font-bold text-xs mb-6 text-white uppercase tracking-[0.2em]">Categories</h4>
               <ul className="space-y-3.5 text-slate-400 text-sm">
-                {['Premium Plots', 'Residential Homes', 'Corporate Leasing', 'Rental Homes', 'New Launches'].map((item, i) => (
+                {['Premium Plots', 'Residential Homes', 'Corporate Leasing', 'Rental Homes', 'New Launch Projects'].map((item, i) => (
                   <li key={i}><Link to="#" className="hover:text-[var(--gold)] transition-colors flex items-center gap-2">
                     <ChevronRight className="w-3.5 h-3.5 text-[var(--crimson)]" /> {item}
                   </Link></li>
