@@ -504,7 +504,7 @@ export default function CorporateLeasingPage() {
               <div className="space-y-5 text-slate-400 font-medium text-sm">
                 <div className="flex items-start bg-slate-900/50 p-4 rounded-2xl border border-slate-800 hover:border-[#D4AF37]/50 transition-colors">
                   <MapPin className="w-5 h-5 mr-4 text-[#D4AF37] shrink-0 mt-0.5" />
-                  <p className="text-sm leading-relaxed">Sector 62, Noida,<br />Uttar Pradesh 201309</p>
+                  <p className="text-sm leading-relaxed"> 207, JS Arcade, Sec-18, Noida, Uttar Pradesh - 201301</p>
                 </div>
                 <div className="flex items-center bg-slate-900/50 p-4 rounded-2xl border border-slate-800 hover:border-[#D4AF37]/50 transition-colors">
                   <Phone className="w-5 h-5 mr-4 text-[#D4AF37] shrink-0" />
