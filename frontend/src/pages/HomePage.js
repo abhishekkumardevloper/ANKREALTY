@@ -1429,7 +1429,7 @@ export default function HomePage() {
               <h4 className="font-bold text-xs mb-6 text-white uppercase tracking-[0.2em]">Headquarters</h4>
               <div className="space-y-3.5">
                 {[
-                  { icon: MapPin, text: 'Sector 62, Noida, Uttar Pradesh 201309' },
+                  { icon: MapPin, text: ' 207, JS Arcade, Sec-18, Noida, Uttar Pradesh - 201301' },
                   { icon: Mail, text: 'info@ankrealty.com' },
                   { icon: Phone, text: '+91 92664 58945' },
                 ].map((item, i) => (
