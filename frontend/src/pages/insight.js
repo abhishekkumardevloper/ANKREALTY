@@ -338,7 +338,7 @@ export default function InsightsPage() {
             <div>
               <h4 className="font-bold text-lg mb-6 text-slate-100">Contact Us</h4>
               <div className="space-y-4 text-slate-400 font-medium text-sm">
-                <p className="flex items-start"><MapPin className="w-5 h-5 mr-3 text-red-600 shrink-0"/> 123 Business Avenue, Tech Park, Mumbai</p>
+                <p className="flex items-start"><MapPin className="w-5 h-5 mr-3 text-red-600 shrink-0"/>  207, JS Arcade, Sec-18, Noida, Uttar Pradesh - 201301</p>
                 <p className="flex items-center"><Mail className="w-5 h-5 mr-3 text-red-600 shrink-0"/> info@ankrealty.com</p>
                 <p className="flex items-center"><Phone className="w-5 h-5 mr-3 text-red-600 shrink-0"/> +91 92664 58945</p>
               </div>
