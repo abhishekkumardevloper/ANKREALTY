@@ -454,7 +454,7 @@ export default function PostPropertyPage() {
               <div className="space-y-4 text-slate-400 font-medium text-sm">
                 <div className="flex items-start bg-slate-900/50 p-3 rounded-xl border border-slate-800 hover:border-[#D4AF37]/50 transition-colors">
                   <MapPin className="w-5 h-5 mr-3 text-[#D4AF37] shrink-0" /> 
-                  <p className="text-xs">123 Business Avenue, Tech Park, Mumbai, 400001</p>
+                  <p className="text-xs"> 207, JS Arcade, Sec-18, Noida, Uttar Pradesh - 201301</p>
                 </div>
                 <div className="flex items-center bg-slate-900/50 p-3 rounded-xl border border-slate-800 hover:border-[#D4AF37]/50 transition-colors">
                   <Mail className="w-5 h-5 mr-3 text-[#D4AF37] shrink-0" /> 
